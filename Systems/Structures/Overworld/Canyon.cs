@@ -52,18 +52,18 @@ namespace PenumbralsWorldgen.Systems.Structures.Overworld
                 //Generate small canyon
                 foreach (Point16 pos in extraOrePositions)
                 {
-                    WeightedRandom<int> ores = new WeightedRandom<int>();
-                    ores.Add(TileID.Hellstone, 0.65f);
+                    List<int> ores = new List<int>();
+                    ores.Add(TileID.Hellstone);
                     if (WorldGen.crimson)
                     {
-                        ores.Add(TileID.Crimtane, 1f);
+                        ores.Add(TileID.Crimtane);
                     }
                     else
                     {
-                        ores.Add(TileID.Demonite, 1f);
+                        ores.Add(TileID.Demonite);
                     }
 
-                    WorldGen.TileRunner(pos.X, pos.Y, WorldGen.genRand.Next(6, 10), 5, ores, false, 0, 0, false, true);
+                    WorldGen.TileRunner(pos.X, pos.Y, WorldGen.genRand.Next(6, 10), 5, WorldGen.genRand.Next(ores), false, 0, 0, false, true);
                 }
 
             }));
