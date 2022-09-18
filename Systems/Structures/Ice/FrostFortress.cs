@@ -284,6 +284,11 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
         int defaultTableType = 24;
         public void GenerateFortress(Point16 position)
         {
+            if (!PenumbralsWorldgen.generateFrostFortresses)
+            {
+                return;
+            }
+
             traps.Clear();
             int initialRoomSizeX = 30;
             int initialRoomSizeY = 20;

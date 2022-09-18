@@ -10,7 +10,7 @@ So far, the mod adds:
 More structures are planned for the future, such as (but not limited to):
 -Buried Remains, large structures of fossils found in the underground desert.
 -Abandoned hell mining facility, a microdungeon in the underworld containing a lot of loot and hellstone. MANKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL.
--Tiki Village, a microdungeon found in the underground dungeon with interconnected houses and chests.
+-Tiki Village, a microdungeon found in the underground jungle with interconnected houses and chests.
 -Fallen Island, a sky island that fell from the sky, containing all the normal sky island loot.
 
 The more currently has no unique items or tiles, but if they are neccessary for any reason they will be added.

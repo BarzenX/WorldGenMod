@@ -28,6 +28,11 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
         public void GenerateHellevator()
         {
+            if (!PenumbralsWorldgen.generateHellevators)
+            {
+                return;
+            }
+
             Point16 position = new Point16(WorldGen.genRand.Next(200, Main.maxTilesX), Main.maxTilesY - WorldGen.genRand.Next(125, 700));
 
             int tunnelHeight = WorldGen.genRand.Next(Main.maxTilesY / 6, Main.maxTilesY / 3);

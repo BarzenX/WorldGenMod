@@ -71,6 +71,11 @@ namespace PenumbralsWorldgen.Systems.Structures.Overworld
 
         public void GenerateCanyon(int sizeY, int sizeXTop, int sizeXBottom, int minDistanceFromSpawn, bool checkForPreviousCanyon = false)
         {
+            if (!PenumbralsWorldgen.generateCanyons)
+            {
+                return;
+            }
+
             int positionX = 0;
             int positionY = 0;
             bool canGenHere = false;

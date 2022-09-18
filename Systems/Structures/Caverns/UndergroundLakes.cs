@@ -35,6 +35,11 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
         public void GenerateLakes()
         {
+            if (!PenumbralsWorldgen.generateLakes)
+            {
+                return;
+            }
+
             for (int i = 0; i < (int)Math.Round(Main.maxTilesX * 0.0035f); i++)
             {
                 Vector2 position = new Vector2(WorldGen.genRand.Next(300, Main.maxTilesX - 300), WorldGen.genRand.Next((int)WorldGen.rockLayer, Main.maxTilesY - 400));
