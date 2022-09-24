@@ -8,5 +8,6 @@ namespace PenumbralsWorldgen
 		public static bool generateLakes = true;
 		public static bool generateFrostFortresses = true;
 		public static bool generateCanyons = true;
+		public static bool generateChastisedChurch = true;
 	}
 }

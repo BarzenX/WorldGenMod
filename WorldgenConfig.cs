@@ -38,12 +38,19 @@ namespace PenumbralsWorldgen
         [Tooltip("Whether or not the 'Canyon' will generate (requires you to generate a new world in order to affect anything)")]
         public bool generateCanyon;
 
+        [DefaultValue(true)]
+        [BackgroundColor(116, 201, 164)]
+        [Label("Chastised Church")]
+        [Tooltip("Whether or not the 'Chastised Church' microdungeon will generate (requires you to generate a new world in order to affect anything)")]
+        public bool generateChastisedChurch;
+
         public override void OnChanged()
         {
             PenumbralsWorldgen.generateCanyons = generateCanyon;
             PenumbralsWorldgen.generateFrostFortresses = generateFrostFortress;
             PenumbralsWorldgen.generateLakes = generateLakes;
             PenumbralsWorldgen.generateHellevators = generateHellevator;
+            PenumbralsWorldgen.generateChastisedChurch = generateChastisedChurch;
         }
     }
 }

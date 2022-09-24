@@ -12,16 +12,16 @@ using System;
 
 namespace PenumbralsWorldgen.Systems.Structures.Underworld
 {
-    class CrookedChurch : ModSystem
+    class ChastisedChurch : ModSystem
     {
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
         {
             int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Underworld"));
-            tasks.Insert(genIndex + 1, new PassLegacy("CrookedChurch", delegate (GenerationProgress progress, GameConfiguration config)
+            tasks.Insert(genIndex + 1, new PassLegacy("ChastisedChurch", delegate (GenerationProgress progress, GameConfiguration config)
             {
-                progress.Message = "CRY FOR THE WEEPER";
+                progress.Message = "Chastising the crooked church...";
 
-                GenerateCrookedChurch();
+                GenerateChastisedChurch();
 
             }));
         }
@@ -33,6 +33,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
         public int towerBrickType = TileID.HellstoneBrick;
         public int crookedWallType = WallID.Flesh;
         public int evilTile = TileID.Crimstone;
+        public int chestStyle = 43;
 
         public void GenerateRoom(Rectangle room, int towerHeight = 10, bool leftDoor = false, bool rightDoor = false, int extraCount = 0)
         {
@@ -198,6 +199,13 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
                 WorldGen.TileRunner(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 2, WorldGen.genRand.NextFloat(3f, 7f), 3, evilTile, true);
             }
 
+            int chest = -1;
+            if (WorldGen.genRand.NextBool(3))
+            {
+                chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: chestStyle);
+                if (chest != -1) FillChest(Main.chest[chest], chestStyle);
+            }
+
             //for (int i = room.X; i < room.X + room.Width; i++)
             //{
             //    int j = room.Y;
@@ -206,8 +214,13 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
 
         }
 
-        public void GenerateCrookedChurch()
+        public void GenerateChastisedChurch()
         {
+            if (!PenumbralsWorldgen.generateChastisedChurch)
+            {
+                return;
+            }
+
             int side = WorldGen.genRand.NextBool() ? 1 : -1;
             Point16 position = new(Main.spawnTileX + ((Main.maxTilesX / 2) - 45) * side, Main.maxTilesY - 100);
 
@@ -220,6 +233,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
                 towerBrickType = TileID.HellstoneBrick;
                 crookedWallType = WallID.Flesh;
                 evilTile = TileID.Crimstone;
+                chestStyle = 43;
             }
             else
             {
@@ -230,6 +244,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
                 towerBrickType = TileID.ObsidianBrick;
                 crookedWallType = WallID.CorruptionUnsafe2;
                 evilTile = TileID.Ebonstone;
+                chestStyle = 46;
             }
 
             int totalWidth = 0;
@@ -259,6 +274,100 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
                     totalWidth += width;
                 }
             }
+        }
+
+
+        public void FillChest(Chest chest, int style)
+        {
+            int nextItem = 0;
+
+            int mainItem = 0;
+            int potionItem = 0;
+            int lightItem = 0;
+            int materialItem = 0;
+
+            switch (WorldGen.genRand.Next(5))
+            {
+                case 0:
+                    mainItem = ItemID.Vilethorn;
+                    if (!WorldGen.crimson) mainItem = ItemID.CrimsonRod;
+                    break;
+                case 1:
+                    mainItem = ItemID.Musket;
+                    if (!WorldGen.crimson) mainItem = ItemID.TheUndertaker;
+                    break;
+                case 2:
+                    mainItem = ItemID.BandofStarpower;
+                    if (!WorldGen.crimson) mainItem = ItemID.PanicNecklace;
+                    break;
+                case 3:
+                    mainItem = ItemID.BallOHurt;
+                    if (!WorldGen.crimson) mainItem = ItemID.TheMeatball;
+                    break;
+                case 4:
+                    mainItem = ItemID.ShadowOrb;
+                    if (!WorldGen.crimson) mainItem = ItemID.CrimsonHeart;
+                    break;
+            }
+
+            switch (WorldGen.genRand.Next(4))
+            {
+                case 0:
+                    potionItem = ItemID.RagePotion;
+                    break;
+                case 1:
+                    potionItem = ItemID.WrathPotion;
+                    break;
+                case 2:
+                    potionItem = ItemID.LifeforcePotion;
+                    break;
+                case 3:
+                    potionItem = ItemID.SummoningPotion;
+                    break;
+            }
+
+            lightItem = !WorldGen.crimson ? ItemID.CrimsonTorch : ItemID.CorruptTorch;
+
+
+            switch (WorldGen.genRand.Next(4))
+            {
+                case 0:
+                    materialItem = ItemID.ShadowScale;
+                    if (!WorldGen.crimson) materialItem = ItemID.TissueSample;
+                    break;
+                case 1:
+                    materialItem = ItemID.DemoniteBar;
+                    if (!WorldGen.crimson) materialItem = ItemID.CrimtaneBar;
+                    break;
+                case 2:
+                    materialItem = ItemID.CorruptSeeds;
+                    if (!WorldGen.crimson) materialItem = ItemID.CrimsonSeeds;
+                    break;
+                case 3:
+                    materialItem = ItemID.RottenChunk;
+                    if (!WorldGen.crimson) materialItem = ItemID.Vertebrae;
+                    break;
+            }
+
+            chest.item[nextItem].SetDefaults(mainItem);
+            chest.item[nextItem].stack = 1;
+            nextItem++;
+
+            chest.item[nextItem].SetDefaults(potionItem);
+            chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
+            nextItem++;
+
+            chest.item[nextItem].SetDefaults(lightItem);
+            chest.item[nextItem].stack = WorldGen.genRand.Next(6, 13);
+            nextItem++;
+
+            chest.item[nextItem].SetDefaults(materialItem);
+            chest.item[nextItem].stack = WorldGen.genRand.Next(5, 10);
+            nextItem++;
+
+            chest.item[nextItem].SetDefaults(ItemID.GoldCoin);
+            chest.item[nextItem].stack = WorldGen.genRand.Next(5, 13);
+            nextItem++;
         }
     }
 }

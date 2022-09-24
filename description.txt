@@ -6,10 +6,10 @@ So far, the mod adds:
 -Abandoned Hellevators, large vertical structures you can find underground resembling the sort of hole a player would build to get the the underworld with ease. They don't go all the way from the surface to the underworld, but if you find them in a playthrough they can help you progress downward more quickly.
 -Underground Lakes, massive bodies of water which you can find almost anywhere underground. Unless in the ice biome, these also offer small patches of jungle and associated loot.
   -The Golden Lake, an underground lake with honey and lots of gold. Only one of these generates per world.
+-The Chastised Church, a microdungeon generating in hell with loot and theming of the world evil you don't have.
 
 More structures are planned for the future, such as (but not limited to):
 -Buried Remains, large structures of fossils found in the underground desert.
--Abandoned hell mining facility, a microdungeon in the underworld containing a lot of loot and hellstone. MANKIND IS DEAD. BLOOD IS FUEL. HELL IS FULL.
 -Tiki Village, a microdungeon found in the underground jungle with interconnected houses and chests.
 -Fallen Island, a sky island that fell from the sky, containing all the normal sky island loot.
 
