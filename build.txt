@@ -1,3 +1,3 @@
 displayName = Microdungeons And More - A Worldgen Mod
 author = Penumbral
-version = 1.0.5
+version = 1.0.6

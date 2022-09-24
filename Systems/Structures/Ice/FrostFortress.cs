@@ -271,6 +271,31 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
                     break;
             }
 
+            if (WorldGen.genRand.NextBool())
+            {
+                int statue = WorldGen.genRand.Next(6);
+                switch (statue)
+                {
+                    case 0:
+                        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 27);
+                        break;
+                    case 1:
+                        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 32);
+                        break;
+                    case 2:
+                        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 33);
+                        break;
+                    case 3:
+                        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 35);
+                        break;
+                    case 4:
+                        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 37);
+                        break;
+                    case 5:
+                        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 68);
+                        break;
+                }
+            }
 
             traps.Add(new Point16(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height)));
         }

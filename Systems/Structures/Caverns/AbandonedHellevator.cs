@@ -41,39 +41,46 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
                 int timeUntilPlacable = WorldGen.genRand.Next(10);
                 for (int j = 0 + position.Y; j > -tunnelHeight - WorldGen.genRand.Next(10) + position.Y; j--)
                 {
-                    WorldGen.KillTile(i, j, noItem: true);
-                    WorldGen.KillWall(i, j);
-
-                    if (timeUntilPlacable > 0)
+                    if (Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.LihzahrdBrick)
                     {
-                        timeUntilPlacable--;
+
                     }
                     else
                     {
-                        if (i - position.X == -3 || i - position.X == 3)
+                        WorldGen.KillTile(i, j, noItem: true);
+                        WorldGen.KillWall(i, j);
+
+                        if (timeUntilPlacable > 0)
                         {
-                            WorldGen.PlaceTile(i, j, TileID.IronBrick, true, true);
-                            WorldGen.PlaceWall(i, j, WallID.IronBrick, true);
+                            timeUntilPlacable--;
                         }
-
-                        if (i - position.X == 0)
+                        else
                         {
-                            WorldGen.PlaceTile(i, j, TileID.Chain, true, true);
-                            WorldGen.PlaceWall(i, j, WallID.IronBrick, true);
-                        }
+                            if (i - position.X == -3 || i - position.X == 3)
+                            {
+                                WorldGen.PlaceTile(i, j, TileID.IronBrick, true, true);
+                                WorldGen.PlaceWall(i, j, WallID.IronBrick, true);
+                            }
 
-                        if (i - position.X == -1 || i - position.X == 1)
-                        {
-                            WorldGen.PlaceWall(i, j, WallID.LeadBrick, true);
-                        }
+                            if (i - position.X == 0)
+                            {
+                                WorldGen.PlaceTile(i, j, TileID.Chain, true, true);
+                                WorldGen.PlaceWall(i, j, WallID.IronBrick, true);
+                            }
 
-                        if (i - position.X == -2 || i - position.X == 2)
-                        {
-                            int type = TileID.LeadBrick;
-                            if (j % 4 < 2) type = TileID.DiamondGemspark;
+                            if (i - position.X == -1 || i - position.X == 1)
+                            {
+                                WorldGen.PlaceWall(i, j, WallID.LeadBrick, true);
+                            }
 
-                            WorldGen.PlaceTile(i, j, type, true, true);
-                            WorldGen.PlaceWall(i, j, WallID.IronBrick, true);
+                            if (i - position.X == -2 || i - position.X == 2)
+                            {
+                                int type = TileID.LeadBrick;
+                                if (j % 4 < 2) type = TileID.DiamondGemspark;
+
+                                WorldGen.PlaceTile(i, j, type, true, true);
+                                WorldGen.PlaceWall(i, j, WallID.IronBrick, true);
+                            }
                         }
                     }
                 }
