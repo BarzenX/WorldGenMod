@@ -43,6 +43,11 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
             hollowRect.X += 2;
             hollowRect.Y += 2;
 
+            if (room.Y + room.Height >= Main.maxTilesY || room.X + room.Height >= Main.maxTilesX || room.X <= 0)
+            {
+                return;
+            }
+
             bool noBreakPoint = WorldGen.genRand.NextBool();
             Vector2 wallBreakPoint = new Vector2(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height));
 
@@ -222,7 +227,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
             }
 
             int side = WorldGen.genRand.NextBool() ? 1 : -1;
-            Point16 position = new(Main.spawnTileX + ((Main.maxTilesX / 2) - 45) * side, Main.maxTilesY - 100);
+            Point16 position = new((Main.maxTilesX / 2) + ((Main.maxTilesX / 2) - 45) * side, Main.maxTilesY - 100);
 
             if (!WorldGen.crimson)
             {
