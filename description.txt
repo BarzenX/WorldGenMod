@@ -1,3 +1,17 @@
+This is the updated version of the mod "Microdungeons And More - A Worldgen Mod" by JustImpaxim. He gave me permission to modify it.
+Link to the original mod: https://steamcommunity.com/workshop/filedetails/discussion/2864294093/5401527630821659050/
+
+I also took the opportunity to
+- create a new variation of the "Canyon", called "Fissure" which looks more natural
+- reduce the size of the Underground Lakes
+- make the count of created Fissures, Underground Lakes and Abandoned Hellevators configurable
+
+The legacy version of the Canyon and the Underground Lakes are still available if someone misses them.
+
+I don't know if I'm ever going to implement the plentiful suggestions made in the old workshop entry...most probably not.
+
+___Original mod description___
+
 Welcome to microdungeons and more, a mod which adds a variety of worldgen and structures to spice up your playthrough. This should be compatible with most content mods (yes, including Calamity), but if you find any incompatibilities please report them in the steam discussion.
 
 So far, the mod adds:

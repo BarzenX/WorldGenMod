@@ -14,16 +14,22 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 {
     class AbandonedHellevator : ModSystem
     {
-        public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
+        public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Micro Biomes"));
-            tasks.Insert(genIndex + 1, new PassLegacy("AbandonedHellevator", delegate (GenerationProgress progress, GameConfiguration config)
+            if (PenumbralsWorldgen.generateHellevators)
             {
-                progress.Message = "Blood is Fuel";
+                int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Micro Biomes"));  //used to be "Micro Biomes", moved 1 step ahead of "Dungeon" because it was sometimes overlapping the dungeon
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Abandoned Hellevator", delegate (GenerationProgress progress, GameConfiguration config)
+                {
+                    progress.Message = "Digging out some express shafts";
 
-                GenerateHellevator();
-                GenerateHellevator();
-            }));
+                    for (int i = 1; i <= PenumbralsWorldgen.hellevatorCount; i++)
+                    {
+                        GenerateHellevator();
+                    }
+                }));
+            }
+
         }
 
         public void GenerateHellevator()
@@ -41,7 +47,34 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
                 int timeUntilPlacable = WorldGen.genRand.Next(10);
                 for (int j = 0 + position.Y; j > -tunnelHeight - WorldGen.genRand.Next(10) + position.Y; j--)
                 {
-                    if (Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.LihzahrdBrick)
+                    if ( Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.LihzahrdBrick            ||
+                         Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.BlueDungeonBrick         ||
+                         Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.GreenDungeonBrick        ||
+                         Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.PinkDungeonBrick         ||
+                         Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.CrackedBlueDungeonBrick  ||
+                         Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.CrackedGreenDungeonBrick ||
+                         Main.tile[i, j] != null && Main.tile[i, j].TileType == TileID.CrackedPinkDungeonBrick  ||
+
+                         Main.tile[i, j].WallType == WallID.BlueDungeon           ||
+                         Main.tile[i, j].WallType == WallID.BlueDungeonSlab       ||
+                         Main.tile[i, j].WallType == WallID.BlueDungeonSlabUnsafe ||
+                         Main.tile[i, j].WallType == WallID.BlueDungeonTile       ||
+                         Main.tile[i, j].WallType == WallID.BlueDungeonTileUnsafe ||
+                         Main.tile[i, j].WallType == WallID.BlueDungeonUnsafe     ||
+
+                         Main.tile[i, j].WallType == WallID.GreenDungeon           ||
+                         Main.tile[i, j].WallType == WallID.GreenDungeonSlab       ||
+                         Main.tile[i, j].WallType == WallID.GreenDungeonSlabUnsafe ||
+                         Main.tile[i, j].WallType == WallID.GreenDungeonTile       ||
+                         Main.tile[i, j].WallType == WallID.GreenDungeonTileUnsafe ||
+                         Main.tile[i, j].WallType == WallID.GreenDungeonUnsafe     ||
+
+                         Main.tile[i, j].WallType == WallID.PinkDungeon           ||
+                         Main.tile[i, j].WallType == WallID.PinkDungeonSlab       ||
+                         Main.tile[i, j].WallType == WallID.PinkDungeonSlabUnsafe ||
+                         Main.tile[i, j].WallType == WallID.PinkDungeonTile       ||
+                         Main.tile[i, j].WallType == WallID.PinkDungeonTileUnsafe ||
+                         Main.tile[i, j].WallType == WallID.PinkDungeonUnsafe        )
                     {
 
                     }

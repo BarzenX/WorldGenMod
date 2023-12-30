@@ -1,0 +1,60 @@
+Configs: {
+	PenumbralsWorldgenConfig: {
+		DisplayName: Penumbrals Worldgen Config
+
+		Headers: {
+			Generation: World Generation Options
+			Legacy: Legacy World Generation Options
+		}
+
+		configGenerateHellevator: {
+			Label: Abandoned Hellevator
+			Tooltip: Whether or not 'Abandoned Hellevator' structures will generate (requires you to generate a new world in order to affect anything)
+		}
+
+		configHellevatorCount: {
+			Label: Abandoned Hellevator Count
+			Tooltip: Number of Abandoned Hellevators to be created
+		}
+
+		configGenerateLakes: {
+			Label: Underground Lakes
+			Tooltip: Whether or not 'Underground Lakes' will generate (requires you to generate a new world in order to affect anything)
+		}
+
+		configLakesCount: {
+			Label: Underground Lakes Count
+			Tooltip: Number of Underground Lakes to be created
+		}
+
+		configGenerateFrostFortress: {
+			Label: Frost Fortress
+			Tooltip: Whether or not the 'Frost Fortress' microdungeon will generate (requires you to generate a new world in order to affect anything)
+		}
+
+		configGenerateCanyon: {
+			Label: Canyons
+			Tooltip: Whether or not 'Canyons' (legacy version of "Fissures") will generate (requires you to generate a new world in order to affect anything)
+		}
+
+		configGenerateChastisedChurch: {
+			Label: Chastised Church
+			Tooltip: Whether or not the 'Chastised Church' microdungeon will generate (requires you to generate a new world in order to affect anything)
+		}
+
+		configGenerateFissure: {
+			Label: Fissure
+			Tooltip: Whether or not 'Fissures' will generate (requires you to generate a new world in order to affect anything)
+		}
+
+		configFissureCount: {
+			Label: Fissure Count
+			Tooltip: Number of Fissures to be created
+		}
+
+		configGenerateLakes_Legacy: {
+			Label: Underground Lakes
+			Tooltip: Whether or not the legacy elliptical version of 'Underground Lakes' will generate (requires you to generate a new world in order to affect anything)
+		}
+	}
+}

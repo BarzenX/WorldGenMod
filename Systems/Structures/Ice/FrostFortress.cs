@@ -18,18 +18,22 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
         public override void PreWorldGen()
         {
-            fortresses.Clear();
+            fortresses.Clear(); // in case of more than 1 world generated during a game
         }
 
-        public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
+        public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Buried Chests"));
-            tasks.Insert(genIndex + 1, new PassLegacy("FrostFortress", delegate (GenerationProgress progress, GameConfiguration config)
+            if (PenumbralsWorldgen.generateFrostFortresses)
             {
-                progress.Message = "Building a snow fort";
+                int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Lakes")); //used to be "Buried Chests", moved 1 step ahead of "Dungeon" because it was sometimes overlapping the dungeon
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Frost Fortress", delegate (GenerationProgress progress, GameConfiguration config)
+                {
+                    progress.Message = "Building a snow fortress";
 
-                GenerateFortresses();
-            }));
+                    GenerateFortresses();
+                }));
+            }
+
         }
 
         public void GenerateFortresses()
@@ -39,7 +43,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
             while (amountGenerated < amount)
             {
-                Vector2 position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 200), WorldGen.genRand.Next((int)WorldGen.rockLayer, Main.maxTilesY - 200));
+                Vector2 position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 200), WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 200));
 
                 List<int> allowedTiles = new List<int>()
                 {
@@ -49,7 +53,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
                 bool tooClose = true;
                 while (Main.tile[(int)position.X, (int)position.Y] == null || !allowedTiles.Contains(Main.tile[(int)position.X, (int)position.Y].TileType) || tooClose)
                 {
-                    position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 200), WorldGen.genRand.Next((int)WorldGen.rockLayer, Main.maxTilesY - 200));
+                    position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 200), WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 200));
 
                     tooClose = false;
                     foreach(Vector2 fort in fortresses)

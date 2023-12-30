@@ -14,16 +14,19 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
 {
     class ChastisedChurch : ModSystem
     {
-        public override void ModifyWorldGenTasks(List<GenPass> tasks, ref float totalWeight)
+        public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Underworld"));
-            tasks.Insert(genIndex + 1, new PassLegacy("ChastisedChurch", delegate (GenerationProgress progress, GameConfiguration config)
+            if (PenumbralsWorldgen.generateChastisedChurch)
             {
-                progress.Message = "Chastising the crooked church...";
+                int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Underworld"));
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Chastised Church", delegate (GenerationProgress progress, GameConfiguration config)
+                {
+                    progress.Message = "Chastising the crooked church...";
 
-                GenerateChastisedChurch();
+                    GenerateChastisedChurch();
 
-            }));
+                }));
+            }
         }
 
         public int floorType = TileID.ObsidianBrick;
@@ -253,7 +256,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
             }
 
             int totalWidth = 0;
-            int maxWidth = Main.maxTilesX / 5;
+            int maxWidth = Main.maxTilesX / 8;
             while (totalWidth < maxWidth)
             {
                 int width = WorldGen.genRand.Next(12, 80);
