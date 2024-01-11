@@ -10,7 +10,7 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace PenumbralsWorldgen.Systems.Structures.Legacy_Versions.Overworld
+namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
 {
     class Canyon : ModSystem
     {
@@ -23,10 +23,10 @@ namespace PenumbralsWorldgen.Systems.Structures.Legacy_Versions.Overworld
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateCanyons)
+            if (WorldGenMod.generateCanyons)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Canyon", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Canyon", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Earthquake!";
 
@@ -47,7 +47,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Legacy_Versions.Overworld
                 }));
 
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Shinies"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Canyon Ores", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Canyon Ores", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Heating up stones";
 
@@ -76,7 +76,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Legacy_Versions.Overworld
 
         public void GenerateCanyon(int sizeY, int sizeXTop, int sizeXBottom, int minDistanceFromSpawn, bool checkForPreviousCanyon = false)
         {
-            if (!PenumbralsWorldgen.generateCanyons)
+            if (!WorldGenMod.generateCanyons)
             {
                 return;
             }

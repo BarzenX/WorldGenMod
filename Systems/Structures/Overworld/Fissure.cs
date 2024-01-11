@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Drawing;
 using static Humanizer.In;
 
-namespace PenumbralsWorldgen.Systems.Structures.Overworld
+namespace WorldGenMod.Systems.Structures.Overworld
 {
     class Fissure : ModSystem
     {
@@ -29,15 +29,15 @@ namespace PenumbralsWorldgen.Systems.Structures.Overworld
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateFissure)
+            if (WorldGenMod.generateFissure)
             {
                 previousFissures.Add(0); //init list
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Fissure", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Fissure", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Cracking world layers";
                     
-                    for (int i = 1; i <= PenumbralsWorldgen.fissureCount; i++)
+                    for (int i = 1; i <= WorldGenMod.fissureCount; i++)
                     {
                         GenerateFissure(
                             sizeY: (int)(Main.maxTilesY * 0.6 * WorldGen.genRand.NextFloat(0.8f, 1.2f)),
@@ -53,7 +53,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Overworld
                 }));
 
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Shinies"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Fissure Ores", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Fissure Ores", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Placing some precious in the Fissure";
 
@@ -158,7 +158,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Overworld
 
         public void GenerateFissure(int sizeY, int sizeXTop, int sizeXBottom, int minDistanceFromSpawn, int shiftEveryXVerticalTiles, int shiftMaxAllowed, bool forcedShiftSide, bool checkForPreviousFissure = false )
         {
-            if (!PenumbralsWorldgen.generateFissure)
+            if (!WorldGenMod.generateFissure)
             {
                 return;
             }

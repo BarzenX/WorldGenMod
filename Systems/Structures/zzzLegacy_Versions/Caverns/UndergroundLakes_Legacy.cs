@@ -10,7 +10,7 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace PenumbralsWorldgen.Systems.Structures.zzzLegacy_Versions.Caverns
+namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
 {
     class UndergroundLakes_Legacy : ModSystem
     {
@@ -24,10 +24,10 @@ namespace PenumbralsWorldgen.Systems.Structures.zzzLegacy_Versions.Caverns
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateLakes_Legacy)
+            if (WorldGenMod.generateLakes_Legacy)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Underground Lakes Legacy", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Underground Lakes Legacy", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Filling some lakes in the Underground";
 

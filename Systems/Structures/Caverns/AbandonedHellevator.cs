@@ -10,20 +10,20 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace PenumbralsWorldgen.Systems.Structures.Caverns
+namespace WorldGenMod.Systems.Structures.Caverns
 {
     class AbandonedHellevator : ModSystem
     {
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateHellevators)
+            if (WorldGenMod.generateHellevators)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Micro Biomes"));  //used to be "Micro Biomes", moved 1 step ahead of "Dungeon" because it was sometimes overlapping the dungeon
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Abandoned Hellevator", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Abandoned Hellevator", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Digging out some express shafts";
 
-                    for (int i = 1; i <= PenumbralsWorldgen.hellevatorCount; i++)
+                    for (int i = 1; i <= WorldGenMod.hellevatorCount; i++)
                     {
                         GenerateHellevator();
                     }
@@ -34,7 +34,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
         public void GenerateHellevator()
         {
-            if (!PenumbralsWorldgen.generateHellevators)
+            if (!WorldGenMod.generateHellevators)
             {
                 return;
             }

@@ -1,6 +1,6 @@
 Configs: {
-	PenumbralsWorldgenConfig: {
-		DisplayName: Penumbrals Worldgen Config
+	WorldgenConfig: {
+		DisplayName: WorldGenMod Config
 
 		Headers: {
 			Generation: World Generation Options
@@ -13,7 +13,7 @@ Configs: {
 		}
 
 		configHellevatorCount: {
-			Label: Abandoned Hellevator Count
+			Label: "   Abandoned Hellevator Count"
 			Tooltip: Number of Abandoned Hellevators to be created
 		}
 
@@ -23,7 +23,7 @@ Configs: {
 		}
 
 		configLakesCount: {
-			Label: Underground Lakes Count
+			Label: "   Underground Lakes Count"
 			Tooltip: Number of Underground Lakes to be created
 		}
 
@@ -42,13 +42,18 @@ Configs: {
 			Tooltip: Whether or not the 'Chastised Church' microdungeon will generate (requires you to generate a new world in order to affect anything)
 		}
 
+		configChastisedChurchGenerationSide: {
+			Label: "   Chastised Church Generation Side"
+			Tooltip: Force the Chastised Church to be generated on a specific world side
+		}
+
 		configGenerateFissure: {
 			Label: Fissure
 			Tooltip: Whether or not 'Fissures' will generate (requires you to generate a new world in order to affect anything)
 		}
 
 		configFissureCount: {
-			Label: Fissure Count
+			Label: "   Fissure Count"
 			Tooltip: Number of Fissures to be created
 		}
 

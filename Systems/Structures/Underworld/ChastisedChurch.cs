@@ -10,16 +10,16 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace PenumbralsWorldgen.Systems.Structures.Underworld
+namespace WorldGenMod.Systems.Structures.Underworld
 {
     class ChastisedChurch : ModSystem
     {
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateChastisedChurch)
+            if (WorldGenMod.generateChastisedChurch)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Underworld"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Chastised Church", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Chastised Church", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Chastising the crooked church...";
 
@@ -224,12 +224,16 @@ namespace PenumbralsWorldgen.Systems.Structures.Underworld
 
         public void GenerateChastisedChurch()
         {
-            if (!PenumbralsWorldgen.generateChastisedChurch)
+            if (!WorldGenMod.generateChastisedChurch)
             {
                 return;
             }
 
-            int side = WorldGen.genRand.NextBool() ? 1 : -1;
+            int side; //init
+            if (WorldGenMod.chastisedChurchGenerationSide == "Left")   side = -1;
+            else if (WorldGenMod.chastisedChurchGenerationSide == "Right")   side = 1;
+            else   side = WorldGen.genRand.NextBool() ? 1 : -1;
+
             Point16 position = new((Main.maxTilesX / 2) + ((Main.maxTilesX / 2) - 45) * side, Main.maxTilesY - 100);
 
             if (!WorldGen.crimson)

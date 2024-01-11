@@ -1,8 +1,8 @@
 using Terraria.ModLoader;
 
-namespace PenumbralsWorldgen
+namespace WorldGenMod
 {
-	public class PenumbralsWorldgen : Mod
+	public class WorldGenMod : Mod
 	{
         /// <summary>
 		/// Abandoned Hellevators activated in ServerConfig
@@ -43,6 +43,11 @@ namespace PenumbralsWorldgen
         /// Chastised Church activated in ServerConfig
         /// </summary>
         public static bool generateChastisedChurch;
+
+        /// <summary>
+        /// Slider for Chastised Church generation preference
+        /// </summary>
+        public static string chastisedChurchGenerationSide;
 
 
 

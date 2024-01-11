@@ -11,7 +11,7 @@ using Terraria.DataStructures;
 using System;
 using static Mono.CompilerServices.SymbolWriter.CodeBlockEntry;
 
-namespace PenumbralsWorldgen.Systems.Structures.Caverns
+namespace WorldGenMod.Systems.Structures.Caverns
 {
     class UndergroundLakes : ModSystem
     {
@@ -25,10 +25,10 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateLakes)
+            if (WorldGenMod.generateLakes)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Underground Lakes", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Underground Lakes", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Filling some lakes in the Underground";
 
@@ -46,7 +46,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
             Vector2 lakePosition;
             int breakCounter; // only for emergency, so worldgen doesn't freeze
 
-            for (int i = 1; i <= PenumbralsWorldgen.lakeCount; i++)
+            for (int i = 1; i <= WorldGenMod.lakeCount; i++)
             {
                 breakCounter = 0; //init
 

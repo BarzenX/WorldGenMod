@@ -3,10 +3,10 @@ using System.ComponentModel;
 using Terraria;
 using Terraria.Localization;
 
-namespace PenumbralsWorldgen
+namespace WorldGenMod
 {
     [BackgroundColor(130 / 5, 230 / 5, 255 / 5, (int)(255f * 0.75f))]
-    class PenumbralsWorldgenConfig : ModConfig
+    class WorldgenConfig : ModConfig
     {
         public override ConfigScope Mode => ConfigScope.ServerSide;
 
@@ -24,6 +24,12 @@ namespace PenumbralsWorldgen
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
         public bool configGenerateChastisedChurch;
+
+        // OptionStrings makes a string appear as a choice rather than an input field. Remember that users can manually edit json files, so be aware that a value other than the Options in OptionStrings might populate the field.
+        [DrawTicks]
+        [OptionStrings(new string[] { "Left", "Random", "Right"})]
+        [DefaultValue("Random")]
+        public string configChastisedChurchGenerationSide;
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
@@ -71,17 +77,24 @@ namespace PenumbralsWorldgen
 
         public override void OnChanged()
         {
-            PenumbralsWorldgen.generateFissure = configGenerateFissure;
-            PenumbralsWorldgen.fissureCount = configFissureCount;
-            PenumbralsWorldgen.generateFrostFortresses = configGenerateFrostFortress;
-            PenumbralsWorldgen.generateLakes = configGenerateLakes;
-            PenumbralsWorldgen.lakeCount = configLakesCount;
-            PenumbralsWorldgen.generateHellevators = configGenerateHellevator;
-            PenumbralsWorldgen.hellevatorCount = configHellevatorCount;
-            PenumbralsWorldgen.generateChastisedChurch = configGenerateChastisedChurch;
+            WorldGenMod.generateFissure = configGenerateFissure;
+            WorldGenMod.fissureCount = configFissureCount;
 
-            PenumbralsWorldgen.generateCanyons = configGenerateCanyon;
-            PenumbralsWorldgen.generateLakes_Legacy = configGenerateLakes_Legacy;
+            WorldGenMod.generateFrostFortresses = configGenerateFrostFortress;
+
+            WorldGenMod.generateLakes = configGenerateLakes;
+            WorldGenMod.lakeCount = configLakesCount;
+
+            WorldGenMod.generateHellevators = configGenerateHellevator;
+            WorldGenMod.hellevatorCount = configHellevatorCount;
+
+            WorldGenMod.generateChastisedChurch = configGenerateChastisedChurch;
+            WorldGenMod.chastisedChurchGenerationSide = configChastisedChurchGenerationSide;
+
+
+            // legacy
+            WorldGenMod.generateCanyons = configGenerateCanyon;
+            WorldGenMod.generateLakes_Legacy = configGenerateLakes_Legacy;
         }
     }
 }

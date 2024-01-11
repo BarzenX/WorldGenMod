@@ -10,7 +10,9 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace PenumbralsWorldgen.Systems.Structures.Caverns
+//TODO: - on small maps sometime the FrostFortress creates extreme slow - unknown reason
+
+namespace WorldGenMod.Systems.Structures.Caverns
 {
     class FrostFortress : ModSystem
     {
@@ -23,10 +25,10 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
-            if (PenumbralsWorldgen.generateFrostFortresses)
+            if (WorldGenMod.generateFrostFortresses)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Lakes")); //used to be "Buried Chests", moved 1 step ahead of "Dungeon" because it was sometimes overlapping the dungeon
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldgenMod: Frost Fortress", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Frost Fortress", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Building a snow fortress";
 
@@ -313,7 +315,7 @@ namespace PenumbralsWorldgen.Systems.Structures.Caverns
         int defaultTableType = 24;
         public void GenerateFortress(Point16 position)
         {
-            if (!PenumbralsWorldgen.generateFrostFortresses)
+            if (!WorldGenMod.generateFrostFortresses)
             {
                 return;
             }
