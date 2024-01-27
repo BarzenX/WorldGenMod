@@ -19,7 +19,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             if (WorldGenMod.generateHellevators)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Micro Biomes"));  //used to be "Micro Biomes", moved 1 step ahead of "Dungeon" because it was sometimes overlapping the dungeon
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Abandoned Hellevator", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Abandoned Hellevator", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Digging out some express shafts";
 
@@ -39,7 +39,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 return;
             }
 
-            Point16 position = new Point16(WorldGen.genRand.Next(200, Main.maxTilesX), Main.maxTilesY - WorldGen.genRand.Next(125, 700));
+            Point16 position = new(WorldGen.genRand.Next(200, Main.maxTilesX), Main.maxTilesY - WorldGen.genRand.Next(125, 700));
 
             int tunnelHeight = WorldGen.genRand.Next(Main.maxTilesY / 6, Main.maxTilesY / 3);
             for (int i = -3 + position.X; i <= 3 + position.X; i++)

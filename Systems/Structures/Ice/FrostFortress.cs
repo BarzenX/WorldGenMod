@@ -16,7 +16,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
 {
     class FrostFortress : ModSystem
     {
-        List<Vector2> fortresses = new List<Vector2>();
+        List<Vector2> fortresses = new();
 
         public override void PreWorldGen()
         {
@@ -28,7 +28,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             if (WorldGenMod.generateFrostFortresses)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Lakes")); //used to be "Buried Chests", moved 1 step ahead of "Dungeon" because it was sometimes overlapping the dungeon
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Frost Fortress", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Frost Fortress", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Building a snow fortress";
 
@@ -45,9 +45,9 @@ namespace WorldGenMod.Systems.Structures.Caverns
 
             while (amountGenerated < amount)
             {
-                Vector2 position = new Vector2(WorldGen.genRand.Next(200, Main.maxTilesX - 200), WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 200));
+                Vector2 position = new(WorldGen.genRand.Next(200, Main.maxTilesX - 200), WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 200));
 
-                List<int> allowedTiles = new List<int>()
+                List<int> allowedTiles = new()
                 {
                     TileID.SnowBlock, TileID.IceBlock, TileID.CorruptIce, TileID.FleshIce
                 };
@@ -171,10 +171,9 @@ namespace WorldGenMod.Systems.Structures.Caverns
             chest.item[nextItem].SetDefaults(ItemID.GoldCoin);
             chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
             if (style == 4) chest.item[nextItem].stack = WorldGen.genRand.Next(6, 20);
-            nextItem++;
         }
 
-        List<Point16> traps = new List<Point16>();
+        List<Point16> traps = new();
         public void GenerateRoom(Rectangle room, bool leftDoor = false, bool rightDoor = false, bool upDoor = false, bool downDoor = false)
         {
             Rectangle hollowRect = room;
@@ -184,9 +183,9 @@ namespace WorldGenMod.Systems.Structures.Caverns
             hollowRect.Y += 2;
 
             bool noBreakPoint = WorldGen.genRand.NextBool();
-            Vector2 wallBreakPoint = new Vector2(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height));
+            Vector2 wallBreakPoint = new(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height));
 
-            List<Rectangle> doors = new List<Rectangle>();
+            List<Rectangle> doors = new();
             if (leftDoor) doors.Add(new Rectangle(room.X, room.Y + room.Height - 5, 2, 3));
             if (rightDoor) doors.Add(new Rectangle(room.X + room.Width - 2, room.Y + room.Height - 5, 2, 3));
             if (upDoor) doors.Add(new Rectangle(room.X + room.Width / 2 - 2, room.Y, 4, 2));

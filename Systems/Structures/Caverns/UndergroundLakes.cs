@@ -15,12 +15,13 @@ namespace WorldGenMod.Systems.Structures.Caverns
 {
     class UndergroundLakes : ModSystem
     {
-        List<Vector2> lakes = new List<Vector2>();
-        bool generatedGoldenLake = false;
+        List<Vector2> lakes = new();
+        bool generatedGoldenLake;
 
         public override void PreWorldGen()
         {
             lakes.Clear(); // in case of more than 1 world generated during a game
+            generatedGoldenLake = false;
         }
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
@@ -28,7 +29,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             if (WorldGenMod.generateLakes)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Underground Lakes", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Underground Lakes", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Filling some lakes in the Underground";
 
@@ -40,9 +41,9 @@ namespace WorldGenMod.Systems.Structures.Caverns
 
         public void GenerateLakes()
         {
-            bool canGen = false;
-            int lakeX = 0;
-            int lakeY = 0;
+            bool canGen;
+            int lakeX;
+            int lakeY;
             Vector2 lakePosition;
             int breakCounter; // only for emergency, so worldgen doesn't freeze
 
@@ -121,9 +122,12 @@ namespace WorldGenMod.Systems.Structures.Caverns
             #region select golden lake
             if (!generatedGoldenLake)
             {
+                if (WorldGenMod.createGoldLake)
+                {
+                    type = LiquidID.Honey;
+                    tileType = TileID.Gold;
+                }
                 generatedGoldenLake = true;
-                type = LiquidID.Honey;
-                tileType = TileID.Gold;
             }
             #endregion
 

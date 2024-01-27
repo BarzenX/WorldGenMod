@@ -25,6 +25,11 @@ namespace WorldGenMod
         public static int lakeCount;
 
         /// <summary>
+        /// If the golden lake shall be created or not
+        /// </summary>
+        public static bool createGoldLake;
+
+        /// <summary>
         /// Frost Fortresses activated in ServerConfig
         /// </summary>
         public static bool generateFrostFortresses;

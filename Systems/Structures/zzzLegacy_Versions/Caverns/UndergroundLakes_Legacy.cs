@@ -14,12 +14,13 @@ namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
 {
     class UndergroundLakes_Legacy : ModSystem
     {
-        List<Vector2> lakes = new List<Vector2>();
-        bool generatedGoldenLake = false;
+        List<Vector2> lakes = new();
+        bool generatedGoldenLake;
 
         public override void PreWorldGen()
         {
             lakes.Clear(); // in case of more than 1 world generated during a game
+            generatedGoldenLake = false;
         }
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
@@ -27,7 +28,7 @@ namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
             if (WorldGenMod.generateLakes_Legacy)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Underground Lakes Legacy", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Underground Lakes Legacy", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Filling some lakes in the Underground";
 
@@ -39,15 +40,15 @@ namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
 
         public void GenerateLakes()
         {
-            bool canGen = false;
-            int lakeX = 0;
-            int lakeY = 0;
+            bool canGen;
+            int lakeX;
+            int lakeY;
 
             for (int i = 0; i < (int)Math.Round(Main.maxTilesX * 0.0035f); i++)
             {
                 lakeX = WorldGen.genRand.Next(300, Main.maxTilesX - 300);
                 lakeY = WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 400); //everything between "Underground" and "Hell"
-                Vector2 lakePosition = new Vector2( lakeX, lakeY );
+                Vector2 lakePosition = new( lakeX, lakeY );
 
                 canGen = true;
                 if (lakes.Count > 0)

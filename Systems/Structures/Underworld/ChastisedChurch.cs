@@ -19,11 +19,23 @@ namespace WorldGenMod.Systems.Structures.Underworld
             if (WorldGenMod.generateChastisedChurch)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Underworld"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Chastised Church", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Chastised Church", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Chastising the crooked church...";
 
-                    GenerateChastisedChurch();
+                    int side; //init
+                    if (WorldGenMod.chastisedChurchGenerationSide == "Left") side = -1;
+                    else if (WorldGenMod.chastisedChurchGenerationSide == "Right") side = 1;
+                    else if (WorldGenMod.chastisedChurchGenerationSide == "Both") side = -1; // start on the left
+                    else side = WorldGen.genRand.NextBool() ? 1 : -1; // "Random"
+
+                    GenerateChastisedChurch(side);
+
+
+                    if (WorldGenMod.chastisedChurchGenerationSide == "Both")
+                    {
+                        GenerateChastisedChurch(1); // do the right side
+                    }
 
                 }));
             }
@@ -52,7 +64,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
             }
 
             bool noBreakPoint = WorldGen.genRand.NextBool();
-            Vector2 wallBreakPoint = new Vector2(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height));
+            Vector2 wallBreakPoint = new(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height));
 
             List<Rectangle> doors = new();
             if (leftDoor) doors.Add(new Rectangle(room.X, room.Y + room.Height - 5, 2, 3));
@@ -179,7 +191,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
             if (WorldGen.genRand.NextBool(2 + extraCount) && extraCount < 4 && room.Y + room.Height * 2 < Main.maxTilesY - 2)
             {
                 int width = (int)(room.Width * WorldGen.genRand.NextFloat(0.5f, 1f));
-                Rectangle nextRoom = new Rectangle(room.X + WorldGen.genRand.Next(room.Width - width), room.Y + room.Height, width, room.Height);
+                Rectangle nextRoom = new(room.X + WorldGen.genRand.Next(room.Width - width), room.Y + room.Height, width, room.Height);
 
                 GenerateRoom(nextRoom, 0, false, false, extraCount + 1);
 
@@ -222,19 +234,16 @@ namespace WorldGenMod.Systems.Structures.Underworld
 
         }
 
-        public void GenerateChastisedChurch()
+        public void GenerateChastisedChurch(int generationSide)
         {
             if (!WorldGenMod.generateChastisedChurch)
             {
                 return;
             }
 
-            int side; //init
-            if (WorldGenMod.chastisedChurchGenerationSide == "Left")   side = -1;
-            else if (WorldGenMod.chastisedChurchGenerationSide == "Right")   side = 1;
-            else   side = WorldGen.genRand.NextBool() ? 1 : -1;
 
-            Point16 position = new((Main.maxTilesX / 2) + ((Main.maxTilesX / 2) - 45) * side, Main.maxTilesY - 100);
+
+            Point16 position = new((Main.maxTilesX / 2) + ((Main.maxTilesX / 2) - 45) * generationSide, Main.maxTilesY - 100);
 
             if (!WorldGen.crimson)
             {
@@ -269,7 +278,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
                 int towerHeight = WorldGen.genRand.Next(5, 10);
                 if (ratio > 1.2f) towerHeight = WorldGen.genRand.Next(10, 20);
 
-                if (side == -1)
+                if (generationSide == -1)
                 {
                     bool leftDoor = totalWidth != 0;
                     bool rightDoor = totalWidth + width < maxWidth;
@@ -295,7 +304,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
 
             int mainItem = 0;
             int potionItem = 0;
-            int lightItem = 0;
+            int lightItem;
             int materialItem = 0;
 
             switch (WorldGen.genRand.Next(5))
@@ -379,7 +388,6 @@ namespace WorldGenMod.Systems.Structures.Underworld
 
             chest.item[nextItem].SetDefaults(ItemID.GoldCoin);
             chest.item[nextItem].stack = WorldGen.genRand.Next(5, 13);
-            nextItem++;
         }
     }
 }

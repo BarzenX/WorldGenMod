@@ -27,7 +27,7 @@ namespace WorldGenMod
 
         // OptionStrings makes a string appear as a choice rather than an input field. Remember that users can manually edit json files, so be aware that a value other than the Options in OptionStrings might populate the field.
         [DrawTicks]
-        [OptionStrings(new string[] { "Left", "Random", "Right"})]
+        [OptionStrings(new string[] { "Left", "Right", "Both", "Random" })]
         [DefaultValue("Random")]
         public string configChastisedChurchGenerationSide;
 
@@ -50,6 +50,10 @@ namespace WorldGenMod
         [DefaultValue(5)]
         [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
         public int configLakesCount;
+
+        [DefaultValue(true)]
+        //[BackgroundColor(116, 201, 164)]
+        public bool configGenerateGoldLake;
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
@@ -84,6 +88,7 @@ namespace WorldGenMod
 
             WorldGenMod.generateLakes = configGenerateLakes;
             WorldGenMod.lakeCount = configLakesCount;
+            WorldGenMod.createGoldLake = configGenerateGoldLake;
 
             WorldGenMod.generateHellevators = configGenerateHellevator;
             WorldGenMod.hellevatorCount = configHellevatorCount;

@@ -1,3 +1,8 @@
+- give the WorldGenSteps a "#" before their name so they are more visble
+- make the Gold Lake of the Underground Lakes configurable to appear or not
+
+
+
 Frost Fortress: make it less stale!
 -> Paintings
 -> Boreal Wood stuff (Doors!, Background wall, furniture)

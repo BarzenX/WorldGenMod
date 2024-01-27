@@ -14,11 +14,12 @@ namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
 {
     class Canyon : ModSystem
     {
-        int previousCanyon = 0;
-        List<Point16> extraOrePositions = new List<Point16>();
+        int previousCanyon;
+        List<Point16> extraOrePositions = new();
         public override void PreWorldGen()
         {
             extraOrePositions.Clear(); // in case of more than 1 world generated during a game
+            previousCanyon = 0;
         }
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
@@ -26,7 +27,7 @@ namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
             if (WorldGenMod.generateCanyons)
             {
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Canyon", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Canyon", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Earthquake!";
 
@@ -47,7 +48,7 @@ namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
                 }));
 
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Shinies"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Canyon Ores", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Canyon Ores", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Heating up stones";
 
@@ -56,8 +57,10 @@ namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
                     {
                         foreach (Point16 pos in extraOrePositions)
                         {
-                            List<int> ores = new List<int>();
-                            ores.Add(TileID.Hellstone);
+                            List<int> ores = new()
+                            {
+                                TileID.Hellstone
+                            };
                             if (WorldGen.crimson)
                             {
                                 ores.Add(TileID.Crimtane);
@@ -86,11 +89,11 @@ namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
             bool canGenHere = false;
             int mapMiddle = Main.maxTilesX / 2;
 
-            FastNoiseLite noise = new FastNoiseLite(WorldGen.genRand.Next(1000, 9000)); //Noise for larger size fluctuations
+            FastNoiseLite noise = new(WorldGen.genRand.Next(1000, 9000)); //Noise for larger size fluctuations
             noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
             noise.SetFrequency(1f);
 
-            FastNoiseLite noise2 = new FastNoiseLite(WorldGen.genRand.Next(1000, 9000)); //Noise for more common size fluctuations
+            FastNoiseLite noise2 = new(WorldGen.genRand.Next(1000, 9000)); //Noise for more common size fluctuations
             noise2.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
             noise2.SetFrequency(2f);
 
@@ -116,27 +119,26 @@ namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
                 }
 
 
-                List<int> allowedTiles = new List<int>()
+                List<int> allowedTiles = new()
                 {
                     TileID.Dirt, TileID.Grass, TileID.Sand, TileID.Stone, TileID.ClayBlock
                 };
                 if (allowedTiles.Contains(Main.tile[positionX, positionY].TileType) && positionY > 100)
                 {
                     canGenHere = true;
-                    break;
                 }
             }
 
             previousCanyon = positionX;
 
             //Various lists for after the hole is generated
-            List<Point16> sideSpikesRight = new List<Point16>();
+            List<Point16> sideSpikesRight = new();
             int tilesUntilRightSpike = WorldGen.genRand.Next(10, 40);
-            List<Point16> sideSpikesLeft = new List<Point16>();
+            List<Point16> sideSpikesLeft = new();
             int tilesUntilLeftSpike = WorldGen.genRand.Next(10, 40);
-            List<Point16> waterCaves = new List<Point16>();
+            List<Point16> waterCaves = new();
             int tilesUntilWaterCave = WorldGen.genRand.Next(5);
-            List<Point16> lavaCaves = new List<Point16>();
+            List<Point16> lavaCaves = new();
             int tilesUntilLavaCave = WorldGen.genRand.Next(15, 25);
 
             int tilesUntilOreSpot = WorldGen.genRand.Next(15, 25);

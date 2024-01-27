@@ -17,8 +17,8 @@ namespace WorldGenMod.Systems.Structures.Overworld
 {
     class Fissure : ModSystem
     {
-        List<int> previousFissures = new List<int>();
-        List<Point16> extraOrePositions = new List<Point16>();
+        List<int> previousFissures = new();
+        List<Point16> extraOrePositions = new();
 
         public override void PreWorldGen()
         {
@@ -33,7 +33,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
             {
                 previousFissures.Add(0); //init list
                 int genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Jungle"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Fissure", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Fissure", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Cracking world layers";
                     
@@ -53,7 +53,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                 }));
 
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Shinies"));
-                tasks.Insert(genIndex + 1, new PassLegacy("WorldGenMod: Fissure Ores", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Fissure Ores", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Placing some precious in the Fissure";
 
@@ -116,19 +116,25 @@ namespace WorldGenMod.Systems.Structures.Overworld
 
                     #region create ore layers
 
-                    List<int> surfaceOres = new List<int>();
-                    surfaceOres.Add(copperTier);
-                    surfaceOres.Add(ironTier);
+                    List<int> surfaceOres = new()
+                    {
+                        copperTier,
+                        ironTier
+                    };
 
-                    List<int> undergroundOres = new List<int>();
-                    undergroundOres.Add(ironTier);
-                    undergroundOres.Add(silverTier);
-                    undergroundOres.Add(crimtaneTier);
+                    List<int> undergroundOres = new()
+                    {
+                        ironTier,
+                        silverTier,
+                        crimtaneTier
+                    };
 
-                    List<int> cavernOres = new List<int>();
-                    cavernOres.Add(silverTier);
-                    cavernOres.Add(goldTier);
-                    cavernOres.Add(crimtaneTier);
+                    List<int> cavernOres = new()
+                    {
+                        silverTier,
+                        goldTier,
+                        crimtaneTier
+                    };
 
                     #endregion
 
@@ -205,25 +211,23 @@ namespace WorldGenMod.Systems.Structures.Overworld
                 }
 
 
-                List<int> allowedTiles = new List<int>()
+                List<int> allowedTiles = new()
                 {
                     TileID.Dirt, TileID.Grass, TileID.Sand, TileID.Stone, TileID.ClayBlock, TileID.SnowBlock, TileID.IceBlock
                 };
                 if (allowedTiles.Contains(Main.tile[positionX, positionY].TileType) && positionY > 100)
                 {
                     canGenHere = true;
-                    break;
                 }
             }
 
             previousFissures.Add(positionX);
 
             // initialization
-            int tilesUntilLavaCave = WorldGen.genRand.Next(15, 25);
             int tilesUntilOreSpot = WorldGen.genRand.Next(15, 25);
             int positionXShifted = positionX; // to make the fissure look more natural: radom x displacement 
             int tilesUntilXShift = shiftEveryXVerticalTiles;
-            int xShift = 0;
+            int xShift;
             int oreSide;
 
             for (int j = positionY - 30; j < positionY + sizeY; j++)
