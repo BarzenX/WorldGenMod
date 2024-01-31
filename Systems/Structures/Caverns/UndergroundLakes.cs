@@ -93,6 +93,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             float radiusX = ellipseX;
             float radiusY = ellipseY;
             float yMult = radiusX / radiusY;
+            int basinThickness = 15;
 
             #region define liquid filling & basin type
 
@@ -126,23 +127,27 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 {
                     type = LiquidID.Honey;
                     tileType = TileID.Gold;
+                    basinThickness = 6;
+                    if (WorldGenMod.smallGoldLake)   basinThickness = 3;
                 }
                 generatedGoldenLake = true;
             }
             #endregion
 
             #region create lake
+            float radiusLen;
             for (int i = position.X - (int)radiusX - 20; i < position.X + (int)radiusX + 20; i++)
             {
                 for (int j = position.Y - (int)radiusY - 20; j < position.Y + (int)radiusY + 20; j++)
                 {
-                    if (new Vector2(i - position.X, (j - position.Y) * yMult).Length() <= radiusX + WorldGen.genRand.Next(12, 15))
+                    radiusLen = new Vector2(i - position.X, (j - position.Y) * yMult).Length();
+                    if (radiusLen <= radiusX + WorldGen.genRand.Next(basinThickness-3, basinThickness))
                     {
                         WorldGen.KillTile(i, j, noItem: true);
                         WorldGen.EmptyLiquid(i, j);
                     }
 
-                    if (new Vector2(i - position.X, (j - position.Y) * yMult).Length() <= radiusX)
+                    if (radiusLen <= radiusX)
                     {
                         if (j > position.Y)
                         {
@@ -150,7 +155,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                         }
                     }
 
-                    if (new Vector2(i - position.X, (j - position.Y) * yMult).Length() > radiusX && new Vector2(i - position.X, (j - position.Y) * yMult).Length() < radiusX + 15 + WorldGen.genRand.Next(6))
+                    if ( (radiusLen > radiusX)   &&   (radiusLen < radiusX + basinThickness + WorldGen.genRand.Next(6)) )
                     {
                         if (j > position.Y - 5)
                         {

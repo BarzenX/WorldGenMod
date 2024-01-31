@@ -32,6 +32,11 @@ Configs: {
 			Tooltip: Whether the Golden Lake shall be created or not (some people might find it too op if it gets found in early game)
 		}
 
+		configSmallerGoldLake: {
+			Label: "      Make Golden Lake smaller"
+			Tooltip: Reduces the amount of gold ore by around 2/3 (some people might find it too op if it gets found in early game)
+		}
+
 		configGenerateFrostFortress: {
 			Label: Frost Fortress
 			Tooltip: Whether or not the 'Frost Fortress' microdungeon will generate (requires you to generate a new world in order to affect anything)

@@ -30,6 +30,11 @@ namespace WorldGenMod
         public static bool createGoldLake;
 
         /// <summary>
+        /// The created Gold Lake will have less gold ore (around 2/3 less)
+        /// </summary>
+        public static bool smallGoldLake;
+
+        /// <summary>
         /// Frost Fortresses activated in ServerConfig
         /// </summary>
         public static bool generateFrostFortresses;

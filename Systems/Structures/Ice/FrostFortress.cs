@@ -13,6 +13,7 @@ using Terraria.GameContent.UI.States;
 using Steamworks;
 using System.Drawing;
 using Rectangle = System.Drawing.Rectangle;
+using System.Security.Policy;
 
 //TODO: - on small maps sometime the FrostFortress creates extreme slow - unknown reason
 
@@ -92,6 +93,9 @@ namespace WorldGenMod.Systems.Structures.Caverns
         int defaultChestType;
         int defaultCampfireType;
         int defaultTableType;
+
+        readonly int gap = -1; // a horizontal gap between two side room columns
+
         public void GenerateFortress(Point16 MainRoomPos)
         {
             if (!WorldGenMod.generateFrostFortresses)
@@ -103,7 +107,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             int initialRoomSizeX = 30;
             int initialRoomSizeY = 20;
 
-            int tileTypes = WorldGen.genRand.Next(2);
+            int tileTypes = WorldGen.genRand.Next(3);
             switch (tileTypes)
             {
                 case 0:
@@ -112,10 +116,10 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     if (WorldGen.genRand.NextBool()) floorType = TileID.AncientSilverBrick;
                     wallType = WallID.SnowBrick;
                     doorWallType = WallID.IceBrick;
-                    doorPlattformType = 35; // 19 Plattforms -> 35=Frozen
-                    defaultChestType = 11;
-                    defaultCampfireType = 3;
-                    defaultTableType = 24;
+                    doorPlattformType = 35; // Tile ID 19 (Plattforms) -> Type 35=Frozen
+                    defaultChestType = 11; // Tile ID 21 (Cests) -> Type 11=Frozen
+                    defaultCampfireType = 3; // Tile ID 215 (Campfire) -> Type 3=Frozen
+                    defaultTableType = 24; // Tile ID 14 (Tables) -> Type 24=Frozen
                     break;
                 case 1:
                     brickType = TileID.BorealWood;
@@ -123,15 +127,26 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     if (WorldGen.genRand.NextBool())   floorType = TileID.AncientSilverBrick;
                     wallType = WallID.BorealWood;
                     doorWallType = WallID.BorealWoodFence;
-                    doorPlattformType = 28; // 19 Plattforms -> 28=Granite
-                    defaultChestType = 33;
-                    defaultCampfireType = 0;
-                    defaultTableType = 28;
+                    doorPlattformType = 28; // Tile ID 19 (Plattforms) -> Type 28=Granite
+                    defaultChestType = 33; // Tile ID 21 (Cests) -> Type 33=Boreal
+                    defaultCampfireType = 0; // Tile ID 215 (Campfire) -> Type 0=Normal
+                    defaultTableType = 28; // Tile ID 14 (Tables) -> Type 33=Boreal
+                    break;
+                case 2:
+                    brickType = TileID.LeadBrick;
+                    floorType = TileID.EbonstoneBrick;
+                    //TODO: find something     if (WorldGen.genRand.NextBool()) floorType = TileID.AncientSilverBrick;
+                    wallType = WallID.BlueDungeonSlab;
+                    doorWallType = WallID.Bone;
+                    doorPlattformType = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
+                    defaultChestType = 3; // Tile ID 21 (Cests) -> Type 33=Shadow
+                    defaultCampfireType = 7; // Tile ID 215 (Campfire) -> Type 0=Bone
+                    defaultTableType = 1; // Tile ID 14 (Tables) -> Type 33=Boreal
                     break;
             }
 
             //init
-            int gap = -1; // the horizontal gap between two room columns
+            
             Rectangle mainRoom; //for later filling the gap between the rooms with bricks
             Rectangle previousRoom; // same
             Rectangle actualRoom; // same
@@ -143,7 +158,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
 
             // generate the main room
             mainRoom = GenerateRoom(room: new Rectangle(MainRoomPos.X - initialRoomSizeX / 2, MainRoomPos.Y - initialRoomSizeY, initialRoomSizeX, initialRoomSizeY),
-                                                            roomType: 0,
+                                                            roomType: RoomID.MainRoom,
                                                             leftDoor: true,
                                                             rightDoor: true,
                                                             upDoor: false,
@@ -175,7 +190,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
 
                 // create main room of this column
                 actualRoom = GenerateRoom(room: new Rectangle(MainRoomPos.X + currentPlusX, MainRoomPos.Y - currentRoomHeight, currentRoomWidth, currentRoomHeight),
-                                                    roomType: 1,
+                                                    roomType: RoomID.SideRight,
                                                     leftDoor: true,
                                                     rightDoor: i != (sideRoomCount - 1),
                                                     upDoor: generateUp,
@@ -189,7 +204,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     {
                         int vertRoomHeight = currentRoomHeight/* + WorldGen.genRand.Next(-3, 4)*/; //TODO: what happens if the room height gets randomized?
                         GenerateRoom(room: new Rectangle(MainRoomPos.X + currentPlusX, MainRoomPos.Y - vertRoomHeight + currentPlusY, currentRoomWidth, currentRoomHeight),
-                                     roomType: 2,
+                                     roomType: RoomID.AboveSide,
                                      leftDoor: false,
                                      rightDoor: false,
                                      upDoor: j != (vertAmount - 1),
@@ -209,7 +224,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     {
                         int vertRoomHeight = currentRoomHeight;
                         GenerateRoom(room: new Rectangle(MainRoomPos.X + currentPlusX, MainRoomPos.Y - vertRoomHeight + currentPlusY, currentRoomWidth, currentRoomHeight),
-                                     roomType: -2,
+                                     roomType: RoomID.BelowSide,
                                      leftDoor: false,
                                      rightDoor: false,
                                      upDoor: true,
@@ -256,7 +271,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 bool generateDown = WorldGen.genRand.NextBool(); // if rooms below this main-column-room shall be generated
 
                 actualRoom = GenerateRoom(room: new Rectangle(MainRoomPos.X + currentPlusX - currentRoomWidth, MainRoomPos.Y - currentRoomHeight, currentRoomWidth, currentRoomHeight),
-                                          roomType: -1,
+                                          roomType: RoomID.SideLeft,
                                           leftDoor: i != (sideRoomCount - 1),
                                           rightDoor: true,
                                           upDoor: generateUp,
@@ -270,7 +285,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     {
                         int vertRoomHeight = currentRoomHeight/* + WorldGen.genRand.Next(-3, 4)*/;
                         GenerateRoom(room: new Rectangle(MainRoomPos.X + currentPlusX - currentRoomWidth, MainRoomPos.Y - vertRoomHeight + currentPlusY, currentRoomWidth, currentRoomHeight),
-                                     roomType: 2,
+                                     roomType: RoomID.AboveSide,
                                      leftDoor: false,
                                      rightDoor: false,
                                      upDoor: j != (vertAmount - 1),
@@ -290,7 +305,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     {
                         int vertRoomHeight = currentRoomHeight;
                         GenerateRoom(room: new Rectangle(MainRoomPos.X + currentPlusX - currentRoomWidth, MainRoomPos.Y - vertRoomHeight + currentPlusY, currentRoomWidth, currentRoomHeight),
-                                     roomType: -2,
+                                     roomType: RoomID.BelowSide,
                                      leftDoor: false,
                                      rightDoor: false,
                                      upDoor: true,
@@ -330,7 +345,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
         /// Creates a room with the given dimensions and places doors on the sides and platforms above / below if activated
         /// </summary>
         /// <param name="room">The dimensions of the room. X and Y define the top left corner of the room</param>
-        /// <param name="roomType">The type of the to-be-created room for some specific generation needs: <br/> 0=main room, 1=side room right, -1=side room left, 2=room above side room, -2=room below side room</param>
+        /// <param name="roomType">The type of the to-be-created room for some specific generation needs: <br/> 0=main room, 1=side room right, -1=side room left, 2=room above side room, -2=room below side room   --> use "RoomID."</param>
         /// <param name="leftDoor">If a door to the left shall be created</param>
         /// <param name="rightDoor">If a door to the right shall be created</param>
         /// <param name="upDoor">If a platform in the ceiling shall be created</param>
@@ -376,12 +391,12 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     } 
 
                     if ( ((j == room.Y + room.Height - 2) && // the height of this rooms floor
-                          ((i >= hollowRect.X) && (i < hollowRect.X + hollowRect.Width) || (roomType >= -1 && roomType <= 1)))) //main rooms and side rooms need the floor on the room frame, up/down rooms mustn't
+                          ((i >= hollowRect.X) && (i < hollowRect.X + hollowRect.Width) || (roomType == RoomID.SideLeft || roomType == RoomID.MainRoom || roomType == RoomID.SideRight)))) //main rooms and side rooms need the floor on the room frame, up/down rooms mustn't
                     {
                         WorldGen.PlaceTile(i, j, floorType, true, true);
                     }
                     else if ((j == room.Y) && // the height of this rooms topmost ceiling row
-                             (roomType == -2)) // down-rooms have the floor type of the above room laying at this height
+                             (roomType == RoomID.BelowSide)) // down-rooms have the floor type of the above room laying at this height
                     {
                         continue; // don't override anything.
                     }
@@ -499,6 +514,12 @@ namespace WorldGenMod.Systems.Structures.Caverns
             #endregion
 
             //TODO: do decoration in separate method
+            DecorateRoom(room: room,
+                         roomType: roomType,
+                         leftDoor: leftDoor,
+                         rightDoor: rightDoor,
+                         upDoor: upDoor,
+                         downDoor: downDoor);
             //int decoration = WorldGen.genRand.Next(4);
             //int chest = -1;
             //switch (decoration)
@@ -628,6 +649,34 @@ namespace WorldGenMod.Systems.Structures.Caverns
             //TODO: put door
         }
 
+        public void DecorateRoom(Rectangle room, int roomType, bool leftDoor = false, bool rightDoor = false, bool upDoor = false, bool downDoor = false)
+        {
+            int x = room.X + room.Width / 2;
+            int y = room.Y + room.Height; ;
+            if (roomType == RoomID.MainRoom)
+            {
+                //build throne podest
+                for (int i = x-4; i <= x + 4; i++)
+                {
+                    WorldGen.PlaceTile(i, y-3, floorType, true, true);
+                }
+                for (int i = x-2; i <= x+2; i++)
+                {
+                    WorldGen.PlaceTile(i, y-4, floorType, true, true);
+                }
+
+                WorldGen.PlaceTile(x-4, y-4, TileID.Statues, style: 0); //Armor statue
+
+                WorldGen.PlaceTile(x+3, y-4, TileID.Statues, style: 0); //Armor statue
+
+                WorldGen.PlaceTile(x, y-5, TileID.Thrones, style: 0); //Throne
+
+                WorldGen.PlaceTile(x-2, y-5, TileID.GoldCoinPile, style: 0); //Gold Coins
+                WorldGen.PlaceTile(x-2, y-6, TileID.SilverCoinPile, style: 0); //Silver Coins
+                WorldGen.PlaceTile(x+2, y-5, TileID.GoldCoinPile, style: 0); //Gold Coins
+            }
+        }
+
         public void FillChest(Chest chest, int style)
         {
             int nextItem = 0;
@@ -727,5 +776,18 @@ namespace WorldGenMod.Systems.Structures.Caverns
             chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
             if (style == 4) chest.item[nextItem].stack = WorldGen.genRand.Next(6, 20);
         }
+    }
+
+
+
+
+    internal class RoomID
+    {
+        public const short MainRoom = 0;
+        public const short SideRight = 1;
+        public const short SideLeft = -1;
+        public const short AboveSide = 2;
+        public const short BelowSide = -2;
+
     }
 }

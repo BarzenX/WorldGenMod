@@ -57,6 +57,10 @@ namespace WorldGenMod
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
+        public bool configSmallerGoldLake;
+
+        [DefaultValue(false)]
+        //[BackgroundColor(116, 201, 164)]
         public bool configGenerateFissure;
 
         [Increment(1)]
@@ -89,6 +93,7 @@ namespace WorldGenMod
             WorldGenMod.generateLakes = configGenerateLakes;
             WorldGenMod.lakeCount = configLakesCount;
             WorldGenMod.createGoldLake = configGenerateGoldLake;
+            WorldGenMod.smallGoldLake = configSmallerGoldLake;
 
             WorldGenMod.generateHellevators = configGenerateHellevator;
             WorldGenMod.hellevatorCount = configHellevatorCount;
