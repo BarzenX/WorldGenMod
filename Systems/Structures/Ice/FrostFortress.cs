@@ -11,6 +11,8 @@ using Terraria.DataStructures;
 using System;
 using Terraria.GameContent.UI.States;
 using Steamworks;
+using System.Drawing;
+using Rectangle = System.Drawing.Rectangle;
 
 //TODO: - on small maps sometime the FrostFortress creates extreme slow - unknown reason
 
@@ -129,7 +131,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             }
 
             //init
-            int gap = 1; // the horizontal gap between two room columns
+            int gap = -1; // the horizontal gap between two room columns
             Rectangle mainRoom; //for later filling the gap between the rooms with bricks
             Rectangle previousRoom; // same
             Rectangle actualRoom; // same
@@ -222,7 +224,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
 
                 currentPlusX += currentRoomWidth + gap;
 
-                FillGapAndPutDoor(previousRoom, actualRoom, previousHighestY, actualHighestY, previousLowestY, actualLowestY);
+                if (gap > 0) FillGapAndPutDoor(previousRoom, actualRoom, previousHighestY, actualHighestY, previousLowestY, actualLowestY);
                 previousRoom = actualRoom;
                 previousHighestY = actualHighestY;
                 previousLowestY = actualLowestY;
@@ -302,7 +304,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
 
                 currentPlusX -= currentRoomWidth + gap;
 
-                FillGapAndPutDoor(previousRoom, actualRoom, previousHighestY, actualHighestY, previousLowestY, actualLowestY);
+                if (gap > 0) FillGapAndPutDoor(previousRoom, actualRoom, previousHighestY, actualHighestY, previousLowestY, actualLowestY);
                 previousRoom = actualRoom;  
                 previousHighestY = actualHighestY;
                 previousLowestY = actualLowestY;
@@ -364,12 +366,12 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 for (int j = room.Y; j < room.Y + room.Height; j++)
                 {
                     WorldGen.EmptyLiquid(i, j);
-                    WorldGen.KillWall(i, j);
                     
 
                     if ( (((i > room.X) && (i < room.X + room.Width - 1)) && ((j > room.Y) && (j < room.Y + room.Height - 1))) && // leave 1 tile distance from the sides (so the background won't overlap to the outside)
                          ((Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f)) || noBreakPoint)     ) // make here and there some cracks in the background to let it look more "abandoned"
                     {
+                        WorldGen.KillWall(i, j);
                         WorldGen.PlaceWall(i, j, wallType);
                     } 
 
@@ -388,19 +390,8 @@ namespace WorldGenMod.Systems.Structures.Caverns
                         WorldGen.PlaceTile(i, j, brickType, true, true);
                     }
                     else WorldGen.KillTile(i, j); //carve out the inside of the room
-
-                    WorldGen.SlopeTile(i, j); //TODO: maybe first complete the room and then check the frame for slopes?
                 }
             }
-
-            // carve out the inside of the room
-            //for (int i = hollowRect.X; i < hollowRect.X + hollowRect.Width; i++)
-            //{
-            //    for (int j = hollowRect.Y; j < hollowRect.Y + hollowRect.Height; j++)
-            //    {
-            //        WorldGen.KillTile(i, j);
-            //    }
-            //}
 
             #region Doors
             if (doors.Count != 0)
@@ -413,30 +404,98 @@ namespace WorldGenMod.Systems.Structures.Caverns
                         {
                             WorldGen.KillTile(i, j);
                             WorldGen.KillWall(i, j);
-                            if ( (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f)) || noBreakPoint) WorldGen.PlaceWall(i, j, doorWallType);
+                            if ( (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f)) || noBreakPoint)   WorldGen.PlaceWall(i, j, doorWallType);
                         }
                     }
                 }
             }
 
+            int x;
+            int y;
+            if (leftDoor)
+            {
+                x = leftDoorRect.X + 1;
+                y = leftDoorRect.Y - 1;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+
+                x = leftDoorRect.X;
+                y = leftDoorRect.Y + leftDoorRect.Height;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, wallType); // There is a one background wall tile missing in as this coordinates used to be on the border of the room. Adding this tile is not a big deal in the end, but little things matter!
+            }
+            if (rightDoor)
+            {
+                x = rightDoorRect.X;
+                y = rightDoorRect.Y - 1;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+
+                x = rightDoorRect.X+1;
+                y = rightDoorRect.Y + rightDoorRect.Height;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, wallType); // There is a one background wall tile missing in as this coordinates used to be on the border of the room. Adding this tile is not a big deal in the end, but little things matter!
+            }
+
             if (downDoor)
             {
+                int j = downDoorRect.Y + downDoorRect.Height - 2;
                 for (int i = downDoorRect.X; i < downDoorRect.X + downDoorRect.Width; i++)
                 {
-                    int j = downDoorRect.Y + downDoorRect.Height - 2;
                     WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: doorPlattformType);
                 }
+
+                x = downDoorRect.X - 1;
+                y = downDoorRect.Y + 1;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+
+                x = downDoorRect.X + downDoorRect.Width;
+                y = downDoorRect.Y + 1;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
             }
 
             if ( upDoor)
             {
+                int j = upDoorRect.Y;
                 for (int i = upDoorRect.X; i < upDoorRect.X + upDoorRect.Width; i++)
                 {
-                    int j = upDoorRect.Y;
                     WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: doorPlattformType);
                 }
-            }
 
+                x = upDoorRect.X - 1;
+                y = upDoorRect.Y + 1;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+
+                x = upDoorRect.X + upDoorRect.Width;
+                y = upDoorRect.Y + 1;
+                WorldGen.KillWall(x, y);
+                WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+            }
+            #endregion
+
+            #region Slopes
+            // if one would form a rhombus: 0 is no slope, 1 is up-right corner, 2 is up-left corner, 3 is down-right corner, 4 is down-left corner.
+            if (leftDoor)
+            {
+                WorldGen.SlopeTile(leftDoorRect.X + 1, leftDoorRect.Y - 1, 3); // door right corner
+            }
+            if (rightDoor)
+            {
+                WorldGen.SlopeTile(rightDoorRect.X, rightDoorRect.Y - 1, 4); // door left corner
+            }
+            if (upDoor)
+            {
+                WorldGen.SlopeTile(upDoorRect.X - 1, upDoorRect.Y + 1, 3); // updoor left corner
+                WorldGen.SlopeTile(upDoorRect.X + upDoorRect.Width, upDoorRect.Y + 1, 4); // updoor right corner
+            }
+            if (downDoor)
+            {
+                WorldGen.SlopeTile(downDoorRect.X - 1, downDoorRect.Y + 1, 3); // updoor left corner
+                WorldGen.SlopeTile(downDoorRect.X + downDoorRect.Width, downDoorRect.Y + 1, 4); // updoor right corner
+            }
             #endregion
 
             //TODO: do decoration in separate method
@@ -565,6 +624,8 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     }
                 }
             }
+
+            //TODO: put door
         }
 
         public void FillChest(Chest chest, int style)
