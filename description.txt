@@ -1,5 +1,5 @@
 This is the updated version of the mod "Microdungeons And More - A Worldgen Mod" by JustImpaxim. He gave me permission to work on the mod, but all credit for it's creation goes to him!
-Link to the original mod: https://steamcommunity.com/workshop/filedetails/discussion/2864294093/5401527630821659050/
+Link to the original mod: https://steamcommunity.com/sharedfiles/filedetails/?id=2864294093
 
 I also took the opportunity to
 - create a new variation of the "Canyon", called "Fissure" which looks more natural
@@ -14,21 +14,22 @@ Mod Repository:
 https://github.com/BarzenX/WorldGenMod
 
 
+
 ___Original mod description___
 
 Welcome to microdungeons and more, a mod which adds a variety of worldgen and structures to spice up your playthrough. This should be compatible with most content mods (yes, including Calamity), but if you find any incompatibilities please report them in the steam discussion.
 
 So far, the mod adds:
--Ravines/canyons, large pits in the ground found on the surface that go fairly deep underground. There will always be two per world, one larger than the other.
--Frost Fortresses, microdungeons containing an abundance of both loot and traps, found in the ice biome.
--Abandoned Hellevators, large vertical structures you can find underground resembling the sort of hole a player would build to get the the underworld with ease. They don't go all the way from the surface to the underworld, but if you find them in a playthrough they can help you progress downward more quickly.
--Underground Lakes, massive bodies of water which you can find almost anywhere underground. Unless in the ice biome, these also offer small patches of jungle and associated loot.
+- Ravines/canyons, large pits in the ground found on the surface that go fairly deep underground. There will always be two per world, one larger than the other.
+- Frost Fortresses, microdungeons containing an abundance of both loot and traps, found in the ice biome.
+- Abandoned Hellevators, large vertical structures you can find underground resembling the sort of hole a player would build to get the the underworld with ease. They don't go all the way from the surface to the underworld, but if you find them in a playthrough they can help you progress downward more quickly.
+- Underground Lakes, massive bodies of water which you can find almost anywhere underground. Unless in the ice biome, these also offer small patches of jungle and associated loot.
   -The Golden Lake, an underground lake with honey and lots of gold. Only one of these generates per world.
--The Chastised Church, a microdungeon generating in hell with loot and theming of the world evil you don't have.
+- The Chastised Church, a microdungeon generating in hell with loot and theming of the world evil you don't have.
 
 More structures are planned for the future, such as (but not limited to):
--Buried Remains, large structures of fossils found in the underground desert.
--Tiki Village, a microdungeon found in the underground jungle with interconnected houses and chests.
--Fallen Island, a sky island that fell from the sky, containing all the normal sky island loot.
+- Buried Remains, large structures of fossils found in the underground desert.
+- Tiki Village, a microdungeon found in the underground jungle with interconnected houses and chests.
+- Fallen Island, a sky island that fell from the sky, containing all the normal sky island loot.
 
-The more currently has no unique items or tiles, but if they are neccessary for any reason they will be added.
+The mod currently has no unique items or tiles, but if they are neccessary for any reason they will be added.

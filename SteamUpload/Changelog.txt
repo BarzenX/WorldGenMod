@@ -1,3 +1,7 @@
+1.1
+- overhauled the Frost Fortress:
+-> no more dynamite traps
+
 1.0.2
 - added the Chastised Church generation side option "Both"
 - made the Gold Underground Lake creation configurable (some people might find it op if found early in the game)

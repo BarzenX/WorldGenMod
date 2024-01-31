@@ -53,7 +53,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
         public void GenerateRoom(Rectangle room, int towerHeight = 10, bool leftDoor = false, bool rightDoor = false, int extraCount = 0)
         {
             Rectangle hollowRect = room;
-            hollowRect.Width -= 4;
+            hollowRect.Width -= 4; //TODO: I think here I need it to increase to 5, so doors can be put "in the center" of the wall
             hollowRect.Height -= 4;
             hollowRect.X += 2;
             hollowRect.Y += 2;
