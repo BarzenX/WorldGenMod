@@ -90,6 +90,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
         int wallType;
         int doorWallType;
         int doorPlattformType;
+        int doorType;
         int defaultChestType;
         int defaultCampfireType;
         int defaultTableType;
@@ -104,7 +105,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             }
 
             traps.Clear();
-            int initialRoomSizeX = 30;
+            int initialRoomSizeX = 31;
             int initialRoomSizeY = 20;
 
             int tileTypes = WorldGen.genRand.Next(3);
@@ -117,6 +118,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     wallType = WallID.SnowBrick;
                     doorWallType = WallID.IceBrick;
                     doorPlattformType = 35; // Tile ID 19 (Plattforms) -> Type 35=Frozen
+                    doorType = 27; // Tile ID 10 (Doors) -> Type 27=Frozen (Closed)
                     defaultChestType = 11; // Tile ID 21 (Cests) -> Type 11=Frozen
                     defaultCampfireType = 3; // Tile ID 215 (Campfire) -> Type 3=Frozen
                     defaultTableType = 24; // Tile ID 14 (Tables) -> Type 24=Frozen
@@ -128,6 +130,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     wallType = WallID.BorealWood;
                     doorWallType = WallID.BorealWoodFence;
                     doorPlattformType = 28; // Tile ID 19 (Plattforms) -> Type 28=Granite
+                    doorType = 15; // Tile ID 10 (Doors) -> Type 15=Iron (Closed)
                     defaultChestType = 33; // Tile ID 21 (Cests) -> Type 33=Boreal
                     defaultCampfireType = 0; // Tile ID 215 (Campfire) -> Type 0=Normal
                     defaultTableType = 28; // Tile ID 14 (Tables) -> Type 33=Boreal
@@ -139,14 +142,26 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     wallType = WallID.BlueDungeonSlab;
                     doorWallType = WallID.Bone;
                     doorPlattformType = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
+                    doorType = 16; // Tile ID 10 (Doors) -> Type 16=Blue Dungeon (Closed)
                     defaultChestType = 3; // Tile ID 21 (Cests) -> Type 33=Shadow
                     defaultCampfireType = 7; // Tile ID 215 (Campfire) -> Type 0=Bone
                     defaultTableType = 1; // Tile ID 14 (Tables) -> Type 33=Boreal
                     break;
             }
 
+            //more collection:
+            // Tile ID 93 (Lamps) -> Type 20=Boreal
+            // Tile ID 10 (Doors) -> Type 15=Iron (Closed)
+            // Tile ID 91 (Banners) -> Type 2=Blue
+            // Tile ID 34 (Chandeliers) -> Type 4=Tungsten
+            // Tile ID 240 (Paintings) -> Type 35=Crowno Devours His Lunch
+            // Tile ID 574 -> Boreal Beam
+            // Tile ID 51 -> Cob web
+
+
+
+
             //init
-            
             Rectangle mainRoom; //for later filling the gap between the rooms with bricks
             Rectangle previousRoom; // same
             Rectangle actualRoom; // same
@@ -471,7 +486,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 WorldGen.PlaceWall(x, y, doorWallType); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
             }
 
-            if ( upDoor)
+            if (upDoor)
             {
                 int j = upDoorRect.Y;
                 for (int i = upDoorRect.X; i < upDoorRect.X + upDoorRect.Width; i++)
@@ -674,6 +689,81 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 WorldGen.PlaceTile(x-2, y-5, TileID.GoldCoinPile, style: 0); //Gold Coins
                 WorldGen.PlaceTile(x-2, y-6, TileID.SilverCoinPile, style: 0); //Silver Coins
                 WorldGen.PlaceTile(x+2, y-5, TileID.GoldCoinPile, style: 0); //Gold Coins
+
+
+                WorldGen.PlaceTile(x - 5, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
+                WorldGen.PlaceTile(x - 6, y - 3, TileID.Lamps, style: 20); //Boreal Wood Lamp
+                WorldGen.PlaceTile(x + 6, y - 3, TileID.Lamps, style: 20); //Boreal Wood Lamp
+
+                //left side coins
+                if (WorldGen.genRand.NextBool())
+                {
+                    WorldGen.PlaceTile(x - 8, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
+                    WorldGen.PlaceTile(x - 9, y - 3, TileID.GoldCoinPile, style: 0); //Silver Coins
+                }
+                else
+                {
+                    WorldGen.PlaceSmallPile(x - WorldGen.genRand.Next(7, 12), y - 3, WorldGen.genRand.Next(16, 18), 1); //Copper or Silver coin stash
+                }
+
+
+                //right side coins
+                if (WorldGen.genRand.NextBool())
+                {
+                    WorldGen.PlaceTile(x + 8, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
+                    WorldGen.PlaceTile(x + 9, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
+                    WorldGen.PlaceTile(x + 10, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
+                }
+                else
+                {
+                    WorldGen.PlaceSmallPile(x + WorldGen.genRand.Next(7, 12), y - 3, WorldGen.genRand.Next(16, 18), 1); //Copper or Silver coin stash
+                }
+
+                //beams
+                for (x = room.X+2; x<room.X+room.Width-2; x++)
+                {
+                    WorldGen.PlaceTile(x, room.Y + 6, TileID.BorealBeam);
+                    WorldGen.PlaceTile(x, room.Y + 8, TileID.BorealBeam);
+                }
+
+                //banners
+                y = room.Y + 2;
+                WorldGen.PlaceTile(room.X + 2, y, TileID.Banners, style: 2);
+                WorldGen.PlaceTile(room.X + 11, y, TileID.Banners, style: 2);
+                WorldGen.PlaceTile(room.X + room.Width - 11, y, TileID.Banners, style: 2);
+                WorldGen.PlaceTile(room.X + room.Width - 3, y, TileID.Banners, style: 2);
+
+                //picture
+                for (x = room.X + 14; x <= room.X + 16; x++)
+                {
+                    WorldGen.KillTile(x, room.Y + 6);
+                    WorldGen.KillTile(x, room.Y + 8);
+                }
+                WorldGen.PlaceTile(room.X + 15, room.Y+7, TileID.Painting3X3, style: 34);
+
+
+
+                // Tile ID 93 (Lamps) -> Type 20=Boreal
+                // Tile ID 10 (Doors) -> Type 15=Iron (Closed)
+                // Tile ID 91 (Banners) -> Type 2=Blue
+                // Tile ID 34 (Chandeliers) -> Type 4=Tungsten
+                // Tile ID 240 (Paintings3x3) -> Type 34=Crowno Devours His Lunch
+                // Tile ID 574 -> Boreal Beam
+                // Tile ID 51 -> Cob web
+            }
+
+            if (roomType == RoomID.SideLeft)
+            {
+                x = room.X + room.Width + gap; // left side rooms always have a right door
+                y = room.Y + room.Height - 3;
+                WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: doorType); //Door
+            }
+
+            if (roomType == RoomID.SideRight)
+            {
+                x = room.X -1 - gap; // right side rooms always have a left door
+                y = room.Y + room.Height - 3;
+                WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: doorType); //Door
             }
         }
 

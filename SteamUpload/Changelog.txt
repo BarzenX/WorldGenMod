@@ -1,6 +1,6 @@
 1.1
 - made the Golden Lake smaller (reduces gold ore from around 2000 to around 800) and
-- added a config option to make the gold lake even smaller (around 400 gold ore)
+- added a config option to make the Golden Lake even smaller (around 400 gold ore)
 - overhauled the Frost Fortress:
 -> no more dynamite traps
 
