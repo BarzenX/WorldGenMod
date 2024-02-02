@@ -11,7 +11,7 @@ using Terraria.DataStructures;
 using System;
 using static Mono.CompilerServices.SymbolWriter.CodeBlockEntry;
 
-namespace WorldGenMod.Systems.Structures.Caverns
+namespace WorldGenMod.Structures.Caverns
 {
     class UndergroundLakes : ModSystem
     {
@@ -54,7 +54,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 do
                 {
                     lakeX = WorldGen.genRand.Next(300, Main.maxTilesX - 300);
-                    lakeY = WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 400); //everything between "Underground" and "Hell"
+                    lakeY = WorldGen.genRand.Next((int)GenVars.rockLayer, Main.maxTilesY - 400); //everything between "Underground" and "Hell"
                     lakePosition = new Vector2(lakeX, lakeY);
 
                     canGen = true;
@@ -83,7 +83,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     GenerateLake(
                         position: lakePosition.ToPoint16(),
                         ellipseX: 50 * WorldGen.genRand.NextFloat(0.8f, 1.2f),
-                        ellipseY: 30 * WorldGen.genRand.NextFloat(0.8f, 1.2f) );
+                        ellipseY: 30 * WorldGen.genRand.NextFloat(0.8f, 1.2f));
                 }
             }
         }
@@ -98,7 +98,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
             #region define liquid filling & basin type
 
             int type = LiquidID.Water;
-            if (position.Y > Terraria.WorldBuilding.GenVars.rockLayer + Main.maxTilesY / 3)
+            if (position.Y > GenVars.rockLayer + Main.maxTilesY / 3)
             {
                 type = LiquidID.Lava;
             }
@@ -128,7 +128,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                     type = LiquidID.Honey;
                     tileType = TileID.Gold;
                     basinThickness = 6;
-                    if (WorldGenMod.smallGoldLake)   basinThickness = 3;
+                    if (WorldGenMod.smallGoldLake) basinThickness = 3;
                 }
                 generatedGoldenLake = true;
             }
@@ -141,7 +141,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                 for (int j = position.Y - (int)radiusY - 20; j < position.Y + (int)radiusY + 20; j++)
                 {
                     radiusLen = new Vector2(i - position.X, (j - position.Y) * yMult).Length();
-                    if (radiusLen <= radiusX + WorldGen.genRand.Next(basinThickness-3, basinThickness))
+                    if (radiusLen <= radiusX + WorldGen.genRand.Next(basinThickness - 3, basinThickness))
                     {
                         WorldGen.KillTile(i, j, noItem: true);
                         WorldGen.EmptyLiquid(i, j);
@@ -155,7 +155,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                         }
                     }
 
-                    if ( (radiusLen > radiusX)   &&   (radiusLen < radiusX + basinThickness + WorldGen.genRand.Next(6)) )
+                    if (radiusLen > radiusX && radiusLen < radiusX + basinThickness + WorldGen.genRand.Next(6))
                     {
                         if (j > position.Y - 5)
                         {
@@ -167,7 +167,7 @@ namespace WorldGenMod.Systems.Structures.Caverns
                             {
                                 WorldGen.PlaceTile(i, j, TileID.Ash, forced: true);
                             }
-                        } 
+                        }
                     }
                 }
             }

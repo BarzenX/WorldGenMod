@@ -10,7 +10,7 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace WorldGenMod.Systems.Structures.Legacy_Versions.Overworld
+namespace WorldGenMod.Structures.zzzLegacy_Versions.Overworld
 {
     class Canyon : ModSystem
     {

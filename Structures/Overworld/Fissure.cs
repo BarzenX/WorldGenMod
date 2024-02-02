@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Drawing;
 using static Humanizer.In;
 
-namespace WorldGenMod.Systems.Structures.Overworld
+namespace WorldGenMod.Structures.Overworld
 {
     class Fissure : ModSystem
     {
@@ -36,7 +36,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                 tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Fissure", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Cracking world layers";
-                    
+
                     for (int i = 1; i <= WorldGenMod.fissureCount; i++)
                     {
                         GenerateFissure(
@@ -64,7 +64,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                     int goldTier;
                     int crimtaneTier;
                     // add copper or tin tier
-                    if (Terraria.WorldBuilding.GenVars.copper == TileID.Copper)
+                    if (GenVars.copper == TileID.Copper)
                     {
                         copperTier = TileID.Copper;
                     }
@@ -74,7 +74,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                     }
 
                     // add iron or lead tier
-                    if (Terraria.WorldBuilding.GenVars.iron == TileID.Iron)
+                    if (GenVars.iron == TileID.Iron)
                     {
                         ironTier = TileID.Iron;
                     }
@@ -84,7 +84,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                     }
 
                     // add silver or tungsten tier
-                    if (Terraria.WorldBuilding.GenVars.silver == TileID.Silver)
+                    if (GenVars.silver == TileID.Silver)
                     {
                         silverTier = TileID.Silver;
                     }
@@ -94,7 +94,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                     }
 
                     // add gold or platinum tier
-                    if (Terraria.WorldBuilding.GenVars.gold == TileID.Gold)
+                    if (GenVars.gold == TileID.Gold)
                     {
                         goldTier = TileID.Gold;
                     }
@@ -162,7 +162,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
 
         }
 
-        public void GenerateFissure(int sizeY, int sizeXTop, int sizeXBottom, int minDistanceFromSpawn, int shiftEveryXVerticalTiles, int shiftMaxAllowed, bool forcedShiftSide, bool checkForPreviousFissure = false )
+        public void GenerateFissure(int sizeY, int sizeXTop, int sizeXBottom, int minDistanceFromSpawn, int shiftEveryXVerticalTiles, int shiftMaxAllowed, bool forcedShiftSide, bool checkForPreviousFissure = false)
         {
             if (!WorldGenMod.generateFissure)
             {
@@ -173,8 +173,8 @@ namespace WorldGenMod.Systems.Structures.Overworld
             int positionY = 0;
             bool canGenHere = false;
             bool previousFissureTooClose = false;
-            int mapMiddle = (Main.maxTilesX / 2);
-            int maxDistanceFromSpawnOnDungeonSide = (Main.maxTilesX / 2) * 6/10;
+            int mapMiddle = Main.maxTilesX / 2;
+            int maxDistanceFromSpawnOnDungeonSide = Main.maxTilesX / 2 * 6 / 10;
             int breakCounter = 0; // only for emergency, so worldgen doesn't freeze
 
             //Find a position to generate the fissure
@@ -189,7 +189,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                         previousFissureTooClose = false; // re-init before for-loop
                         for (int i = 0; i < previousFissures.Count; i++)
                         {
-                            previousFissureTooClose = previousFissureTooClose || Math.Abs(positionX - previousFissures[i]) < (shiftMaxAllowed + 20);
+                            previousFissureTooClose = previousFissureTooClose || Math.Abs(positionX - previousFissures[i]) < shiftMaxAllowed + 20;
                         }
                         if (previousFissureTooClose)
                         {
@@ -198,14 +198,14 @@ namespace WorldGenMod.Systems.Structures.Overworld
                             { return; }
                         }
                     }
-                } while ((Math.Abs(positionX - mapMiddle) < minDistanceFromSpawn) ||
-                         (Math.Sign(positionX - mapMiddle) == Terraria.WorldBuilding.GenVars.dungeonSide && Math.Abs(positionX - mapMiddle) > maxDistanceFromSpawnOnDungeonSide) ||
-                         (checkForPreviousFissure && previousFissureTooClose));//(checkForPreviousFissure && Math.Abs(positionX - previousFissure) < (shiftMaxAllowed + 20) )
+                } while (Math.Abs(positionX - mapMiddle) < minDistanceFromSpawn ||
+                         Math.Sign(positionX - mapMiddle) == GenVars.dungeonSide && Math.Abs(positionX - mapMiddle) > maxDistanceFromSpawnOnDungeonSide ||
+                         checkForPreviousFissure && previousFissureTooClose);//(checkForPreviousFissure && Math.Abs(positionX - previousFissure) < (shiftMaxAllowed + 20) )
 
                 positionY = 100; // initial value
-                while ( (Main.tile[positionX, positionY] == null) ||
-                        (!Main.tile[positionX, positionY].HasTile) ||
-                        (!Main.tileSolid[Main.tile[positionX, positionY].TileType]) )
+                while (Main.tile[positionX, positionY] == null ||
+                        !Main.tile[positionX, positionY].HasTile ||
+                        !Main.tileSolid[Main.tile[positionX, positionY].TileType])
                 {
                     positionY++; // go further down until solid tile got detected
                 }
@@ -232,7 +232,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
 
             for (int j = positionY - 30; j < positionY + sizeY; j++)
             {
-                float progressDown = ((float)j - (float)positionY) / (float)sizeY;
+                float progressDown = (j - (float)positionY) / sizeY;
                 int sizeXCurrent = (int)MathHelper.Lerp(sizeXTop, sizeXBottom, progressDown);
 
                 #region Ore Spots
@@ -242,7 +242,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                     tilesUntilOreSpot = WorldGen.genRand.Next(20, 55); // reset value
 
                     //randomize placement side
-                    if ( WorldGen.genRand.NextBool() )
+                    if (WorldGen.genRand.NextBool())
                     {
                         oreSide = 1; // on the right of the fissure
                     }
@@ -251,7 +251,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                         oreSide = -1; // on the left of the fissure
                     }
 
-                    extraOrePositions.Add(new Point16(positionXShifted + (sizeXCurrent / 2) * oreSide + WorldGen.genRand.Next(25) * oreSide, j));
+                    extraOrePositions.Add(new Point16(positionXShifted + sizeXCurrent / 2 * oreSide + WorldGen.genRand.Next(25) * oreSide, j));
                 }
                 #endregion
 
@@ -276,11 +276,11 @@ namespace WorldGenMod.Systems.Structures.Overworld
                     }
 
 
-                    if ((positionXShifted - positionX) == -shiftMaxAllowed) // hit the left limit
+                    if (positionXShifted - positionX == -shiftMaxAllowed) // hit the left limit
                     {
                         forcedShiftSide = true; // change forced shift direction
                     }
-                    else if ((positionXShifted - positionX) == shiftMaxAllowed) // hit the right limit
+                    else if (positionXShifted - positionX == shiftMaxAllowed) // hit the right limit
                     {
                         forcedShiftSide = false; // change forced shift direction
                     }
@@ -296,7 +296,7 @@ namespace WorldGenMod.Systems.Structures.Overworld
                 #endregion
 
                 // carve out tiles and liquid
-                for (int i = positionXShifted - (sizeXCurrent / 2); i < positionXShifted + (sizeXCurrent / 2); i++)
+                for (int i = positionXShifted - sizeXCurrent / 2; i < positionXShifted + sizeXCurrent / 2; i++)
                 {
                     WorldGen.KillTile(i, j, false, false, true);
                     WorldGen.EmptyLiquid(i, j);

@@ -10,7 +10,7 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
+namespace WorldGenMod.Structures.zzzLegacy_Versions.Caverns
 {
     class UndergroundLakes_Legacy : ModSystem
     {
@@ -47,8 +47,8 @@ namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
             for (int i = 0; i < (int)Math.Round(Main.maxTilesX * 0.0035f); i++)
             {
                 lakeX = WorldGen.genRand.Next(300, Main.maxTilesX - 300);
-                lakeY = WorldGen.genRand.Next((int)Terraria.WorldBuilding.GenVars.rockLayer, Main.maxTilesY - 400); //everything between "Underground" and "Hell"
-                Vector2 lakePosition = new( lakeX, lakeY );
+                lakeY = WorldGen.genRand.Next((int)GenVars.rockLayer, Main.maxTilesY - 400); //everything between "Underground" and "Hell"
+                Vector2 lakePosition = new(lakeX, lakeY);
 
                 canGen = true;
                 if (lakes.Count > 0)
@@ -76,7 +76,7 @@ namespace WorldGenMod.Systems.Structures.zzzLegacy_Versions.Caverns
             float yMult = radiusX / radiusY;
 
             int type = LiquidID.Water;
-            if (position.Y > Terraria.WorldBuilding.GenVars.rockLayer + Main.maxTilesY / 3) type = LiquidID.Lava;
+            if (position.Y > GenVars.rockLayer + Main.maxTilesY / 3) type = LiquidID.Lava;
 
             int tileType = TileID.Mud;
 

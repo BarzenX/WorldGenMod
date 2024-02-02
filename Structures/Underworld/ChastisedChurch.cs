@@ -10,7 +10,7 @@ using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
 
-namespace WorldGenMod.Systems.Structures.Underworld
+namespace WorldGenMod.Structures.Underworld
 {
     class ChastisedChurch : ModSystem
     {
@@ -154,7 +154,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
 
             for (int i = room.Center.X - room.Width / 2; i < room.Center.X + room.Width / 2; i++)
             {
-                float currentMultiplier = 1f - ((float)Math.Abs(i - room.Center.X) / (room.Width / 2f));
+                float currentMultiplier = 1f - Math.Abs(i - room.Center.X) / (room.Width / 2f);
                 for (int j1 = 0; j1 < (int)(towerHeight * currentMultiplier); j1++)
                 {
                     int j = room.Y - 1 - j1;
@@ -210,7 +210,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
                 WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 13);
             }
 
-            if ((extraCount > 0 && WorldGen.genRand.NextBool(3)) || WorldGen.genRand.NextBool(6))
+            if (extraCount > 0 && WorldGen.genRand.NextBool(3) || WorldGen.genRand.NextBool(6))
             {
                 WorldGen.TileRunner(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 2, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Hellstone, true);
             }
@@ -243,7 +243,7 @@ namespace WorldGenMod.Systems.Structures.Underworld
 
 
 
-            Point16 position = new((Main.maxTilesX / 2) + ((Main.maxTilesX / 2) - 45) * generationSide, Main.maxTilesY - 100);
+            Point16 position = new(Main.maxTilesX / 2 + (Main.maxTilesX / 2 - 45) * generationSide, Main.maxTilesY - 100);
 
             if (!WorldGen.crimson)
             {
