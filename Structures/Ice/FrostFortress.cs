@@ -24,7 +24,7 @@ namespace WorldGenMod.Structures.Ice
         List<Vector2> fortresses = new();
         List<Point16> traps = new();
         readonly int gap = -1; // the horizontal gap between two side room columns
-        readonly int wThick = 2; //TODO: include tickness of the outer walls and ceilings in code
+        readonly int wThick = 2; // the tickness of the outer walls and ceilings in code
 
         IDictionary<string, int> Deco = new Dictionary<string, int>(); // the dictionary where the styles of tiles are stored
 
@@ -154,8 +154,8 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
                     Deco[S.Campfire] = 7;  // Tile ID 215 (Campfire) -> Type 0=Bone
                     Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood Table
-                    Deco[S.Chandelier] = 32;//TODO: Tile ID 34 (Chandeliers) -> Type 32=Obsidian
-                    Deco[S.Lamp] = 23;     //TODO: Tile ID 93 (Lamps) -> Type 23=Obsidian
+                    Deco[S.Chandelier] = 32;// Tile ID 34 (Chandeliers) -> Type 32=Obsidian
+                    Deco[S.Lamp] = 23;     // Tile ID 93 (Lamps) -> Type 23=Obsidian
                     Deco[S.Torch] = 7;     // Tile ID 93 (Torches) -> Type 7=Demon
                     Deco[S.Banner] = 0;    // Tile ID 91 (Banners) -> Type 0=Red
                     break;
@@ -229,11 +229,11 @@ namespace WorldGenMod.Structures.Ice
 
                 // create main room of this column
                 actualSideRoom = GenerateRoom(room: new Rectangle2P(MainRoomPos.X + currentPlusX, MainRoomPos.Y - currentRoomHeight, currentRoomWidth, currentRoomHeight),
-                                          roomType: RoomID.SideRight,
-                                          leftDoor: true,
-                                          rightDoor: i != sideRoomCount,
-                                          upDoor: generateUp,
-                                          downDoor: generateDown);
+                                              roomType: RoomID.SideRight,
+                                              leftDoor: true,
+                                              rightDoor: i != sideRoomCount,
+                                              upDoor: generateUp,
+                                              downDoor: generateDown);
 
                 int currentPlusY = -currentRoomHeight + wThick; //init
                 if (generateUp)
@@ -283,9 +283,6 @@ namespace WorldGenMod.Structures.Ice
                 previousHighestY = actualHighestY;
                 previousLowestY = actualLowestY;
             }
-            WorldGen.PlaceTile(MainRoomPos.X + currentPlusX - gap - (wThick - 1), MainRoomPos.Y - (wThick), Deco[S.Brick], true, true); //there is some FloorTile on the outer wall of the fortress, clean it
-            WorldGen.PlaceTile(MainRoomPos.X + currentPlusX - gap - (wThick), MainRoomPos.Y - (wThick), Deco[S.Brick], true, true); //there is some FloorTile on the outer wall of the fortress, clean it
-            //TODO: put these tiles also in GenerateRoom (idea: Right room but has no right door = last right room)
 
 
 
@@ -310,11 +307,11 @@ namespace WorldGenMod.Structures.Ice
                 bool generateDown = WorldGen.genRand.NextBool(); // if rooms below this main-column-room shall be generated
 
                 actualSideRoom = GenerateRoom(room: new Rectangle2P(MainRoomPos.X + currentPlusX - currentRoomWidth, MainRoomPos.Y - currentRoomHeight, currentRoomWidth, currentRoomHeight),
-                                          roomType: RoomID.SideLeft,
-                                          leftDoor: i != sideRoomCount,
-                                          rightDoor: true,
-                                          upDoor: generateUp,
-                                          downDoor: generateDown);
+                                              roomType: RoomID.SideLeft,
+                                              leftDoor: i != sideRoomCount,
+                                              rightDoor: true,
+                                              upDoor: generateUp,
+                                              downDoor: generateDown);
 
                 int currentPlusY = -currentRoomHeight + wThick;
                 if (generateUp)
@@ -363,10 +360,6 @@ namespace WorldGenMod.Structures.Ice
                 previousHighestY = actualHighestY;
                 previousLowestY = actualLowestY;
             }
-            WorldGen.PlaceTile(MainRoomPos.X + currentPlusX + gap, MainRoomPos.Y - wThick, Deco[S.Brick], true, true); //there is some FloorTile on the outer wall of the fortress, clean it
-            WorldGen.PlaceTile(MainRoomPos.X + currentPlusX + gap + 1, MainRoomPos.Y - wThick, Deco[S.Brick], true, true); //there is some FloorTile on the outer wall of the fortress, clean it
-            //TODO: put these tiles also in GenerateRoom (idea: Left room but has no left door = last left room)
-
 
 
             int[] allowedTraps = new int[]
@@ -430,6 +423,9 @@ namespace WorldGenMod.Structures.Ice
 
 
             // Create room frame & background wall
+            bool lastLeftSideRoom = (roomType == RoomID.SideLeft && !leftDoor);
+            bool lastRightSideRoom = (roomType == RoomID.SideRight && !rightDoor);
+            bool lastSideRoom = lastLeftSideRoom || lastRightSideRoom; //this side room is the last one on this side
             for (int i = room.X0; i <= room.X1; i++)
             {
                 for (int j = room.Y0; j <= room.Y1; j++)
@@ -445,7 +441,9 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     if ( (j == hollowRect.Y1 + 1) && // the height of this rooms floor
-                         ((i >= hollowRect.X0 && i <= hollowRect.X1) || (roomType == RoomID.SideLeft || roomType == RoomID.MainRoom || roomType == RoomID.SideRight)) ) //main rooms and side rooms need the floor on the room frame, up/down rooms mustn't
+                          ( ((i >= hollowRect.X0 && i <= hollowRect.X1) || ((roomType == RoomID.SideLeft && !lastSideRoom) || roomType == RoomID.MainRoom || (roomType == RoomID.SideRight && !lastSideRoom)) ) ||  //main rooms and side rooms need the floor on the room frame, up/down rooms mustn't
+                            (i >= hollowRect.X0 && lastLeftSideRoom) ||// the last side room mustn't have the floor on the outer wall
+                            (i <= hollowRect.X1 && lastRightSideRoom) ) ) // the last side room mustn't have the floor on the outer wall
                     {
                         WorldGen.PlaceTile(i, j, Deco[S.Floor], true, true);
                     }
@@ -456,7 +454,7 @@ namespace WorldGenMod.Structures.Ice
                     }
                     else if (i < hollowRect.X0 || i > hollowRect.X1 || j < hollowRect.Y0 || j > hollowRect.Y1 + 1)
                     {
-                        WorldGen.PlaceTile(i, j, Deco[S.Brick], true, true); // place the outer wall of the room
+                        WorldGen.PlaceTile(i, j, Deco[S.Brick], true, true); // place the outer wall bricks of the room
                     }
                     else WorldGen.KillTile(i, j); //carve out the inside of the room
                 }
@@ -652,7 +650,7 @@ namespace WorldGenMod.Structures.Ice
 
             Rectangle2P gap = new(0, 0, 0, 0); //init
 
-            //TODO: where fill wall -1 and +1 of the gap, as this will be left out when generating the room
+            //TODO: where to put PlaceWall at x-1 and x+1 of the gap?, as these will be left out when generating the room
 
             //first step: derive the side to which the room expanded
             if (actualRoom.X0 > previousRoom.X0) // the actual room is on the right side of the previous room
@@ -665,7 +663,7 @@ namespace WorldGenMod.Structures.Ice
                 gap.X0 = actualRoom.X1 + 1;
                 gap.X1 = previousRoom.X0 - 1;
             }
-
+            
             //second step: find out which room column reaches less farther up (to define Y of the gap)
             if (previousHighestY > actualHighestY)    gap.Y0 = previousHighestY;
             else    gap.Y0 = actualHighestY;
@@ -824,6 +822,7 @@ namespace WorldGenMod.Structures.Ice
                 // Tile ID 240 (Paintings3x3) -> Type 34=Crowno Devours His Lunch
                 // Tile ID 574 -> Boreal Beam
                 // Tile ID 51 -> Cob web
+                PlaceCobWeb(freeR);
             }
             #endregion
 
@@ -832,6 +831,8 @@ namespace WorldGenMod.Structures.Ice
                 x = room.X1; // left side rooms always have a right door
                 y = freeR.Y1;
                 WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); //Door
+
+                PlaceCobWeb((freeR.X0 + freeR.X1)/2, (freeR.Y0 + freeR.Y1) / 2, 6, 3, false);
             }
 
             if (roomType == RoomID.SideRight)
@@ -942,12 +943,52 @@ namespace WorldGenMod.Structures.Ice
             if (style == 4) chest.item[nextItem].stack = WorldGen.genRand.Next(6, 20);
         }
 
-        public void PlaceCobWeb(int x0, int y0, int radius)
+        /// <summary>
+        /// Places patches of CobWeb in an rectangular space and adds some randomness on the edges.
+        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
+        /// </summary>
+        /// <param name="area">The rectangle where CobWeb shall be placed</param>
+        public void PlaceCobWeb(Rectangle2P area)
         {
-            // Tile ID 51 -> Cob web
-            //WorldGen.PlaceTile(x + 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
+            for (int x = area.X0; x <= area.X1; x++)
+            {
+                for (int y = area.Y0; y <= area.Y1; y++)
+                {
+                    if (!Main.tile[x, y].HasTile) //first the fast query
+                    {
+                        WorldGen.PlaceTile(x, y, TileID.Cobweb); //TODO:Add randomness
+                    }
+                }
+            }
+        }
 
-            //TODO
+        /// <summary>
+        /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
+        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
+        /// </summary>
+        /// <param name="x0">Center x-coordinate of the CobWeb patch</param>
+        /// <param name="y0">Center y-coordinate of the CobWeb patch</param>
+        /// <param name="xRadius">Radius (written in tiles) in x-direction of the CobWeb patch</param>
+        /// <param name="yRadius">Radius (written in tiles) in y-direction of the CobWeb patch</param>
+        /// <param name="includeBorder">whether the border of the ellipse shall get CobWeb placed or not</param>
+        public void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, bool includeBorder)
+        {
+            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
+            Rectangle2P overall = new Rectangle2P(x0 - xRadius, y0 - yRadius, x0 + xRadius, y0 + yRadius, "dummy"); // the rectangle exactly covering the ellipse
+            
+            for (int x = overall.X0; x <= overall.X1; x++) 
+            {
+                for(int y = overall.Y0; y <= overall.Y1; y++) 
+                {
+                    if ( !Main.tile[x, y].HasTile ) //first the fast query
+                    {
+                        if ( CobWebs.Contains(x, y, includeBorder) ) //then the more compute-heavy check
+                        {
+                            WorldGen.PlaceTile(x, y, TileID.Cobweb); //TODO:Add randomness
+                        }
+                    }
+                }
+            }
         }
     }
 
