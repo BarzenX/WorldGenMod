@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria.ModLoader;
 
 namespace WorldGenMod
 {
@@ -18,18 +19,18 @@ namespace WorldGenMod
         private int yTiles;
 
         /// <summary>
-        /// Initializes a new instance of the Rectangle4Point structure with the specified values and size.
+        /// Initializes a new instance of the Rectangle2Point structure with the specified values and size. 
         /// <br/>It it a special rectangular, adapted to Terraria worlds, so that Width and Height will give back the amount of tiles on that side.
         /// <br/>For mathematical purposes there are xDiff and yDiff who give back the correct substraction values from X0 to X1 and Y0 to Y1.
         /// <br/>
         /// <br/>Example: From X0=100 to (including!) X1=101 there are 2 tiles and xDiff = 1
         /// <br/>
-        /// <br/>Attention: don't use xTiles = 0 or yTiles = 0!
+        /// <br/>Attention: don't use xTiles <= 0 or yTiles <= 0!
         /// </summary>
-        /// <param name="xTopLeft">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="yTopLeft">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="xTiles">The amount of tiles on the x side of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="yTiles">The amount of tiles on the y side of the rectangular region defined by this Rectangle4Point</param>
+        /// <param name="xTopLeft">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="yTopLeft">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="xTiles">The amount of tiles on the x side of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="yTiles">The amount of tiles on the y side of the rectangular region defined by this Rectangle2Point</param>
         public Rectangle2P(int xTopLeft, int yTopLeft, int xTiles, int yTiles)
         {
             this.x0 = xTopLeft;
@@ -45,18 +46,18 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Initializes a new instance of the Rectangle4Point structure with the specified values and size.
+        /// Initializes a new instance of the Rectangle2Point structure with the specified values and size.
         /// <br/>It it a special rectangular, adapted to Terraria worlds, so that Width and Height will give back the amount of tiles on that side.
         /// <br/>For mathematical purposes there are xDiff and yDiff who give back the correct substraction values from X0 to X1 and Y0 to Y1.
         /// <br/>
         /// <br/>Example: From X0=100 to (including!) X1=101 there are 2 tiles and xDiff = 1
         /// </summary>
-        /// <param name="xTopLeft">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="yTopLeft">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="xBottomRight">The x-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="yBottomRight">The y-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="dummy">Just a dummy to have a second Constructor</param>
-        public Rectangle2P(int xTopLeft, int yTopLeft, int xBottomRight, int yBottomRight, int dummy=0)
+        /// <param name="xTopLeft">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="yTopLeft">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="xBottomRight">The x-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="yBottomRight">The y-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="dummy">Just a dummy to have another Constructor</param>
+        public Rectangle2P(int xTopLeft, int yTopLeft, int xBottomRight, int yBottomRight, String dummy)
         {
             this.x0 = xTopLeft;
             this.y0 = yTopLeft;
@@ -68,22 +69,24 @@ namespace WorldGenMod
             this.ydiff = y1 - y0;
 
             this.xTiles = xdiff + 1;
-            this.yTiles = ydiff +1;
+            this.yTiles = ydiff + 1;
         }
 
         /// <summary>
-        /// Initializes a new instance of the Rectangle4Point structure with the specified values and size.
+        /// Initializes a new instance of the Rectangle2Point structure with the specified values and size.
         /// <br/>It it a special rectangular, adapted to Terraria worlds, so that Width and Height will give back the amount of tiles on that side.
         /// <br/>For mathematical purposes there are xDiff and yDiff who give back the correct substraction values from X0 to X1 and Y0 to Y1.
         /// <br/>
         /// <br/>Example: From X0=100 to (including!) X1=101 there are 2 tiles and xDiff = 1
+        /// <br/>
+        /// <br/>Attention: don't use xMath <= 0 or yMath <= 0!
         /// </summary>
-        /// <param name="xTopLeft">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="yTopLeft">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="xMath">The x-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="yMath">The y-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle4Point</param>
-        /// <param name="dummy">Just a dummy to have a second Constructor</param>
-        public Rectangle2P(int xTopLeft, int yTopLeft, int xMath, int yMath, float dummy = 0f)
+        /// <param name="xTopLeft">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="yTopLeft">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="xMath">The mathematical x-difference of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="yMath">The mathematical y-difference of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="dummy">Just a dummy to have another Constructor</param>
+        public Rectangle2P(int xTopLeft, int yTopLeft, int xMath, int yMath, char dummy)
         {
             this.x0 = xTopLeft;
             this.y0 = yTopLeft;
@@ -94,46 +97,68 @@ namespace WorldGenMod
             this.x1 = xTopLeft + xMath;
             this.y1 = yTopLeft + yMath;
 
-
-
             this.xTiles = xdiff + 1;
             this.yTiles = ydiff + 1;
         }
 
         /// <summary>
-        /// Gets or sets the x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point.
+        /// Gets or sets the x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point.
         /// </summary>
-        public readonly int X0
+        public int X0
         {
-            get => x0;
+            readonly get => x0;
+            set
+            {
+                this.x0 = value;
+                this.xdiff = this.x1 - this.x0;
+                this.xTiles = xdiff + 1;
+            }
         }
 
         /// <summary>
-        /// Gets or sets the y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle4Point.
+        /// Gets or sets the y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point.
         /// </summary>
-        public readonly int Y0
+        public int Y0
         {
-            get => y0;
+            readonly get => y0;
+            set
+            {
+                this.y0 = value;
+                this.ydiff = this.y1 - this.y0;
+                this.yTiles = ydiff + 1;
+            }
         }
 
         /// <summary>
-        /// Gets the mathematical length of the x side (= X1 - X0) of the rectangular region defined by this Rectangle4Point.
+        /// Gets or sets the x-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle2Point.
         /// </summary>
-        public readonly int X1
+        public int X1
         {
-            get => x1;
+            readonly get => x1;
+            set
+            {
+                this.x1 = value;
+                this.xdiff = this.x1 - this.x0;
+                this.xTiles = xdiff + 1;
+            }
         }
 
         /// <summary>
-        /// Gets the mathematical length of the y side (= Y1 - Y0) of the rectangular region defined by this Rectangle4Point.
+        /// Gets or sets the y-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle2Point.
         /// </summary>
-        public readonly int Y1
+        public int Y1
         {
-            get => y1;
+            readonly get => y1;
+            set
+            {
+                this.y1 = value;
+                this.ydiff = this.y1 - this.y0;
+                this.yTiles = ydiff + 1;
+            }
         }
 
         /// <summary>
-        /// Gets or sets the x-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle4Point.
+        /// Gets the mathematical length of the x side (= X1 - X0) of the rectangular region defined by this Rectangle2Point.
         /// </summary>
         public readonly int XDiff
         {
@@ -141,7 +166,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets or sets the y-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle4Point.
+        /// Gets the mathematical length of the y side (= Y1 - Y0) of the rectangular region defined by this Rectangle2Point.
         /// </summary>
         public readonly int YDiff
         {
@@ -149,7 +174,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets the amount of tiles on the x side of the rectangular region defined by this Rectangle4Point.
+        /// Gets the amount of tiles on the x side of the rectangular region defined by this Rectangle2Point.
         /// </summary>
         public readonly int XTiles
         {
@@ -157,12 +182,36 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets the amount of tiles on the y side of the rectangular region defined by this Rectangle4Point.
+        /// Gets the amount of tiles on the y side of the rectangular region defined by this Rectangle2Point.
         /// </summary>
         public readonly int YTiles
         {
             get => yTiles;
         }
-    }
 
+        /// <summary>
+        /// Adjusts the location of this rectangle by the specified amount.
+        /// </summary>
+        public void Move(int x, int y)
+        {
+            unchecked
+            {
+                x0 += x;
+                x1 += x;
+
+                y0 += y;
+                y1 += y;
+            }
+        }
+
+        /// <summary>
+        /// Determines if the specified point is contained (including the frame) within the rectangular region defined by this Rectangle2Point.
+        /// </summary>
+        public readonly bool Contains(int x, int y) => (X0 <= x) && (x <= X1) && (Y0 <= y) && (y <= Y1);
+
+        /// <summary>
+        /// Converts the attributes of this Rectangle2Point to a human readable string.
+        /// </summary>
+        public override readonly string ToString() => $"{{X0={x0},Y0={y0},X1={x1},Y1={y1},xdiff={xdiff},ydiff={ydiff}}}";
+    }
 }
