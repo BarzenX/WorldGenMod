@@ -17,6 +17,8 @@ namespace WorldGenMod
         private int ydiff; //The mathematical y-difference of the rectangular region defined by this Rectangle2Point
         private int xTiles; //The amount of tiles on the x side of the rectangular region defined by this Rectangle2Point
         private int yTiles; //The amount of tiles on the y side of the rectangular region defined by this Rectangle2Point
+        private int xCenter; //The x-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if xTiles is even, there is no real middle, and the lower x-coordinate of the "double tile center" will be returned)
+        private int yCenter; //The y-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if yTiles is even, there is no real middle, and the lower y-coordinate of the "double tile center" will be returned)
 
         /// <summary>
         /// Initializes a new instance of the Rectangle2Point structure with the specified values. 
@@ -43,6 +45,9 @@ namespace WorldGenMod
 
             this.x1 = this.x0 + this.xdiff;
             this.y1 = this.y0 + this.ydiff;
+
+            this.xCenter = x0 + this.xdiff / 2;
+            this.yCenter = y0 + this.ydiff / 2;
         }
 
         /// <summary>
@@ -70,6 +75,9 @@ namespace WorldGenMod
 
             this.xTiles = xdiff + 1;
             this.yTiles = ydiff + 1;
+
+            this.xCenter = x0 + this.xdiff / 2;
+            this.yCenter = y0 + this.ydiff / 2;
         }
 
         /// <summary>
@@ -99,6 +107,9 @@ namespace WorldGenMod
 
             this.xTiles = xdiff + 1;
             this.yTiles = ydiff + 1;
+
+            this.xCenter = x0 + this.xdiff / 2;
+            this.yCenter = y0 + this.ydiff / 2;
         }
 
         /// <summary>
@@ -187,6 +198,24 @@ namespace WorldGenMod
         public readonly int YTiles
         {
             get => yTiles;
+        }
+
+        /// <summary>
+        /// Gets the x-coordinate of the center point of the rectangular region defined by this Rectangle2Point.
+        /// <br/> If xTiles is even, there is no real middle, and the lower x-coordinate of the "double tile center" will be returned
+        /// </summary>
+        public readonly int XCenter
+        {
+            get => xCenter;
+        }
+
+        /// <summary>
+        /// Gets the y-coordinate of the center point of the rectangular region defined by this Rectangle2Point.
+        /// <br/> If yTiles is even, there is no real middle, and the lower y-coordinate of the "double tile center" will be returned
+        /// </summary>
+        public readonly int YCenter
+        {
+            get => yCenter;
         }
 
         /// <summary>
@@ -319,7 +348,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Determines if the specified point (x/y) is contained within the Ellipse.
+        /// Determines if the specified point (x/y) (written in global coordinates) is contained within the Ellipse.
         /// </summary>
         public readonly bool Contains(int x, int y, bool includeBorder = false)
         {
@@ -338,6 +367,53 @@ namespace WorldGenMod
             {
                 if (xForm) return yR2 * x2 + xR2 * y2 < xR2 * yR2;
                 else return xR2 * x2 + yR2 * y2 < xR2 * yR2;
+            }
+        }
+
+        /// <summary>
+        /// Calculates the normalized distance from the Ellipse center point to the specified point (x/y) (written in global coordinates).
+        /// </summary>
+        public readonly float Distance(int x, int y)
+        {
+            // x², y², xRadius², yRadius²
+            long x2 = (x - x0) * (x - x0); // x²
+            long y2 = (y - y0) * (y - y0); // y²
+            long xR2 = xRadius * xRadius;
+            long yR2 = yRadius * yRadius;
+
+            if (xForm) return (float)(yR2 * x2 + xR2 * y2) / (float)(xR2 * yR2);
+            else return       (float)(xR2 * x2 + yR2 * y2) / (float)(xR2 * yR2);
+        }
+
+        /// <summary>
+        /// Calculates the normalized distance from the Ellipse center point to the specified point (x/y) (written in global coordinates) and if it's contained within the Ellipse
+        /// <br/>
+        /// </summary>
+        public readonly (float, bool) Distance_Contains(int x, int y, bool includeBorder = false)
+        {
+            // x², y², xRadius², yRadius²
+            long x2 = (x - x0) * (x - x0); // x²
+            long y2 = (y - y0) * (y - y0); // y²
+            long xR2 = xRadius * xRadius;
+            long yR2 = yRadius * yRadius;
+
+            float num1, num2;
+
+            if (xForm)
+            {
+                num1 = yR2 * x2 + xR2 * y2;
+                num2 = xR2 * yR2;
+
+                if (includeBorder)   return (num1 / num2, num1 <= num2);
+                else                 return (num1 / num2, num1 <  num2);
+            }
+            else
+            {
+                num1 = xR2 * x2 + yR2 * y2;
+                num2 = xR2 * yR2;
+
+                if (includeBorder) return (num1 / num2, num1 <= num2);
+                else               return (num1 / num2, num1 < num2);
             }
         }
 
