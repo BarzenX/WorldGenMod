@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Terraria.ID;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace WorldGenMod
@@ -422,4 +424,86 @@ namespace WorldGenMod
         /// </summary>
         public override readonly string ToString() => $"{{X0={x0}, Y0={y0}, xRadius={xRadius}, yRadius={yRadius}, xTiles={xTiles}, yTiles={yTiles}, xForm={xForm}}}";
     }
+
+    class Func
+    {
+        /// <summary>
+        /// Turns a chandelier from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the chandelier</param>
+        /// <param name="y">The y-coordinate used for placing the chandelier</param>
+        public static void UnlightChandelier(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 54) //chandelier is lit
+            {
+                for (int i = x - 1; i <= x + 1; i++)
+                {
+                    for (int j = y; j <= y + 2; j++)
+                    {
+                        Main.tile[i, j].TileFrameX += 54; // make the chandelier unlit
+                        // Explanation:
+                        // A chandelier is a 3x3 multitile. Each tile consists of 18 pixels. The unlit appearance is just at the right of the lit one on the Tile Spritesheet.
+                        // So each of the 3x3 unlit tiles has an offset of 3*18 pixels to is lit appearance.
+                    }
+                }
+            }
+            //TODO: expand method for other light sources
+        }
+
+        /// <summary>
+        /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187)
+        /// </summary>
+        /// <param name="xPlace">x-coordinate of world placement position</param>
+        /// <param name="yPlace">y-coordinate of world placement position</param>
+        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Broken Chandelier covered in CobWeb" is 25)</param>
+        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0 (type 186 only has Y=0) </param>
+        /// <param name="type">TileID</param>
+        public static void PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187)
+        {
+            if (type < 186 || type > 187) return;
+
+            WorldGen.PlaceTile(xPlace, yPlace, type);
+
+            for (int x = xPlace - 1; x <= xPlace + 1; x++)
+            {
+                for (int y = yPlace - 1; y <= yPlace; y++)
+                {
+                    Main.tile[x, y].TileFrameX += (short)(XSprite * 18 * 3);
+                    Main.tile[x, y].TileFrameY += (short)(YSprite * 18 * 2);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Places a specific SubID of a 1x1 tile 
+        /// </summary>
+        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="yPlace">y-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Mug" in Tile-ID#13 is 4)</param>
+        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
+        /// <param name="type">TileID</param>
+        public static void Place1x1SubID(int xPlace, int yPlace, ushort type, int XSprite, int YSprite)
+        {
+            WorldGen.PlaceTile(xPlace, yPlace, type);
+            Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
+            Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
+        }
+
+        /// <summary>
+        /// Places a specific SubID of a 1x2 tile (1 tile wide, 2 tiles high)
+        /// </summary>
+        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="yTop">y-coordinate (in world coordinates) of highest tile of the object (f.ex. the chain-tile of a lantern)</param>
+        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0</param>
+        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
+        public static void Change1x2SubID(int xPlace, int yTop, ushort type, int XSprite, int YSprite)
+        {
+            for (int y = yTop; y <= yTop + 1; y++)
+            {
+                Main.tile[xPlace, y].TileFrameX = (short)(XSprite * 18);
+                Main.tile[xPlace, y].TileFrameY = (short)(YSprite * 18 * 2);
+            }
+        }
+    }
+
 }
