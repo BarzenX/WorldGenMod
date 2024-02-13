@@ -451,6 +451,22 @@ namespace WorldGenMod
         }
 
         /// <summary>
+        /// Turns a lantern from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the lantern</param>
+        /// <param name="y">The y-coordinate used for placing the lantern</param>
+        public static void UnlightLantern(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 18) //lantern is lit
+            {
+                for (int j = y; j <= y + 1; j++)
+                {
+                    Main.tile[x, j].TileFrameX += 18; // make the lantern unlit
+                }
+            }
+        }
+
+        /// <summary>
         /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187)
         /// </summary>
         /// <param name="xPlace">x-coordinate of world placement position</param>
@@ -487,22 +503,6 @@ namespace WorldGenMod
             WorldGen.PlaceTile(xPlace, yPlace, type);
             Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
             Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
-        }
-
-        /// <summary>
-        /// Places a specific SubID of a 1x2 tile (1 tile wide, 2 tiles high)
-        /// </summary>
-        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
-        /// <param name="yTop">y-coordinate (in world coordinates) of highest tile of the object (f.ex. the chain-tile of a lantern)</param>
-        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0</param>
-        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
-        public static void Change1x2SubID(int xPlace, int yTop, ushort type, int XSprite, int YSprite)
-        {
-            for (int y = yTop; y <= yTop + 1; y++)
-            {
-                Main.tile[xPlace, y].TileFrameX = (short)(XSprite * 18);
-                Main.tile[xPlace, y].TileFrameY = (short)(YSprite * 18 * 2);
-            }
         }
     }
 

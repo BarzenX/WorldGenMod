@@ -15,6 +15,7 @@ using System.Security.Policy;
 using static Humanizer.In;
 using MonoMod.Utils;
 using System.Diagnostics;
+using static Humanizer.On;
 
 //TODO: - on small maps sometime the FrostFortress creates extreme slow - unknown reason
 
@@ -93,6 +94,7 @@ namespace WorldGenMod.Structures.Ice
         public void FillAndChooseStyle()
         {
             // create dictionary entries
+            Deco.Add(S.StyleSave, 0);
             Deco.Add(S.Brick, 0);
             Deco.Add(S.Floor, 0);
             Deco.Add(S.BackWall, 0);
@@ -102,16 +104,19 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.Chest, 0);
             Deco.Add(S.Campfire, 0);
             Deco.Add(S.Table, 0);
+            Deco.Add(S.MainPainting, 0);
             Deco.Add(S.Chandelier, 0);
             Deco.Add(S.Lamp, 0);
             Deco.Add(S.Torch, 0);
+            Deco.Add(S.Lantern, 0);
             Deco.Add(S.Banner, 0);
 
             //choose a random style and define it's types
             int chooseStyle = WorldGen.genRand.Next(3);
             switch (chooseStyle)
             {
-                case 0:
+                case S.StyleSnow: // Snow
+                    Deco[S.StyleSave] = S.StyleSnow;
                     Deco[S.Brick] = TileID.SnowBrick;
                     Deco[S.Floor] = TileID.IceBrick;
                     if (WorldGen.genRand.NextBool())   Deco[S.Floor] = TileID.AncientSilverBrick;
@@ -122,13 +127,16 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chest] = 11;    // Tile ID 21 (Cests) -> Type 11=Frozen
                     Deco[S.Campfire] = 3;  // Tile ID 215 (Campfire) -> Type 3=Frozen
                     Deco[S.Table] = 24;    // Tile ID 14 (Tables) -> Type 24=Frozen
+                    Deco[S.MainPainting] = 26;// Tile ID 240 (Painting3X3) -> Type 26=Discover
                     Deco[S.Chandelier] = 11;// Tile ID 34 (Chandeliers) -> Type 11=Frozen
                     Deco[S.Lamp] = 5;      // Tile ID 93 (Lamps) -> Type 5=Frozen
                     Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
+                    Deco[S.Lantern] = 18;   // Tile ID 42 (Lanterns) -> Type 18=Frozen
                     Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
                     break;
 
-                case 1:
+                case S.StyleBoreal: // Boreal
+                    Deco[S.StyleSave] = S.StyleBoreal;
                     Deco[S.Brick] = TileID.BorealWood;
                     Deco[S.Floor] = TileID.GrayBrick;
                     if (WorldGen.genRand.NextBool())   Deco[S.Floor] = TileID.AncientSilverBrick;
@@ -139,13 +147,16 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chest] = 33;    // Tile ID 21 (Cests) -> Type 33=Boreal
                     Deco[S.Campfire] = 0;  // Tile ID 215 (Campfire) -> Type 0=Normal
                     Deco[S.Table] = 28;    // Tile ID 14 (Tables) -> Type 33=Boreal
+                    Deco[S.MainPainting] = 34;// Tile ID 240 (Painting3X3) -> Type 34=Crowno Devours His Lunch
                     Deco[S.Chandelier] = 25;// Tile ID 34 (Chandeliers) -> Type 25=Boreal
                     Deco[S.Lamp] = 20;     // Tile ID 93 (Lamps) -> Type 20=Boreal
                     Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
+                    Deco[S.Lantern] = 29;   // Tile ID 42 (Lanterns) -> Type 29=Boreal
                     Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
                     break;
 
-                case 2:
+                case S.StyleDarkLead: // Dark Lead
+                    Deco[S.StyleSave] = S.StyleDarkLead;
                     Deco[S.Brick] = TileID.LeadBrick;
                     Deco[S.Floor] = TileID.EbonstoneBrick;
                     //TODO: find something     if (WorldGen.genRand.NextBool())   Deco[Style.Floor] = TileID.AncientSilverBrick;
@@ -156,9 +167,11 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
                     Deco[S.Campfire] = 7;  // Tile ID 215 (Campfire) -> Type 0=Bone
                     Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood Table
+                    Deco[S.MainPainting] = 35;// Tile ID 240 (Painting3X3) -> Type 35=Rare Enchantment
                     Deco[S.Chandelier] = 32;// Tile ID 34 (Chandeliers) -> Type 32=Obsidian
                     Deco[S.Lamp] = 23;     // Tile ID 93 (Lamps) -> Type 23=Obsidian
                     Deco[S.Torch] = 7;     // Tile ID 93 (Torches) -> Type 7=Demon
+                    Deco[S.Lantern] = 0;   // Tile ID 42 (Lanterns) -> Type 0=Chain Lantern
                     Deco[S.Banner] = 0;    // Tile ID 91 (Banners) -> Type 0=Red
                     break;
             }
@@ -224,7 +237,7 @@ namespace WorldGenMod.Structures.Ice
             for (int i = 1; i <= sideRoomCount; i++)
             {
                 int sideRoomXTiles = WorldGen.genRand.Next(15,21);
-                if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors are centered in the room
+                if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors (default 4 tiles wide) are centered in the room
                 sideRoomX1 = sideRoomX0 + (sideRoomXTiles - 1);
 
                 int sideRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
@@ -322,7 +335,7 @@ namespace WorldGenMod.Structures.Ice
             for (int i = 1; i <= sideRoomCount; i++)
             {
                 int sideRoomXTiles = WorldGen.genRand.Next(15, 21);
-                if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors are centered in the room
+                if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors (default 4 tiles wide) are centered in the room
                 sideRoomX0 = sideRoomX1 - (sideRoomXTiles - 1);
 
                 int sideRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
@@ -830,14 +843,14 @@ namespace WorldGenMod.Structures.Ice
                     }
                 }
 
-                //picture
+                //painting
                 for (x = freeR.X0 + 12; x <= freeR.X1 - 12; x++)
                 {
                     WorldGen.PlaceWall(x, freeR.Y0 + 4, Deco[S.BackWall]); //just in case it got deleted by the "cracked" background design
                     WorldGen.PlaceWall(x, freeR.Y0 + 5, Deco[S.BackWall]);
                     WorldGen.PlaceWall(x, freeR.Y0 + 6, Deco[S.BackWall]);
                 }
-                WorldGen.PlaceTile(freeR.X0 + 13, freeR.Y0 + 5, TileID.Painting3X3, style: 34);
+                WorldGen.PlaceTile(freeR.X0 + 13, freeR.Y0 + 5, TileID.Painting3X3, style: Deco[S.MainPainting]);
 
                 //banners
                 y = freeR.Y0;
@@ -960,29 +973,54 @@ namespace WorldGenMod.Structures.Ice
 
 
                     // wooden beam
-                    y = freeR.Y1 - 4;
-                    if (freeR.YTiles >= 7) // if less than 7 tiles, there won't be enough space for the lamps
+                    if (freeR.YTiles >= 8) // if less than 8 tiles, there won't be enough space for the lanterns to look good
                     {
+                        y = freeR.Y1 - 4;
+
                         for (x = freeR.X0; x <= freeR.X1; x++)
                         {
                             if (!(Main.tile[x, y].WallType == 0)) WorldGen.PlaceTile(x, y, TileID.BorealBeam);
 
                             if (freeR.YTiles > 15) WorldGen.PlaceTile(x, freeR.Y0 - 4, TileID.BorealBeam);
                         }
+
+                    }
+
+                    // if romm is too high, there will be a lot of unused space...fill it
+                    if (freeR.YTiles >= 12)
+                    {
+                        int lastBeam = y;
+                        y = freeR.Y0 + 3;
+
+                        // wooden beam
+                        for (x = freeR.X0; x <= freeR.X1; x++)
+                        {
+                            if (!(Main.tile[x, y].WallType == 0)) WorldGen.PlaceTile(x, y, TileID.BorealBeam);
+
+                            if (freeR.YTiles > 15) WorldGen.PlaceTile(x, freeR.Y0 - 4, TileID.BorealBeam);
+                        }
+
+                        //painting
+                        int beamfreeY = (lastBeam - y) - 2; // number of free tiles between the two beam lines
+                        if (beamfreeY >= 4)
+                        {
+                            Place6x4PaintingByStyle(new Rectangle2P(freeR.XCenter - 2, y + 1 + ((beamfreeY - 4) / 2), 6, 4), Deco[S.StyleSave]);
+                            //TODO: paintings don't get centered
+                        }
                     }
 
 
                     // lantern left
-                    x = freeR.XCenter - WorldGen.genRand.Next(3, 6);
+                    x =  freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns); // Table
-                    if (placed) Func.Change1x2SubID(x, y, TileID.HangingLanterns, 1, 29); // unlit boreal wood lamp
+                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (placed) Func.UnlightLantern(x, y);
 
                     // lantern right
-                    x = freeR.XCenter + WorldGen.genRand.Next(3, 6);
+                    x = freeR.XCenter + 1 + WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns); // Table
-                    if (placed) Func.Change1x2SubID(x, y, TileID.HangingLanterns, 1, 29); // unlit boreal wood lamp
+                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (placed) Func.UnlightLantern(x, y);
 
                     //TODO: if yTiles >= 10, fill the open space between the wooden beams and the lanterns
 
@@ -1207,6 +1245,60 @@ namespace WorldGenMod.Structures.Ice
                 }
             }
         }
+
+        /// <summary>
+        /// Places a random 4x6 painting for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 4x6 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        public void Place6x4PaintingByStyle(Rectangle2P area, int style)
+        {
+            for (int x = area.X0; x <= area.X1; x++) 
+            {
+                for (int y = area.Y0; x <= area.Y1; y++)
+                {
+                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
+                }
+            }
+
+            List<int> paintings = new List<int>();
+            if (style == S.StyleSnow)
+            {
+                paintings.Add(5); // Dryadisque
+                paintings.Add(11); // Great Wave
+                paintings.Add(12); // Starry Night
+                paintings.Add(30); // Sparky
+            }
+            else if (style == S.StyleBoreal)
+            {
+                paintings.Add(0); // The Eye Sees the End
+                paintings.Add(3); // The Screamer
+                paintings.Add(4); // Goblins Playing Poker
+                paintings.Add(9); // The Persistency of Eyes
+                paintings.Add(16); // The Creation of the Guide
+                paintings.Add(46); // The Gentleman Scientist
+                paintings.Add(47); // The Firestarter
+                paintings.Add(48); // The Bereaved
+                paintings.Add(49); // The Strongman
+            }
+            else if (style == S.StyleDarkLead)
+            {
+                paintings.Add(1); // Something Evil is Watching You
+                paintings.Add(2); // The Twins Have Awoken
+                paintings.Add(8); // The Destroyer
+                paintings.Add(17); // Jacking Skeletron
+                paintings.Add(19); // Blood Moon Countess
+                paintings.Add(21); // Morbid Curiosity
+                paintings.Add(44); // Graveyard (Painting)
+                paintings.Add(49); // Remnants of Devotion
+            }
+            else
+            {
+                paintings.Add(23); // Leopard Skin...should never occur or I called the method wrong...so just to be sure
+            }
+
+            WorldGen.PlaceTile(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[Main.rand.Next(paintings.Count)] );
+        }
     }
 
     internal class RoomID
@@ -1228,6 +1320,7 @@ namespace WorldGenMod.Structures.Ice
 
     internal class S //Style
     {
+        public const String StyleSave = "Style";
         public const String Brick = "Brick";
         public const String Floor = "Floor";
         public const String BackWall = "BackWall";
@@ -1237,9 +1330,15 @@ namespace WorldGenMod.Structures.Ice
         public const String Chest = "Chest";
         public const String Campfire = "Campfire";
         public const String Table = "Table";
+        public const String MainPainting = "MainPainting";
         public const String Chandelier = "Chandelier";
         public const String Lamp = "Lamp";
         public const String Torch = "Torch";
+        public const String Lantern = "Lantern";
         public const String Banner = "Banner";
+
+        public const int StyleSnow = 0;
+        public const int StyleBoreal = 1;
+        public const int StyleDarkLead = 2;
     }
 }
