@@ -504,6 +504,22 @@ namespace WorldGenMod
             Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
             Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
         }
+
+        /// <summary>
+        /// Tries to place a tile repeated times in a given space (a straight line), each time variating the placement position
+        /// </summary>
+        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="yPlace">y-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Mug" in Tile-ID#13 is 4)</param>
+        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
+        /// <param name="type">TileID</param>
+        public static void TryPlaceTile(Rectangle2P area, int yPlace, ushort type, int XSprite, int YSprite)
+        {
+            //WorldGen.PlaceTile(xPlace, yPlace, type);
+            //Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
+            //Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
+            //TODO:
+        }
     }
 
 }

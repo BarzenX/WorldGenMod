@@ -773,11 +773,11 @@ namespace WorldGenMod.Structures.Ice
                 {
                     x = room.X0;
                     y = freeR.Y1;
-                    WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
+                    WorldGen.PlaceObject(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
 
                     x = room.X1;
                     y = freeR.Y1;
-                    WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
+                    WorldGen.PlaceObject(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
                 }
 
 
@@ -791,11 +791,11 @@ namespace WorldGenMod.Structures.Ice
                     WorldGen.PlaceTile(i, y - 1, Deco[S.Floor], true, true);
                 }
 
-                WorldGen.PlaceTile(x - 4, y - 1, TileID.Statues, style: 0); //Armor statue
+                WorldGen.PlaceObject(x - 3, y - 1, TileID.Statues, style: 0); //Armor statue
 
-                WorldGen.PlaceTile(x + 3, y - 1, TileID.Statues, style: 0); //Armor statue
+                WorldGen.PlaceObject(x + 4, y - 1, TileID.Statues, style: 0); //Armor statue
 
-                WorldGen.PlaceTile(x, y - 2, TileID.Thrones, style: 0); //Throne
+                WorldGen.PlaceObject(x, y - 2, TileID.Thrones, style: 0); //Throne
 
                 WorldGen.PlaceTile(x - 2, y - 2, TileID.GoldCoinPile, style: 0); //Gold Coins
                 WorldGen.PlaceTile(x - 2, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
@@ -803,8 +803,8 @@ namespace WorldGenMod.Structures.Ice
 
 
                 WorldGen.PlaceTile(x - 5, y, TileID.SilverCoinPile, style: 0); //Silver Coins
-                WorldGen.PlaceTile(x - 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
-                WorldGen.PlaceTile(x + 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
+                WorldGen.PlaceObject(x - 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
+                WorldGen.PlaceObject(x + 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
 
                 //left side coins
                 if (WorldGen.genRand.NextBool())
@@ -850,31 +850,31 @@ namespace WorldGenMod.Structures.Ice
                     WorldGen.PlaceWall(x, freeR.Y0 + 5, Deco[S.BackWall]);
                     WorldGen.PlaceWall(x, freeR.Y0 + 6, Deco[S.BackWall]);
                 }
-                WorldGen.PlaceTile(freeR.X0 + 13, freeR.Y0 + 5, TileID.Painting3X3, style: Deco[S.MainPainting]);
+                WorldGen.PlaceObject(freeR.X0 + 13, freeR.Y0 + 5, TileID.Painting3X3, style: Deco[S.MainPainting]);
 
                 //banners
                 y = freeR.Y0;
-                WorldGen.PlaceTile(freeR.X0    , y, TileID.Banners, style: Deco[S.Banner]);
-                WorldGen.PlaceTile(freeR.X0 + 9, y, TileID.Banners, style: Deco[S.Banner]);
-                WorldGen.PlaceTile(freeR.X1    , y, TileID.Banners, style: Deco[S.Banner]);
-                WorldGen.PlaceTile(freeR.X1 - 9, y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceObject(freeR.X0    , y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceObject(freeR.X0 + 9, y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceObject(freeR.X1    , y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceObject(freeR.X1 - 9, y, TileID.Banners, style: Deco[S.Banner]);
 
                 //floating blocks in the room
                 x = freeR.X0 + 5;
                 y = freeR.Y0 + 7;
                 WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true); //put a brick to place the banner to it
-                WorldGen.PlaceTile(x, y+1, TileID.Banners, style: Deco[S.Banner]); //banner
+                WorldGen.PlaceObject(x, y+1, TileID.Banners, style: Deco[S.Banner]); //banner
                 WorldGen.PlaceTile(x - 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
                 WorldGen.PlaceTile(x + 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
 
                 x = freeR.X1 - 5;
                 WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true); //put a brick to place the banner to it
-                WorldGen.PlaceTile(x, y + 1, TileID.Banners, style: Deco[S.Banner]); // banner
+                WorldGen.PlaceObject(x, y + 1, TileID.Banners, style: Deco[S.Banner]); // banner
                 WorldGen.PlaceTile(x - 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
                 WorldGen.PlaceTile(x + 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
 
                 // lighting
-                WorldGen.PlaceTile(freeR.X0 + 13, freeR.Y0, TileID.Chandeliers, style: Deco[S.Chandelier]); //boreal chandelier
+                WorldGen.PlaceObject(freeR.X0 + 13, freeR.Y0, TileID.Chandeliers, style: Deco[S.Chandelier]); //boreal chandelier
 
                 y = freeR.Y1 - 4;
                 WorldGen.PlaceTile(freeR.X0, y, TileID.Torches, style: Deco[S.Torch]); //torch
@@ -936,7 +936,7 @@ namespace WorldGenMod.Structures.Ice
             }
 
             bool placed;
-            int roomDeco = WorldGen.genRand.Next(1);
+            int roomDeco = WorldGen.genRand.Next(1); //TODO
             switch (roomDeco) 
             { 
                 case 0: // two tables, two lamps, a beam line
@@ -945,14 +945,14 @@ namespace WorldGenMod.Structures.Ice
                     x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
                     y = freeR.Y1;
                     placed = false;
-                    if (WorldGen.genRand.NextBool())    placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+                    if (WorldGen.genRand.NextBool())    placed = WorldGen.PlaceObject(x, y, TileID.Tables, style: Deco[S.Table]); // Table
                     else if (WorldGen.genRand.NextBool())   Func.PlaceLargePile(x, y, 22, 0, 186); //Broken Table covered in CobWeb
 
-                    // stuff on table left
+                    // stuff on the left table
                     if (placed)
                     {
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
+                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
+                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
                         //if (WorldGen.genRand.NextBool())   Func.Place1x1SubID(x + WorldGen.genRand.Next(-1, 2), y + 2, TileID.FoodPlatter, 4, 0); // mug on the table
                     }
 
@@ -960,14 +960,14 @@ namespace WorldGenMod.Structures.Ice
                     // table right
                     x = freeR.XCenter + WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
                     y = freeR.Y1;
-                    if (WorldGen.genRand.NextBool())    placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+                    if (WorldGen.genRand.NextBool())    placed = WorldGen.PlaceObject(x, y, TileID.Tables, style: Deco[S.Table]); // Table
                     else if (WorldGen.genRand.NextBool())   Func.PlaceLargePile(x, y, 22, 0, 186); //Broken Table covered in CobWeb
 
-                    // stuff on table right
+                    // stuff on the right table
                     if (placed)
                     {
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
+                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
+                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
                         //if (WorldGen.genRand.NextBool()) Func.Place1x1SubID(x + WorldGen.genRand.Next(-1, 2), y + 2, TileID.FoodPlatter, 4, 0); // mug on the table
                     }
 
@@ -986,7 +986,7 @@ namespace WorldGenMod.Structures.Ice
 
                     }
 
-                    // if romm is too high, there will be a lot of unused space...fill it
+                    // if room is too high, there will be a lot of unused space...fill it
                     if (freeR.YTiles >= 12)
                     {
                         int lastBeam = y;
@@ -1001,30 +1001,50 @@ namespace WorldGenMod.Structures.Ice
                         }
 
                         //painting
-                        int beamfreeY = (lastBeam - y) - 2; // number of free tiles between the two beam lines
-                        if (beamfreeY >= 4)
-                        {
-                            Place6x4PaintingByStyle(new Rectangle2P(freeR.XCenter - 2, y + 1 + ((beamfreeY - 4) / 2), 6, 4), Deco[S.StyleSave]);
-                            //TODO: paintings don't get centered
-                        }
+                        int beamfreeY = (lastBeam - y) - 1; // number of free tiles between the two beam lines
+                        PlacePainting(new Rectangle2P(freeR.X0, y + 1, freeR.X1, lastBeam - 1, "dummyString"), Deco[S.StyleSave]);
                     }
 
 
                     // lantern left
                     x =  freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceObject(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
                     if (placed) Func.UnlightLantern(x, y);
 
                     // lantern right
                     x = freeR.XCenter + 1 + WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceObject(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
                     if (placed) Func.UnlightLantern(x, y);
 
-                    //TODO: if yTiles >= 10, fill the open space between the wooden beams and the lanterns
+                    // cobwebs
+                    PlaceCobWeb(freeR, 1, 25);
 
                     break;
+
+                case 1: // kitchen with shelves
+
+                    //WorldGen.PlaceTile(freeR.XCenter, freeR.Y1, TileID.Fireplace); // Fireplace
+                    //WorldGen.Place3x2(freeR.XCenter, freeR.Y1, TileID.Fireplace); // Fireplace
+                    WorldGen.PlaceObject(freeR.XCenter, freeR.Y1, TileID.Fireplace);
+                    bool test2 = WorldGen.PlaceObject(freeR.X0 + 1, freeR.Y1, TileID.CookingPots, style: 0); // cooking pot
+                    Debug.WriteLine(test2);
+                    //TODO: hier weiter
+
+                    //bar
+                    //furnace or better fireplace (has a version without light!)
+                    //cooking pot
+                    //keg
+                    //candle
+                    //chain
+                    //trash can
+                    //sink
+                    //pots with herbs?
+                    //"hanging" pots
+                    break;
+
+
             }
 
             //x = freeR.X0 + 5;
@@ -1247,7 +1267,90 @@ namespace WorldGenMod.Structures.Ice
         }
 
         /// <summary>
-        /// Places a random 4x6 painting for the given decoration style 
+        /// Tries to place a painting in the given area. It tries to place paintings from tall to flat (6x4 -> 3x3 -> 2x3 -> 3x2)
+        /// <br/>
+        /// <br/> ATTENTION: does not check if the final placement position is empty. Best make sure that the whole area is free.
+        /// </summary>
+        /// <param name="area">The area where the painting can be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeMode">The placement method: 0 = centered in x and y, 1 = random x and centered y</param>
+        /// <param name="limitType">Allow types of paintings: (binary selection) 0= no painting, 1=3x2, 2=2x3, 4=3x3, 8=6x4, 15=all types</param>
+        public void PlacePainting(Rectangle2P area, int style, int placeMode = 0, byte limitType = 15)
+        {
+            bool allow3x2 = (limitType & 1) != 0;
+            bool allow2x3 = (limitType & 2) != 0;
+            bool allow3x3 = (limitType & 4) != 0;
+            bool allow6x4 = (limitType & 8) != 0;
+
+            //painting
+            int x, y;
+            if (area.YTiles >= 4 && allow6x4 && WorldGen.genRand.NextBool())
+            {
+                if (placeMode == 0)
+                {
+                    x = area.XCenter - 2;
+                    y = area.Y0 + ((area.YTiles - 4) / 2);
+                    Place6x4PaintingByStyle(new Rectangle2P(x, y, 6, 4), style);
+                } 
+                else if (placeMode == 1)
+                {
+                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (6 - 1));
+                    y = area.Y0 + ((area.YTiles - 4) / 2);
+                    Place6x4PaintingByStyle(new Rectangle2P(x, y, 6, 4), style);
+                }
+            }
+
+            else if (area.YTiles >= 3 && allow3x3 && WorldGen.genRand.NextBool())
+            {
+                if (placeMode == 0)
+                {
+                    x = area.XCenter - 1 + WorldGen.genRand.Next(2); //3 XTiles cannot be centered in an even room, so alternate betweend the two "out-center" positions..that's why the Next(2)
+                    y = area.Y0 + ((area.YTiles - 3) / 2);
+                    Place3x3PaintingByStyle(new Rectangle2P(x, y, 3, 3), style);
+                }
+                else if (placeMode == 1)
+                {
+                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (3 - 1));
+                    y = area.Y0 + ((area.YTiles - 3) / 2);
+                    Place3x3PaintingByStyle(new Rectangle2P(x, y, 3, 3), style);
+                }
+            }
+
+            else if (area.YTiles >= 3 && allow2x3 && WorldGen.genRand.NextBool())
+            {
+                if (placeMode == 0)
+                {
+                    x = area.XCenter;
+                    y = area.Y0 + ((area.YTiles - 3) / 2);
+                    Place2x3PaintingByStyle(new Rectangle2P(x, y, 2,  3),  style);
+                }
+                else if (placeMode == 1)
+                {
+                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (2 - 1));
+                    y = area.Y0 + ((area.YTiles - 3) / 2);
+                    Place2x3PaintingByStyle(new Rectangle2P(x, y, 2, 3), style);
+                }
+            }
+
+            else if (area.YTiles >= 2 && allow3x2 && WorldGen.genRand.NextBool())
+            {
+                if (placeMode == 0)
+                {
+                    x = area.XCenter - 1 + WorldGen.genRand.Next(2);
+                    y = area.Y0 + ((area.YTiles - 2) / 2);
+                    Place3x2PaintingByStyle(new Rectangle2P(x, y, 3, 2), style);
+                }
+                else if (placeMode == 1)
+                {
+                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (3 - 1));
+                    y = area.Y0 + ((area.YTiles - 2) / 2);
+                    Place3x2PaintingByStyle(new Rectangle2P(x, y, 3, 2), style);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Places a random 4x6 painting of a pre-selected variety for the given decoration style 
         /// </summary>
         /// <param name="area">The 4x6 area where the painting shall be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
@@ -1297,7 +1400,174 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(23); // Leopard Skin...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceTile(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[Main.rand.Next(paintings.Count)] );
+            WorldGen.PlaceObject(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[Main.rand.Next(paintings.Count)] );
+        }
+
+        /// <summary>
+        /// Places a random 3x3 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 3x3 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        public void Place3x3PaintingByStyle(Rectangle2P area, int style)
+        {
+            for (int x = area.X0; x <= area.X1; x++)
+            {
+                for (int y = area.Y0; x <= area.Y1; y++)
+                {
+                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
+                }
+            }
+
+            List<int> paintings = new List<int>();
+            if (style == S.StyleSnow)
+            {
+                paintings.Add(22); // Guide Picasso
+                paintings.Add(24); // Father of Someone
+                paintings.Add(26); // Discover
+                paintings.Add(76); // Outcast
+                paintings.Add(77); // Fairy Guides
+                paintings.Add(79); // Morning Hunt
+                paintings.Add(82); // Cat Sword
+            }
+            else if (style == S.StyleBoreal)
+            {
+                paintings.Add(13); // The Hanged Man
+                paintings.Add(19); // The Cursed Man
+                paintings.Add(20); // Sunflowers
+                paintings.Add(22); // Guide Picasso
+                paintings.Add(23); // The Guardian's Gaze
+                paintings.Add(25); // Nurse Lisa
+                paintings.Add(28); // Old Miner
+                paintings.Add(33); // The Merchant
+                paintings.Add(34); // Crowno Devours His Lunch
+                paintings.Add(70); // Nevermore
+                paintings.Add(78); // A Horrible Night for Alchemy
+            }
+            else if (style == S.StyleDarkLead)
+            {
+                paintings.Add(70); // Nevermore
+                paintings.Add(71); // Reborn
+                paintings.Add(68); // Snakes, I Hate Snakes
+                paintings.Add(65); // Burning Spirit
+                paintings.Add(35); // Rare Enchantment
+                paintings.Add(34); // Crowno Devours His Lunch
+                paintings.Add(12); // Blood Moon Rising
+                paintings.Add(13); // The Hanged Man
+                paintings.Add(15); // Bone Warp
+                paintings.Add(18); // Skellington J Skellingsworth
+                paintings.Add(23); // The Guardian's Gaze
+                paintings.Add(30); // Imp Face
+            }
+            else
+            {
+                paintings.Add(48); // Compass Rose...should never occur or I called the method wrong...so just to be sure
+            }
+
+            WorldGen.PlaceObject(area.X0 + 1, area.Y0 + 1, TileID.Painting3X3, style: paintings[Main.rand.Next(paintings.Count)]);
+        }
+
+        /// <summary>
+        /// Places a random 2x3 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 2x3 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        public void Place2x3PaintingByStyle(Rectangle2P area, int style)
+        {
+            for (int x = area.X0; x <= area.X1; x++)
+            {
+                for (int y = area.Y0; x <= area.Y1; y++)
+                {
+                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
+                }
+            }
+
+            List<int> paintings = new List<int>();
+            if (style == S.StyleSnow)
+            {
+                paintings.Add(0); // Waldo
+                paintings.Add(10); // Ghost Manifestation
+                paintings.Add(15); // Strange Growth #1
+                paintings.Add(19); // Happy Little Tree
+                paintings.Add(26); // Love is in the Trash Slot
+            }
+            else if (style == S.StyleBoreal)
+            {
+                paintings.Add(1); // Darkness
+                paintings.Add(2); // Dark Soul Reaper
+                paintings.Add(3); // Land
+                paintings.Add(4); // Trapped Ghost
+                paintings.Add(6); // Glorious Night
+                paintings.Add(7); // Bandage Boy
+                paintings.Add(17); // Strange Growth #3
+                paintings.Add(18); // Strange Growth #4
+                paintings.Add(21); // Secrets
+                paintings.Add(22); // Thunderbolt
+                paintings.Add(24); // The Werewolf
+            }
+            else if (style == S.StyleDarkLead)
+            {
+                paintings.Add(4); // Trapped Ghost
+                paintings.Add(11); // Wicked Undead
+                paintings.Add(12); // Bloody Goblet
+                paintings.Add(20); // Strange Dead Fellows
+                paintings.Add(22); // Thunderbolt
+                paintings.Add(24); // The Werewolf
+            }
+            else
+            {
+                paintings.Add(18); // Strange Growth #4...should never occur or I called the method wrong...so just to be sure
+            }
+
+            WorldGen.PlaceObject(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[Main.rand.Next(paintings.Count)]);
+        }
+
+        /// <summary>
+        /// Places a random 3x2 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 3x2 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        public void Place3x2PaintingByStyle(Rectangle2P area, int style)
+        {
+            for (int x = area.X0; x <= area.X1; x++)
+            {
+                for (int y = area.Y0; x <= area.Y1; y++)
+                {
+                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
+                }
+            }
+
+            List<int> paintings = new List<int>();
+            if (style == S.StyleSnow)
+            {
+                paintings.Add(6); // Place Above the Clouds
+                paintings.Add(8); // Cold Waters in the White Land
+                paintings.Add(15); // Sky Guardian
+                paintings.Add(32); // Viking Voyage
+                paintings.Add(35); // Forest Troll
+            }
+            else if (style == S.StyleBoreal)
+            {
+                paintings.Add(1); // Finding Gold
+                paintings.Add(5); // Through the Window
+                paintings.Add(7); // Do Not Step on the Grass
+                paintings.Add(11); // Daylight
+                paintings.Add(20); // Still Life
+                paintings.Add(33); // Bifrost
+            }
+            else if (style == S.StyleDarkLead)
+            {
+                paintings.Add(0); // Demon's Eye
+                paintings.Add(1); // Finding Gold
+                paintings.Add(9); // Lightless Chasms
+                paintings.Add(20); // Still Life
+                paintings.Add(36); // Aurora Borealis
+            }
+            else
+            {
+                paintings.Add(4); // Underground Reward...should never occur or I called the method wrong...so just to be sure
+            }
+
+            WorldGen.PlaceObject(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[Main.rand.Next(paintings.Count)]);
         }
     }
 
