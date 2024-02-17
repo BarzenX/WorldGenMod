@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Terraria.ID;
 using Terraria;
 using Terraria.ModLoader;
+using System.Diagnostics;
+using WorldGenMod.Structures.Ice;
 
 namespace WorldGenMod
 {
@@ -447,7 +449,7 @@ namespace WorldGenMod
                     }
                 }
             }
-            //TODO: expand method for other light sources
+            //TODO: expand method for other light sources?
         }
 
         /// <summary>
@@ -467,14 +469,37 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187)
+        /// Turns a fireplace from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the fireplace</param>
+        /// <param name="y">The y-coordinate used for placing the fireplace</param>
+        public static void UnlightFireplace(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 54) //fireplace is lit
+            {
+                for (int i = x - 1; i <= x + 1; i++)
+                {
+                    for (int j = y - 1; j <= y; j++)
+                    {
+                        Main.tile[i, j].TileFrameX += 54; // make the fireplace unlit
+                        if (j == y - 1)   Main.tile[i, j].TileFrameY = 0; // make the fireplace unlit
+                        if (j == y    )   Main.tile[i, j].TileFrameY = 18; // make the fireplace unlit
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187).
+        /// <br/>Has an option for painting the pile.
         /// </summary>
         /// <param name="xPlace">x-coordinate of world placement position</param>
         /// <param name="yPlace">y-coordinate of world placement position</param>
         /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Broken Chandelier covered in CobWeb" is 25)</param>
         /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0 (type 186 only has Y=0) </param>
         /// <param name="type">TileID</param>
-        public static void PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187)
+        /// <param name="paint">State a PaintID bigger than 0 to automatically paint the pile</param>
+        public static void PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187, byte paint = 0)
         {
             if (type < 186 || type > 187) return;
 
@@ -486,6 +511,8 @@ namespace WorldGenMod
                 {
                     Main.tile[x, y].TileFrameX += (short)(XSprite * 18 * 3);
                     Main.tile[x, y].TileFrameY += (short)(YSprite * 18 * 2);
+
+                    if (paint > 0)   WorldGen.paintTile(x, y, paint);
                 }
             }
         }
@@ -506,20 +533,127 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Tries to place a tile repeated times in a given space (a straight line), each time variating the placement position
+        /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
         /// </summary>
-        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
-        /// <param name="yPlace">y-coordinate (in world coordinates) of the placement position</param>
-        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Mug" in Tile-ID#13 is 4)</param>
-        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
-        /// <param name="type">TileID</param>
-        public static void TryPlaceTile(Rectangle2P area, int yPlace, ushort type, int XSprite, int YSprite)
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="type"></param>
+        /// <param name="style"></param>
+        /// <returns></returns>
+        public static bool PlaceHangingLantern(int x, int y, ushort type, int style = 0)
         {
-            //WorldGen.PlaceTile(xPlace, yPlace, type);
-            //Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
-            //Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
-            //TODO:
+            if (!Main.tile[x, y - 1].HasTile || !Main.tile[x + 1, y - 1].HasTile) return false; // no solid tiles to hang to
+
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y; j <= y + 2; j++)
+                {
+                    if (Main.tile[i, j].HasTile)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            int num2 = style * 36;
+            int num3 = 0;
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y; j <= y + 2; j++)
+                {
+                    Main.tile[i, j].CopyFrom(Main.tile[x, y - 1]);
+                    Main.tile[i, j].TileType = type;
+                    Main.tile[i, j].TileFrameX = (short)(num2 + 18 * (i - x));
+                    Main.tile[i, j].TileFrameY = (short)(num3 + 18 * (j - y));
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to place a tile repeatedly in a given space (a straight line), each time variating the placement position.
+        /// <br/> There is also an adjustable initial "placement chance" to make the placement even more randomized.
+        /// </summary>
+        /// <param name="area">The straight line (must be a horizontal or vertical line!) where the object shall be placed at random</param>
+        /// <param name="type">TileID</param>
+        /// <param name="style">Specification of the TileID (f.ex. TileID 215 (Campfire) -> style 3 = Frozen Campfire)</param>
+        /// <param name="maxTry">Maximum count of tries to place the object</param>
+        /// <param name="chance">Chance of the part to be actual placed (1% .. chance .. 100%) </param>
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
+        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
+        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
+        {
+            if ( !Chance.Perc(chance))   return (false, 0, 0);
+
+            bool randomizeX = area.YTiles == 1;
+
+            int x, y, actTry = 0;
+            Tile actTile;
+
+            do
+            {
+                // randomize placement position
+                if (randomizeX)
+                {
+                    x = Main.rand.Next(area.X0, area.X1 + 1); // X0 <= x <= X1
+                    y = area.Y0;
+                }
+                else
+                {
+                    x = area.X0;
+                    y = Main.rand.Next(area.Y0, area.Y1 + 1); // Y0 <= y <= Y1
+                }
+
+                // try placement
+                if (!Main.tile[x, y].HasTile)
+                {
+                    if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
+                    if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
+                    else WorldGen.PlaceTile(x, y, type, style: style);
+                }
+
+                // check placement
+                actTile = Main.tile[x, y];
+                if (actTile.HasTile && actTile.TileType == type) // placement successful
+                {
+                    return (true, x, y);
+                }
+
+                actTry++;
+            }
+            while ( actTry < maxTry );
+
+            return (false, 0, 0);
+            //TODO: add placement chance
         }
     }
 
+    internal class Chance
+    {
+        /// <summary> Returns true every "1 out of x times" (2 .. x .. maxInt)</summary>
+        public static bool OneOut(int x)
+        {
+            return Main.rand.NextBool(Math.Max(1, x));
+        }
+
+        /// <summary> Returns true in x percent of cases (0 .. x .. 100) </summary>
+        public static bool Perc(float x)
+        {
+            return (Main.rand.NextFloat() < (Math.Clamp(x, 0f, 100f) / 100.0f));
+        }
+
+        /// <summary> Returns true in x percent of cases (0 .. x .. 1)</summary>
+        public static bool Perc2(float x)
+        {
+            return (Main.rand.NextFloat() < Math.Clamp(x, 0f, 1f));
+        }
+
+        /// <summary> Just a shorter way for </summary>
+        public static bool Simple()
+        {
+            return (Main.rand.NextBool());
+        }
+    }
 }

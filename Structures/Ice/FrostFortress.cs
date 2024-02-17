@@ -16,8 +16,10 @@ using static Humanizer.In;
 using MonoMod.Utils;
 using System.Diagnostics;
 using static Humanizer.On;
+using static Terraria.GameContent.Animations.IL_Actions.NPCs;
+using System.Drawing;
 
-//TODO: - on small maps sometime the FrostFortress creates extreme slow - unknown reason
+//TODO: on small maps sometimes the FrostFortress creates extreme slow - unknown reason
 
 namespace WorldGenMod.Structures.Ice
 {
@@ -58,8 +60,8 @@ namespace WorldGenMod.Structures.Ice
 
             while (amountGenerated < amount)
             {
-                int x = WorldGen.genRand.Next(200, Main.maxTilesX - 200);
-                int y = WorldGen.genRand.Next((int)GenVars.rockLayer, Main.maxTilesY - 200);
+                int x = Main.rand.Next(200, Main.maxTilesX - 200);
+                int y = Main.rand.Next((int)GenVars.rockLayer, Main.maxTilesY - 200);
                 Vector2 position = new(x, y); //init for later position search iteration
 
                 List<int> allowedTiles = new()
@@ -70,8 +72,8 @@ namespace WorldGenMod.Structures.Ice
                 bool tooClose = true;
                 while (Main.tile[(int)position.X, (int)position.Y] == null || !allowedTiles.Contains(Main.tile[(int)position.X, (int)position.Y].TileType) || tooClose)
                 {
-                    x = WorldGen.genRand.Next(200, Main.maxTilesX - 200);
-                    y = WorldGen.genRand.Next((int)GenVars.rockLayer, Main.maxTilesY - 200);
+                    x = Main.rand.Next(200, Main.maxTilesX - 200);
+                    y = Main.rand.Next((int)GenVars.rockLayer, Main.maxTilesY - 200);
                     position = new Vector2(x, y);
 
                     tooClose = false;
@@ -110,16 +112,19 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.Torch, 0);
             Deco.Add(S.Lantern, 0);
             Deco.Add(S.Banner, 0);
+            Deco.Add(S.DecoPlat, 0);
+            Deco.Add(S.StylePaint, 0);
+            Deco.Add(S.HangingPot, 0);
 
             //choose a random style and define it's types
-            int chooseStyle = WorldGen.genRand.Next(3);
+            int chooseStyle = Main.rand.Next(3);
             switch (chooseStyle)
             {
                 case S.StyleSnow: // Snow
                     Deco[S.StyleSave] = S.StyleSnow;
                     Deco[S.Brick] = TileID.SnowBrick;
                     Deco[S.Floor] = TileID.IceBrick;
-                    if (WorldGen.genRand.NextBool())   Deco[S.Floor] = TileID.AncientSilverBrick;
+                    if (Chance.Simple())   Deco[S.Floor] = TileID.AncientSilverBrick;
                     Deco[S.BackWall] = WallID.SnowBrick;
                     Deco[S.DoorWall] = WallID.IceBrick;
                     Deco[S.DoorPlat] = 35; // Tile ID 19 (Plattforms) -> Type 35=Frozen
@@ -131,15 +136,18 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chandelier] = 11;// Tile ID 34 (Chandeliers) -> Type 11=Frozen
                     Deco[S.Lamp] = 5;      // Tile ID 93 (Lamps) -> Type 5=Frozen
                     Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
-                    Deco[S.Lantern] = 18;   // Tile ID 42 (Lanterns) -> Type 18=Frozen
+                    Deco[S.Lantern] = 18;  // Tile ID 42 (Lanterns) -> Type 18=Frozen
                     Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
+                    Deco[S.DecoPlat] = 19; //TODO: Tile ID 19 (Plattforms) -> Type 19=Boreal
+                    Deco[S.StylePaint] = PaintID.WhitePaint;
+                    Deco[S.HangingPot] = 4; // Tile ID 591 (PotsSuspended) -> Type 4=Shiverthorn
                     break;
 
                 case S.StyleBoreal: // Boreal
                     Deco[S.StyleSave] = S.StyleBoreal;
                     Deco[S.Brick] = TileID.BorealWood;
                     Deco[S.Floor] = TileID.GrayBrick;
-                    if (WorldGen.genRand.NextBool())   Deco[S.Floor] = TileID.AncientSilverBrick;
+                    if (Chance.Simple())   Deco[S.Floor] = TileID.AncientSilverBrick;
                     Deco[S.BackWall] = WallID.BorealWood;
                     Deco[S.DoorWall] = WallID.BorealWoodFence;
                     Deco[S.DoorPlat] = 28; // Tile ID 19 (Plattforms) -> Type 28=Granite
@@ -151,15 +159,18 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chandelier] = 25;// Tile ID 34 (Chandeliers) -> Type 25=Boreal
                     Deco[S.Lamp] = 20;     // Tile ID 93 (Lamps) -> Type 20=Boreal
                     Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
-                    Deco[S.Lantern] = 29;   // Tile ID 42 (Lanterns) -> Type 29=Boreal
+                    Deco[S.Lantern] = 29;  // Tile ID 42 (Lanterns) -> Type 29=Boreal
                     Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
+                    Deco[S.DecoPlat] = 19; // Tile ID 19 (Plattforms) -> Type 19=Boreal
+                    Deco[S.StylePaint] = 0;// no paint, leave boreal brown
+                    Deco[S.HangingPot] = 5; // Tile ID 591 (PotsSuspended) -> Type 5=Blinkrot
                     break;
 
                 case S.StyleDarkLead: // Dark Lead
                     Deco[S.StyleSave] = S.StyleDarkLead;
                     Deco[S.Brick] = TileID.LeadBrick;
                     Deco[S.Floor] = TileID.EbonstoneBrick;
-                    //TODO: find something     if (WorldGen.genRand.NextBool())   Deco[Style.Floor] = TileID.AncientSilverBrick;
+                    //TODO: find something     if (Chance.Simple())   Deco[Style.Floor] = TileID.AncientSilverBrick;
                     Deco[S.BackWall] = WallID.BlueDungeonSlab;
                     Deco[S.DoorWall] = WallID.Bone;
                     Deco[S.DoorPlat] = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
@@ -173,6 +184,9 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Torch] = 7;     // Tile ID 93 (Torches) -> Type 7=Demon
                     Deco[S.Lantern] = 0;   // Tile ID 42 (Lanterns) -> Type 0=Chain Lantern
                     Deco[S.Banner] = 0;    // Tile ID 91 (Banners) -> Type 0=Red
+                    Deco[S.DecoPlat] = 19; //TODO: Tile ID 19 (Plattforms) -> Type 19=Boreal
+                    Deco[S.StylePaint] = PaintID.GrayPaint;
+                    Deco[S.HangingPot] = 6; // Tile ID 591 (PotsSuspended) -> Type 6=Corrupt Deathweed
                     break;
             }
             
@@ -233,19 +247,19 @@ namespace WorldGenMod.Structures.Ice
             // generate rooms to the right of the main room
             sideRoomX0 = mainRoom.X1 + 1 + gap; // init value for first iteration
             sideRoomY1 = mainRoom.Y1; // this value is constant
-            int sideRoomCount = WorldGen.genRand.Next(3, 7); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
+            int sideRoomCount = Main.rand.Next(3, 7); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
             for (int i = 1; i <= sideRoomCount; i++)
             {
-                int sideRoomXTiles = WorldGen.genRand.Next(15,21);
+                int sideRoomXTiles = Main.rand.Next(15,21);
                 if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors (default 4 tiles wide) are centered in the room
                 sideRoomX1 = sideRoomX0 + (sideRoomXTiles - 1);
 
-                int sideRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
+                int sideRoomYTiles = (int)(sideRoomXTiles * Main.rand.NextFloat(0.6f, 1f));
                 sideRoomY0 = sideRoomY1 - (sideRoomYTiles - 1);
 
 
-                bool generateUp = WorldGen.genRand.NextBool(); // if rooms above this main-column-room shall be generated
-                bool generateDown = WorldGen.genRand.NextBool(); // if rooms below this main-column-room shall be generated
+                bool generateUp = Chance.Simple(); // if rooms above this main-column-room shall be generated
+                bool generateDown = Chance.Simple(); // if rooms below this main-column-room shall be generated
 
                 // create main room of this column
                 actualSideRoom = GenerateRoom(room: new Rectangle2P(sideRoomX0, sideRoomY0, sideRoomX1, sideRoomY1, "dummyText"),
@@ -262,10 +276,10 @@ namespace WorldGenMod.Structures.Ice
                     verticalRoomX1 = sideRoomX1; //this value is constant
                     verticalRoomY1 = sideRoomY0 + (wThick - 1); // init value for first iteration
 
-                    int vertAmount = WorldGen.genRand.Next(1, 4); //number of rooms above this main-column room
+                    int vertAmount = Main.rand.Next(1, 4); //number of rooms above this main-column room
                     for (int j = 1; j <= vertAmount; j++)
                     {
-                        int vertRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
+                        int vertRoomYTiles = (int)(sideRoomXTiles * Main.rand.NextFloat(0.6f, 1f));
                         verticalRoomY0 = verticalRoomY1 - (vertRoomYTiles - 1);
 
                         actualVerticalRoom = GenerateRoom(room: new Rectangle2P(verticalRoomX0, verticalRoomY0, verticalRoomX1, verticalRoomY1, "dummyText"),
@@ -288,10 +302,10 @@ namespace WorldGenMod.Structures.Ice
                     verticalRoomX1 = sideRoomX1; //this value is constant
                     verticalRoomY0 = sideRoomY1 - (wThick - 1); // init value for first iteration
 
-                    int vertAmount = WorldGen.genRand.Next(1, 4); //number of rooms below this main-column room
+                    int vertAmount = Main.rand.Next(1, 4); //number of rooms below this main-column room
                     for (int j = 1; j <= vertAmount; j++)
                     {
-                        int vertRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
+                        int vertRoomYTiles = (int)(sideRoomXTiles * Main.rand.NextFloat(0.6f, 1f));
                         verticalRoomY1 = verticalRoomY0 + (vertRoomYTiles - 1);
 
                         actualVerticalRoom = GenerateRoom(room: new Rectangle2P(verticalRoomX0, verticalRoomY0, verticalRoomX1, verticalRoomY1, "dummyText"),
@@ -331,18 +345,18 @@ namespace WorldGenMod.Structures.Ice
 
             sideRoomX1 = mainRoom.X0 - 1 - gap; // init value for first iteration
             sideRoomY1 = mainRoom.Y1; // this value is constant
-            sideRoomCount = WorldGen.genRand.Next(3, 7); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
+            sideRoomCount = Main.rand.Next(3, 7); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
             for (int i = 1; i <= sideRoomCount; i++)
             {
-                int sideRoomXTiles = WorldGen.genRand.Next(15, 21);
+                int sideRoomXTiles = Main.rand.Next(15, 21);
                 if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors (default 4 tiles wide) are centered in the room
                 sideRoomX0 = sideRoomX1 - (sideRoomXTiles - 1);
 
-                int sideRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
+                int sideRoomYTiles = (int)(sideRoomXTiles * Main.rand.NextFloat(0.6f, 1f));
                 sideRoomY0 = sideRoomY1 - (sideRoomYTiles - 1);
 
-                bool generateUp = WorldGen.genRand.NextBool(); // if rooms above this main-column-room shall be generated
-                bool generateDown = WorldGen.genRand.NextBool(); // if rooms below this main-column-room shall be generated
+                bool generateUp = Chance.Simple(); // if rooms above this main-column-room shall be generated
+                bool generateDown = Chance.Simple(); // if rooms below this main-column-room shall be generated
 
                 actualSideRoom = GenerateRoom(room: new Rectangle2P(sideRoomX0, sideRoomY0, sideRoomX1, sideRoomY1, "dummyText"),
                                               roomType: RoomID.SideLeft,
@@ -358,10 +372,10 @@ namespace WorldGenMod.Structures.Ice
                     verticalRoomX1 = sideRoomX1; //this value is constant
                     verticalRoomY1 = sideRoomY0 + (wThick - 1); // init value for first iteration
 
-                    int vertAmount = WorldGen.genRand.Next(1, 4);
+                    int vertAmount = Main.rand.Next(1, 4);
                     for (int j = 1; j <= vertAmount; j++)
                     {
-                        int vertRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
+                        int vertRoomYTiles = (int)(sideRoomXTiles * Main.rand.NextFloat(0.6f, 1f));
                         verticalRoomY0 = verticalRoomY1 - (vertRoomYTiles - 1);
 
                         actualVerticalRoom = GenerateRoom(room: new Rectangle2P(verticalRoomX0, verticalRoomY0, verticalRoomX1, verticalRoomY1, "dummyText"),
@@ -385,10 +399,10 @@ namespace WorldGenMod.Structures.Ice
                     verticalRoomX1 = sideRoomX1; //this value is constant
                     verticalRoomY0 = sideRoomY1 - (wThick - 1); // init value for first iteration
 
-                    int vertAmount = WorldGen.genRand.Next(1, 4);
+                    int vertAmount = Main.rand.Next(1, 4);
                     for (int j = 1; j <= vertAmount; j++)
                     {
-                        int vertRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
+                        int vertRoomYTiles = (int)(sideRoomXTiles * Main.rand.NextFloat(0.6f, 1f));
                         verticalRoomY1 = verticalRoomY0 + (vertRoomYTiles - 1);
 
                         actualVerticalRoom = GenerateRoom(room: new Rectangle2P(verticalRoomX0, verticalRoomY0, verticalRoomX1, verticalRoomY1, "dummyText"),
@@ -425,7 +439,7 @@ namespace WorldGenMod.Structures.Ice
                 };
             foreach (Point16 trap in traps)
             {
-                WorldGen.placeTrap(trap.X, trap.Y, allowedTraps[WorldGen.genRand.Next(allowedTraps.Length)]);
+                WorldGen.placeTrap(trap.X, trap.Y, allowedTraps[Main.rand.Next(allowedTraps.Length)]);
             }
         }
 
@@ -451,13 +465,13 @@ namespace WorldGenMod.Structures.Ice
             int x; //temp variable for later calculations;
             int y; //temp variable for later calculations;
 
-            bool noBreakPoint = WorldGen.genRand.NextBool(); //force the background wall of the room to have no holes
-            Vector2 wallBreakPoint = new(room.X0 + WorldGen.genRand.Next(room.XDiff), room.Y0 + WorldGen.genRand.Next(room.YDiff));
+            bool noBreakPoint = Chance.Simple(); //force the background wall of the room to have no holes
+            Vector2 wallBreakPoint = new(room.X0 + Main.rand.Next(room.XDiff), room.Y0 + Main.rand.Next(room.YDiff));
 
 
 
             // create door rectangles
-            IDictionary<int, (bool,Rectangle2P)> doors = new Dictionary<int, (bool, Rectangle2P)>(); // a dictionary for working and sending the doors in a compact way
+            IDictionary<int, (bool doorExist ,Rectangle2P doorRect)> doors = new Dictionary<int, (bool, Rectangle2P)>(); // a dictionary for working and sending the doors in a compact way
 
             int leftRightDoorsYTiles = 3; // how many tiles the left and right doors are high
             y = hollowRect.Y1 - (leftRightDoorsYTiles - 1);
@@ -489,7 +503,7 @@ namespace WorldGenMod.Structures.Ice
 
 
                     if (i > room.X0 && i < room.X1 && j > room.Y0 && j < room.Y1 && // leave 1 tile distance from the sides (so the background won't overlap to the outside)
-                         (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f) || noBreakPoint)) // make here and there some cracks in the background to let it look more "abandoned"
+                         (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > Main.rand.NextFloat(1f, 7f) || noBreakPoint)) // make here and there some cracks in the background to let it look more "abandoned"
                     {
                         WorldGen.KillWall(i, j);
                         WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
@@ -500,16 +514,16 @@ namespace WorldGenMod.Structures.Ice
                             (i >= hollowRect.X0 && lastLeftSideRoom) ||// the last side room mustn't have the floor on the outer wall
                             (i <= hollowRect.X1 && lastRightSideRoom) ) ) // the last side room mustn't have the floor on the outer wall
                     {
-                        WorldGen.PlaceTile(i, j, Deco[S.Floor], true, true);
+                        WorldGen.PlaceTile(i, j, Deco[S.Floor], mute: true, forced: true);
                     }
                     else if (j == room.Y0 && // the height of this rooms topmost ceiling row
-                             roomType == RoomID.BelowSide) // down-rooms have the floor type of the above room laying at this height
+                             roomType == RoomID.BelowSide) // down-rooms have the floor type of the above room laying at this height. Placing bricks would destroy already placed decoration
                     {
                         continue; // don't override anything.
                     }
                     else if (i < hollowRect.X0 || i > hollowRect.X1 || j < hollowRect.Y0 || j > hollowRect.Y1 + 1)
                     {
-                        WorldGen.PlaceTile(i, j, Deco[S.Brick], true, true); // place the outer wall bricks of the room
+                        WorldGen.PlaceTile(i, j, Deco[S.Brick], mute: true, forced: true); // place the outer wall bricks of the room
                     }
                     else WorldGen.KillTile(i, j); //carve out the inside of the room
                 }
@@ -517,23 +531,26 @@ namespace WorldGenMod.Structures.Ice
 
             #region Doors
             //carve out doors
+            bool aboveRoomFloor;
             for (int doorNum = 0; doorNum <= doors.Count - 1; doorNum++)
             {
-                if (doors[doorNum].Item1)
+                if (doors[doorNum].doorExist)
                 {
-                    for (int i = doors[doorNum].Item2.X0; i <= doors[doorNum].Item2.X1; i++)
+                    for (int i = doors[doorNum].doorRect.X0; i <= doors[doorNum].doorRect.X1; i++)
                     {
-                        for (int j = doors[doorNum].Item2.Y0; j <= doors[doorNum].Item2.Y1; j++)
+                        for (int j = doors[doorNum].doorRect.Y0; j <= doors[doorNum].doorRect.Y1; j++)
                         {
-                            WorldGen.KillTile(i, j);
+                            aboveRoomFloor = (roomType == RoomID.BelowSide) && (doorNum == Door.Up) && (j == doors[doorNum].doorRect.Y0);
+                            if ( !aboveRoomFloor ) WorldGen.KillTile(i, j); // kill everything but this row of an above room to not destroy decoration
+
                             WorldGen.KillWall(i, j);
-                            if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f) || noBreakPoint) WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
+                            if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > Main.rand.NextFloat(1f, 7f) || noBreakPoint)    WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
                         }
                     }
                 }
             }
 
-            // place every door according to it's roomy type
+            // put additional background walls at special positions
             if (leftDoor)
             {
                 x = leftDoorRect.X1;
@@ -564,7 +581,7 @@ namespace WorldGenMod.Structures.Ice
                 int j = downDoorRect.Y0;
                 for (int i = downDoorRect.X0; i <= downDoorRect.X1; i++)
                 {
-                    WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: Deco[S.DoorPlat]);
+                    WorldGen.PlaceTile(i, j, TileID.Platforms, mute: true, forced: true, style: Deco[S.DoorPlat]);
                 }
 
                 x = downDoorRect.X0 - 1;
@@ -583,7 +600,7 @@ namespace WorldGenMod.Structures.Ice
                 int j = upDoorRect.Y0;
                 for (int i = upDoorRect.X0; i <= upDoorRect.X1; i++)
                 {
-                    WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: Deco[S.DoorPlat]);
+                    WorldGen.PlaceTile(i, j, TileID.Platforms, mute: true, forced: true, style: Deco[S.DoorPlat]);
                 }
 
                 x = upDoorRect.X0 - 1;
@@ -626,63 +643,63 @@ namespace WorldGenMod.Structures.Ice
                          doors: doors);
 
 
-            //int decoration = WorldGen.genRand.Next(4);
+            //int decoration = Main.rand.Next(4);
             //int chest = -1;
             //switch (decoration)
             //{
             //    default:
             //        break;
             //    case 0:
-            //        if (WorldGen.genRand.NextBool())
+            //        if (Chance.Simple())
             //        {
-            //            chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: 4);
+            //            chest = WorldGen.PlaceChest(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, style: 4);
             //            if (chest != -1) FillChest(Main.chest[chest], 4);
             //        }
             //        else
             //        {
-            //            chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: defaultChestType);
+            //            chest = WorldGen.PlaceChest(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, style: defaultChestType);
             //            if (chest != -1) FillChest(Main.chest[chest], defaultChestType);
             //        }
             //        break;
             //    case 1:
-            //        chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: defaultChestType);
+            //        chest = WorldGen.PlaceChest(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, style: defaultChestType);
             //        if (chest != -1) FillChest(Main.chest[chest], defaultChestType);
             //        break;
             //    case 2:
-            //        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Campfire, style: defaultCampfireType);
+            //        WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Campfire, style: defaultCampfireType);
             //        break;
             //    case 3:
-            //        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Tables, style: defaultTableType);
+            //        WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Tables, style: defaultTableType);
             //        break;
             //}
 
-            //if (WorldGen.genRand.NextBool())
+            //if (Chance.Simple())
             //{
-            //    int statue = WorldGen.genRand.Next(6);
+            //    int statue = Main.rand.Next(6);
             //    switch (statue)
             //    {
             //        case 0:
-            //            WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 27);
+            //            WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 27);
             //            break;
             //        case 1:
-            //            WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 32);
+            //            WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 32);
             //            break;
             //        case 2:
-            //            WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 33);
+            //            WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 33);
             //            break;
             //        case 3:
-            //            WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 35);
+            //            WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 35);
             //            break;
             //        case 4:
-            //            WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 37);
+            //            WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 37);
             //            break;
             //        case 5:
-            //            WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 68);
+            //            WorldGen.PlaceTile(room.X + Main.rand.Next(room.Width), room.Y + room.Height - 3, TileID.Statues, style: 68);
             //            break;
             //    }
             //}
 
-            traps.Add(new Point16(room.X0 + WorldGen.genRand.Next(room.XDiff), room.Y0 + WorldGen.genRand.Next(room.YDiff)));
+            traps.Add(new Point16(room.X0 + Main.rand.Next(room.XDiff), room.Y0 + Main.rand.Next(room.YDiff)));
 
             return room;
         }
@@ -754,7 +771,7 @@ namespace WorldGenMod.Structures.Ice
             }
         }
 
-        public void DecorateRoom(Rectangle2P room, int roomType, IDictionary<int, (bool, Rectangle2P)> doors)
+        public void DecorateRoom(Rectangle2P room, int roomType, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors)
         {
             Rectangle2P freeR = room; // the "free" room.... e.g. without the wall bricks
             freeR.X0 += wThick;
@@ -773,11 +790,11 @@ namespace WorldGenMod.Structures.Ice
                 {
                     x = room.X0;
                     y = freeR.Y1;
-                    WorldGen.PlaceObject(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
+                    WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
 
                     x = room.X1;
                     y = freeR.Y1;
-                    WorldGen.PlaceObject(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
+                    WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); // put another door (resulting in double doors)
                 }
 
 
@@ -791,11 +808,11 @@ namespace WorldGenMod.Structures.Ice
                     WorldGen.PlaceTile(i, y - 1, Deco[S.Floor], true, true);
                 }
 
-                WorldGen.PlaceObject(x - 3, y - 1, TileID.Statues, style: 0); //Armor statue
+                WorldGen.PlaceTile(x - 4, y - 1, TileID.Statues, style: 0); //Armor statue
 
-                WorldGen.PlaceObject(x + 4, y - 1, TileID.Statues, style: 0); //Armor statue
+                WorldGen.PlaceTile(x + 3, y - 1, TileID.Statues, style: 0); //Armor statue
 
-                WorldGen.PlaceObject(x, y - 2, TileID.Thrones, style: 0); //Throne
+                WorldGen.PlaceTile(x, y - 2, TileID.Thrones, style: 0); //Throne
 
                 WorldGen.PlaceTile(x - 2, y - 2, TileID.GoldCoinPile, style: 0); //Gold Coins
                 WorldGen.PlaceTile(x - 2, y - 3, TileID.SilverCoinPile, style: 0); //Silver Coins
@@ -803,23 +820,23 @@ namespace WorldGenMod.Structures.Ice
 
 
                 WorldGen.PlaceTile(x - 5, y, TileID.SilverCoinPile, style: 0); //Silver Coins
-                WorldGen.PlaceObject(x - 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
-                WorldGen.PlaceObject(x + 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
+                WorldGen.PlaceTile(x - 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
+                WorldGen.PlaceTile(x + 6, y, TileID.Lamps, style: Deco[S.Lamp]); //Boreal Wood Lamp
 
                 //left side coins
-                if (WorldGen.genRand.NextBool())
+                if (Chance.Simple())
                 {
                     WorldGen.PlaceTile(x - 8, y, TileID.SilverCoinPile, style: 0); //Silver Coins
                     WorldGen.PlaceTile(x - 9, y, TileID.GoldCoinPile, style: 0); //Silver Coins
                 }
                 else
                 {
-                    WorldGen.PlaceSmallPile(x - WorldGen.genRand.Next(7, 12), y, WorldGen.genRand.Next(16, 18), 1); //Copper or Silver coin stash
+                    WorldGen.PlaceSmallPile(x - Main.rand.Next(7, 12), y, Main.rand.Next(16, 18), 1); //Copper or Silver coin stash
                 }
 
 
                 //right side coins
-                if (WorldGen.genRand.NextBool())
+                if (Chance.Simple())
                 {
                     WorldGen.PlaceTile(x + 8, y, TileID.SilverCoinPile, style: 0); //Silver Coins
                     WorldGen.PlaceTile(x + 9, y, TileID.SilverCoinPile, style: 0); //Silver Coins
@@ -827,7 +844,7 @@ namespace WorldGenMod.Structures.Ice
                 }
                 else
                 {
-                    WorldGen.PlaceSmallPile(x + WorldGen.genRand.Next(7, 12), y, WorldGen.genRand.Next(16, 18), 1); //Copper or Silver coin stash
+                    WorldGen.PlaceSmallPile(x + Main.rand.Next(7, 12), y, Main.rand.Next(16, 18), 1); //Copper or Silver coin stash
                 }
 
 
@@ -839,7 +856,10 @@ namespace WorldGenMod.Structures.Ice
                     if (x < freeR.X0 + 12 || x > freeR.X1 - 12) //leave space for the picture
                     {
                         WorldGen.PlaceTile(x, freeR.Y0 + 4, TileID.BorealBeam);
+                        WorldGen.paintTile(x, freeR.Y0 + 4, (byte)Deco[S.StylePaint]);
+
                         WorldGen.PlaceTile(x, freeR.Y0 + 6, TileID.BorealBeam);
+                        WorldGen.paintTile(x, freeR.Y0 + 6, (byte)Deco[S.StylePaint]);
                     }
                 }
 
@@ -850,31 +870,31 @@ namespace WorldGenMod.Structures.Ice
                     WorldGen.PlaceWall(x, freeR.Y0 + 5, Deco[S.BackWall]);
                     WorldGen.PlaceWall(x, freeR.Y0 + 6, Deco[S.BackWall]);
                 }
-                WorldGen.PlaceObject(freeR.X0 + 13, freeR.Y0 + 5, TileID.Painting3X3, style: Deco[S.MainPainting]);
+                WorldGen.PlaceTile(freeR.X0 + 13, freeR.Y0 + 5, TileID.Painting3X3, style: Deco[S.MainPainting]);
 
                 //banners
                 y = freeR.Y0;
-                WorldGen.PlaceObject(freeR.X0    , y, TileID.Banners, style: Deco[S.Banner]);
-                WorldGen.PlaceObject(freeR.X0 + 9, y, TileID.Banners, style: Deco[S.Banner]);
-                WorldGen.PlaceObject(freeR.X1    , y, TileID.Banners, style: Deco[S.Banner]);
-                WorldGen.PlaceObject(freeR.X1 - 9, y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceTile(freeR.X0    , y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceTile(freeR.X0 + 9, y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceTile(freeR.X1    , y, TileID.Banners, style: Deco[S.Banner]);
+                WorldGen.PlaceTile(freeR.X1 - 9, y, TileID.Banners, style: Deco[S.Banner]);
 
                 //floating blocks in the room
                 x = freeR.X0 + 5;
                 y = freeR.Y0 + 7;
                 WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true); //put a brick to place the banner to it
-                WorldGen.PlaceObject(x, y+1, TileID.Banners, style: Deco[S.Banner]); //banner
+                WorldGen.PlaceTile(x, y+1, TileID.Banners, style: Deco[S.Banner]); //banner
                 WorldGen.PlaceTile(x - 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
                 WorldGen.PlaceTile(x + 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
 
                 x = freeR.X1 - 5;
                 WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true); //put a brick to place the banner to it
-                WorldGen.PlaceObject(x, y + 1, TileID.Banners, style: Deco[S.Banner]); // banner
+                WorldGen.PlaceTile(x, y + 1, TileID.Banners, style: Deco[S.Banner]); // banner
                 WorldGen.PlaceTile(x - 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
                 WorldGen.PlaceTile(x + 1, y, TileID.Torches, style: Deco[S.Torch]); //torch
 
                 // lighting
-                WorldGen.PlaceObject(freeR.X0 + 13, freeR.Y0, TileID.Chandeliers, style: Deco[S.Chandelier]); //boreal chandelier
+                WorldGen.PlaceTile(freeR.X0 + 13, freeR.Y0, TileID.Chandeliers, style: Deco[S.Chandelier]); //boreal chandelier
 
                 y = freeR.Y1 - 4;
                 WorldGen.PlaceTile(freeR.X0, y, TileID.Torches, style: Deco[S.Torch]); //torch
@@ -902,7 +922,7 @@ namespace WorldGenMod.Structures.Ice
                 y = freeR.Y1;
                 WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); //Door
 
-                if (gap > 0 && doors[Door.Left].Item1) // in case there is a gap between side rooms and this left side room also has a left door
+                if (gap > 0 && doors[Door.Left].doorExist) // in case there is a gap between side rooms and this left side room also has a left door
                 {
                     x = room.X0;
                     y = freeR.Y1;
@@ -917,7 +937,7 @@ namespace WorldGenMod.Structures.Ice
                 y = freeR.Y1;
                 WorldGen.PlaceTile(x, y, TileID.ClosedDoor, style: Deco[S.Door]); //Door
 
-                if (gap > 0 && doors[Door.Right].Item1) // in case there is a gap between side rooms and this right side room also has a right door
+                if (gap > 0 && doors[Door.Right].doorExist) // in case there is a gap between side rooms and this right side room also has a right door
                 {
                     x = room.X1;
                     y = freeR.Y1;
@@ -935,40 +955,43 @@ namespace WorldGenMod.Structures.Ice
                 //TODO?
             }
 
+            // init variables
             bool placed;
-            int roomDeco = WorldGen.genRand.Next(1); //TODO
-            switch (roomDeco) 
-            { 
-                case 0: // two tables, two lamps, a beam line
+            (bool success, int x, int y) placeResult;
+            Rectangle2P left, right;
+
+            //choose room decoration at random
+            int roomDeco = Main.rand.Next(1,2); //TODO
+            switch (roomDeco)
+            {
+                case 0: // two tables, two lamps, a beam line, maybe another and a painting
 
                     // table left
-                    x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
+                    x = freeR.XCenter - Main.rand.Next(3, freeR.XDiff / 2 - 1);
                     y = freeR.Y1;
                     placed = false;
-                    if (WorldGen.genRand.NextBool())    placed = WorldGen.PlaceObject(x, y, TileID.Tables, style: Deco[S.Table]); // Table
-                    else if (WorldGen.genRand.NextBool())   Func.PlaceLargePile(x, y, 22, 0, 186); //Broken Table covered in CobWeb
+                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+                    else if (Chance.Simple()) Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); //Broken Table covered in CobWeb
 
                     // stuff on the left table
                     if (placed)
                     {
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
-                        //if (WorldGen.genRand.NextBool())   Func.Place1x1SubID(x + WorldGen.genRand.Next(-1, 2), y + 2, TileID.FoodPlatter, 4, 0); // mug on the table
+                        if (Chance.Simple()) WorldGen.PlaceTile(x + Main.rand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
+                        if (Chance.Simple()) WorldGen.PlaceTile(x + Main.rand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
                     }
 
 
                     // table right
-                    x = freeR.XCenter + WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
+                    x = freeR.XCenter + Main.rand.Next(3, freeR.XDiff / 2 - 1);
                     y = freeR.Y1;
-                    if (WorldGen.genRand.NextBool())    placed = WorldGen.PlaceObject(x, y, TileID.Tables, style: Deco[S.Table]); // Table
-                    else if (WorldGen.genRand.NextBool())   Func.PlaceLargePile(x, y, 22, 0, 186); //Broken Table covered in CobWeb
+                    if (Chance.Simple())   placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+                    else if (Chance.Simple())   Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); //Broken Table covered in CobWeb
 
                     // stuff on the right table
                     if (placed)
                     {
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                        if (WorldGen.genRand.NextBool())   WorldGen.PlaceObject(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
-                        //if (WorldGen.genRand.NextBool()) Func.Place1x1SubID(x + WorldGen.genRand.Next(-1, 2), y + 2, TileID.FoodPlatter, 4, 0); // mug on the table
+                        if (Chance.Simple())   WorldGen.PlaceTile(x + Main.rand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
+                        if (Chance.Simple())   WorldGen.PlaceTile(x + Main.rand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
                     }
 
 
@@ -979,9 +1002,11 @@ namespace WorldGenMod.Structures.Ice
 
                         for (x = freeR.X0; x <= freeR.X1; x++)
                         {
-                            if (!(Main.tile[x, y].WallType == 0)) WorldGen.PlaceTile(x, y, TileID.BorealBeam);
-
-                            if (freeR.YTiles > 15) WorldGen.PlaceTile(x, freeR.Y0 - 4, TileID.BorealBeam);
+                            if (!(Main.tile[x, y].WallType == 0))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.BorealBeam);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
                         }
 
                     }
@@ -995,27 +1020,28 @@ namespace WorldGenMod.Structures.Ice
                         // wooden beam
                         for (x = freeR.X0; x <= freeR.X1; x++)
                         {
-                            if (!(Main.tile[x, y].WallType == 0)) WorldGen.PlaceTile(x, y, TileID.BorealBeam);
-
-                            if (freeR.YTiles > 15) WorldGen.PlaceTile(x, freeR.Y0 - 4, TileID.BorealBeam);
+                            if (!(Main.tile[x, y].WallType == 0))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.BorealBeam);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
                         }
 
                         //painting
-                        int beamfreeY = (lastBeam - y) - 1; // number of free tiles between the two beam lines
                         PlacePainting(new Rectangle2P(freeR.X0, y + 1, freeR.X1, lastBeam - 1, "dummyString"), Deco[S.StyleSave]);
                     }
 
 
                     // lantern left
-                    x =  freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2);
+                    x = freeR.XCenter - Main.rand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceObject(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
                     if (placed) Func.UnlightLantern(x, y);
 
                     // lantern right
-                    x = freeR.XCenter + 1 + WorldGen.genRand.Next(3, freeR.XDiff / 2);
+                    x = freeR.XCenter + 1 + Main.rand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (WorldGen.genRand.NextBool()) placed = WorldGen.PlaceObject(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
                     if (placed) Func.UnlightLantern(x, y);
 
                     // cobwebs
@@ -1025,23 +1051,109 @@ namespace WorldGenMod.Structures.Ice
 
                 case 1: // kitchen with shelves
 
-                    //WorldGen.PlaceTile(freeR.XCenter, freeR.Y1, TileID.Fireplace); // Fireplace
-                    //WorldGen.Place3x2(freeR.XCenter, freeR.Y1, TileID.Fireplace); // Fireplace
-                    WorldGen.PlaceObject(freeR.XCenter, freeR.Y1, TileID.Fireplace);
-                    bool test2 = WorldGen.PlaceObject(freeR.X0 + 1, freeR.Y1, TileID.CookingPots, style: 0); // cooking pot
-                    Debug.WriteLine(test2);
+                    // wooden beam arch at floor
+                    for (y = freeR.Y1 - 3; y <= freeR.Y1; y++)
+                    {
+                        WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, y, TileID.BorealBeam);
+                        WorldGen.paintTile(doors[Door.Down].doorRect.X0, y, (byte)Deco[S.StylePaint]);
+
+                        WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, y, TileID.BorealBeam);
+                        WorldGen.paintTile(doors[Door.Down].doorRect.X1, y, (byte)Deco[S.StylePaint]);
+                    }
+                    for (x = doors[Door.Down].doorRect.X0; x <= doors[Door.Down].doorRect.X1; x++)
+                    {
+                        WorldGen.PlaceTile(x, freeR.Y1 - 4, TileID.BorealBeam);
+                        WorldGen.paintTile(x, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
+
+                        WorldGen.PlaceTile(x, freeR.Y1, TileID.BorealBeam); //those are just temporary, for making the placement of the floor decoration easier
+                    }
+                    //TODO: if Style = DarkLead, paint the wooden beams with "gray paint" so they fit better
+
+                    // chains hanging down
+                    if (((freeR.Y1 - 5) - freeR.Y0) >= 1) // at least two tiles or it looks weird
+                    {
+                        for (y = freeR.Y0; y <= freeR.Y1 - 5; y++)
+                        {
+                            WorldGen.PlaceTile(doors[Door.Down].doorRect.X0 - 1, y, TileID.Chain);
+                            WorldGen.PlaceTile(doors[Door.Down].doorRect.X1 + 1, y, TileID.Chain);
+                        }
+                    }
+
+
+                    // cooking pot and bar table or fireplace
+                    left = new Rectangle2P(freeR.X0 + 1, freeR.Y1, freeR.X1 - 1, freeR.Y1, "dummyString");
+
+                    Func.TryPlaceTile(left, TileID.CookingPots, style: 0); // cooking pot
+
+                    placeResult = Func.TryPlaceTile(left, TileID.Tables, style: 17, chance: 50); // wooden bar (table)
+                    if (placeResult.success)
+                    {
+                        left = new Rectangle2P(placeResult.x - 1, placeResult.y - 2, placeResult.x + 1, placeResult.y - 2, "dummyString");
+                        Func.TryPlaceTile(left, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                        Func.TryPlaceTile(left, TileID.Candles, style: 0, chance: 50); // Candle
+                        Func.TryPlaceTile(left, TileID.Bottles, style: 4, chance: 50); // Mug
+
+                    }
+
+                    placeResult = Func.TryPlaceTile(left, TileID.Fireplace, chance: 50); // Fireplace
+                    if (placeResult.success) Func.UnlightFireplace(placeResult.x, placeResult.y);
+
+                    // get rid again of the temporary "space blocking" beams
+                    for (x = doors[Door.Down].doorRect.X0 + 1; x <= doors[Door.Down].doorRect.X1 - 1; x++)
+                    {
+                        WorldGen.KillTile(x, freeR.Y1);
+                    }
+
+                    // first shelf 
+                    if (freeR.YTiles >= 6)
+                    {
+                        for (x = freeR.X0; x <= doors[Door.Down].doorRect.X0 - 1; x++)
+                        {
+                            WorldGen.PlaceTile(x, freeR.Y1 - 4, TileID.Platforms, style: 19); // Boreal wood platform
+                            WorldGen.paintTile(x, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
+                        }
+                        for (x = doors[Door.Down].doorRect.X1 + 1; x <= freeR.X1; x++)
+                        {
+                            WorldGen.PlaceTile(x, freeR.Y1 - 4, TileID.Platforms, style: 19); // Boreal wood platform
+                            WorldGen.paintTile(x, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
+                        }
+
+                        //TODO: if just one yTile, put plates & cups, else put crates & keg
+                    }
+
+                    // second shelf 
+                    //if (freeR.YTiles >= 10)
+                    //{
+                    //    if (Chance.Simple())
+                    //    {
+                    //        for (x = freeR.X0; x <= doors[Door.Down].doorRect.X0 - 1; x++)
+                    //        {
+                    //            WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: 19); // Boreal wood platform
+                    //            WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
+                    //        }
+                    //    }
+
+                    //    if (Chance.Simple())
+                    //    {
+                    //        for (x = doors[Door.Down].doorRect.X1 + 1; x <= freeR.X1; x++)
+                    //        {
+                    //            WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: 19); // Boreal wood platform
+                    //            WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
+                    //        }
+                    //    }
+
+                    //}
+
+
+
                     //TODO: hier weiter
 
-                    //bar
-                    //furnace or better fireplace (has a version without light!)
-                    //cooking pot
                     //keg
-                    //candle
-                    //chain
                     //trash can
                     //sink
                     //pots with herbs?
                     //"hanging" pots
+
                     break;
 
 
@@ -1070,7 +1182,7 @@ namespace WorldGenMod.Structures.Ice
             int lightItem = 0;
             int ammoItem = 0;
 
-            switch (WorldGen.genRand.Next(4))
+            switch (Main.rand.Next(4))
             {
                 case 0:
                     mainItem = ItemID.IceBlade;
@@ -1090,7 +1202,7 @@ namespace WorldGenMod.Structures.Ice
                     break;
             }
 
-            switch (WorldGen.genRand.Next(4))
+            switch (Main.rand.Next(4))
             {
                 case 0:
                     potionItem = ItemID.SwiftnessPotion;
@@ -1110,7 +1222,7 @@ namespace WorldGenMod.Structures.Ice
                     break;
             }
 
-            switch (WorldGen.genRand.Next(4))
+            switch (Main.rand.Next(4))
             {
                 case 0:
                     lightItem = ItemID.IceTorch;
@@ -1127,7 +1239,7 @@ namespace WorldGenMod.Structures.Ice
             }
 
 
-            switch (WorldGen.genRand.Next(3))
+            switch (Main.rand.Next(3))
             {
                 case 0:
                     ammoItem = ItemID.FrostburnArrow;
@@ -1145,20 +1257,20 @@ namespace WorldGenMod.Structures.Ice
             nextItem++;
 
             chest.item[nextItem].SetDefaults(potionItem);
-            chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
+            chest.item[nextItem].stack = Main.rand.Next(1, 3);
             nextItem++;
 
             chest.item[nextItem].SetDefaults(lightItem);
-            chest.item[nextItem].stack = WorldGen.genRand.Next(6, 13);
+            chest.item[nextItem].stack = Main.rand.Next(6, 13);
             nextItem++;
 
             chest.item[nextItem].SetDefaults(ammoItem);
-            chest.item[nextItem].stack = WorldGen.genRand.Next(25, 75);
+            chest.item[nextItem].stack = Main.rand.Next(25, 75);
             nextItem++;
 
             chest.item[nextItem].SetDefaults(ItemID.GoldCoin);
-            chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
-            if (style == 4) chest.item[nextItem].stack = WorldGen.genRand.Next(6, 20);
+            chest.item[nextItem].stack = Main.rand.Next(1, 3);
+            if (style == 4) chest.item[nextItem].stack = Main.rand.Next(6, 20);
         }
 
         /// <summary>
@@ -1184,7 +1296,7 @@ namespace WorldGenMod.Structures.Ice
                                 break;
 
                             case 1:
-                                if (WorldGen.genRand.Next(1, 101) <= percChance)   WorldGen.PlaceTile(x, y, TileID.Cobweb);
+                                if (Main.rand.Next(1, 101) <= percChance)   WorldGen.PlaceTile(x, y, TileID.Cobweb);
                                 break;
 
                             case 2:
@@ -1223,7 +1335,7 @@ namespace WorldGenMod.Structures.Ice
                         float distance;
                         (distance, contains) = CobWebs.Distance_Contains(x, y, includeBorder); //then the more compute-heavy check
 
-                        if (contains && (WorldGen.genRand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
+                        if (contains && (Main.rand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
                         {
                             WorldGen.PlaceTile(x, y, TileID.Cobweb);
                         }
@@ -1257,7 +1369,7 @@ namespace WorldGenMod.Structures.Ice
                         float distance;
                         (distance, contains) = CobWebs.Distance_Contains(x, y, includeBorder); //then the more compute-heavy check
 
-                        if (contains && (WorldGen.genRand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
+                        if (contains && (Main.rand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
                         {
                             WorldGen.PlaceTile(x, y, TileID.Cobweb);
                         }
@@ -1284,7 +1396,7 @@ namespace WorldGenMod.Structures.Ice
 
             //painting
             int x, y;
-            if (area.YTiles >= 4 && allow6x4 && WorldGen.genRand.NextBool())
+            if (area.YTiles >= 4 && allow6x4 && Chance.Simple())
             {
                 if (placeMode == 0)
                 {
@@ -1294,29 +1406,29 @@ namespace WorldGenMod.Structures.Ice
                 } 
                 else if (placeMode == 1)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (6 - 1));
+                    x = area.X0 + Main.rand.Next(area.XTiles - (6 - 1));
                     y = area.Y0 + ((area.YTiles - 4) / 2);
                     Place6x4PaintingByStyle(new Rectangle2P(x, y, 6, 4), style);
                 }
             }
 
-            else if (area.YTiles >= 3 && allow3x3 && WorldGen.genRand.NextBool())
+            else if (area.YTiles >= 3 && allow3x3 && Chance.Simple())
             {
                 if (placeMode == 0)
                 {
-                    x = area.XCenter - 1 + WorldGen.genRand.Next(2); //3 XTiles cannot be centered in an even room, so alternate betweend the two "out-center" positions..that's why the Next(2)
+                    x = area.XCenter - 1 + Main.rand.Next(2); //3 XTiles cannot be centered in an even room, so alternate betweend the two "out-center" positions..that's why the Next(2)
                     y = area.Y0 + ((area.YTiles - 3) / 2);
                     Place3x3PaintingByStyle(new Rectangle2P(x, y, 3, 3), style);
                 }
                 else if (placeMode == 1)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (3 - 1));
+                    x = area.X0 + Main.rand.Next(area.XTiles - (3 - 1));
                     y = area.Y0 + ((area.YTiles - 3) / 2);
                     Place3x3PaintingByStyle(new Rectangle2P(x, y, 3, 3), style);
                 }
             }
 
-            else if (area.YTiles >= 3 && allow2x3 && WorldGen.genRand.NextBool())
+            else if (area.YTiles >= 3 && allow2x3 && Chance.Simple())
             {
                 if (placeMode == 0)
                 {
@@ -1326,23 +1438,23 @@ namespace WorldGenMod.Structures.Ice
                 }
                 else if (placeMode == 1)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (2 - 1));
+                    x = area.X0 + Main.rand.Next(area.XTiles - (2 - 1));
                     y = area.Y0 + ((area.YTiles - 3) / 2);
                     Place2x3PaintingByStyle(new Rectangle2P(x, y, 2, 3), style);
                 }
             }
 
-            else if (area.YTiles >= 2 && allow3x2 && WorldGen.genRand.NextBool())
+            else if (area.YTiles >= 2 && allow3x2 && Chance.Simple())
             {
                 if (placeMode == 0)
                 {
-                    x = area.XCenter - 1 + WorldGen.genRand.Next(2);
+                    x = area.XCenter - 1 + Main.rand.Next(2);
                     y = area.Y0 + ((area.YTiles - 2) / 2);
                     Place3x2PaintingByStyle(new Rectangle2P(x, y, 3, 2), style);
                 }
                 else if (placeMode == 1)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (3 - 1));
+                    x = area.X0 + Main.rand.Next(area.XTiles - (3 - 1));
                     y = area.Y0 + ((area.YTiles - 2) / 2);
                     Place3x2PaintingByStyle(new Rectangle2P(x, y, 3, 2), style);
                 }
@@ -1400,7 +1512,7 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(23); // Leopard Skin...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceObject(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[Main.rand.Next(paintings.Count)] );
+            WorldGen.PlaceTile(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[Main.rand.Next(paintings.Count)] );
         }
 
         /// <summary>
@@ -1463,7 +1575,7 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(48); // Compass Rose...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceObject(area.X0 + 1, area.Y0 + 1, TileID.Painting3X3, style: paintings[Main.rand.Next(paintings.Count)]);
+            WorldGen.PlaceTile(area.X0 + 1, area.Y0 + 1, TileID.Painting3X3, style: paintings[Main.rand.Next(paintings.Count)]);
         }
 
         /// <summary>
@@ -1518,7 +1630,7 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(18); // Strange Growth #4...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceObject(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[Main.rand.Next(paintings.Count)]);
+            WorldGen.PlaceTile(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[Main.rand.Next(paintings.Count)]);
         }
 
         /// <summary>
@@ -1567,7 +1679,7 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(4); // Underground Reward...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceObject(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[Main.rand.Next(paintings.Count)]);
+            WorldGen.PlaceTile(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[Main.rand.Next(paintings.Count)]);
         }
     }
 
@@ -1595,7 +1707,7 @@ namespace WorldGenMod.Structures.Ice
         public const String Floor = "Floor";
         public const String BackWall = "BackWall";
         public const String DoorWall = "DoorWall";
-        public const String DoorPlat = "DoorPlattform";
+        public const String DoorPlat = "DoorPlatform";
         public const String Door = "Door";
         public const String Chest = "Chest";
         public const String Campfire = "Campfire";
@@ -1606,6 +1718,9 @@ namespace WorldGenMod.Structures.Ice
         public const String Torch = "Torch";
         public const String Lantern = "Lantern";
         public const String Banner = "Banner";
+        public const String DecoPlat = "DecoPlatform";
+        public const String StylePaint = "StylePaint";
+        public const String HangingPot = "HangingPot";
 
         public const int StyleSnow = 0;
         public const int StyleBoreal = 1;
