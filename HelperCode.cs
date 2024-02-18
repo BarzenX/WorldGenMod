@@ -13,6 +13,8 @@ namespace WorldGenMod
 {
     public struct Rectangle2P
     {
+        public static readonly Rectangle2P Empty; // an empty rectangle for cases when one wants to say "there is nothing"
+
         private int x0; //The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point
         private int y0; //The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point
         private int x1; //The x-coordinate of the bottom-right corner of the rectangular region defined by this Rectangle2Point
@@ -223,7 +225,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Adjusts the location of this rectangle by the specified amount.
+        /// Adjusts the location of this Rectangle2Point by the specified amount.
         /// </summary>
         public void Move(int x, int y)
         {
@@ -238,9 +240,22 @@ namespace WorldGenMod
         }
 
         /// <summary>
+        /// Creates a copy of this Rectangle2Point and gives the possibility to alter its location by offsets.
+        /// </summary>
+        public Rectangle2P CloneAndMove(int xOffset = 0, int yOffset = 0)
+        {
+            return new Rectangle2P(this.X0 + xOffset, this.Y0 + yOffset, this.X1 + xOffset, this.Y1 + yOffset, "dummyString");
+        }
+
+        /// <summary>
         /// Determines if the specified point is contained (including the frame) within the rectangular region defined by this Rectangle2Point.
         /// </summary>
         public readonly bool Contains(int x, int y) => (X0 <= x) && (x <= X1) && (Y0 <= y) && (y <= Y1);
+
+        /// <summary>
+        /// Checks if the Rectangle2Point is empty
+        /// </summary>
+        public readonly bool IsEmpty() => (this.Equals(Empty));
 
         /// <summary>
         /// Converts the attributes of this Rectangle2Point to a human readable string.
@@ -575,7 +590,8 @@ namespace WorldGenMod
         /// Tries to place a tile repeatedly in a given space (a straight line), each time variating the placement position.
         /// <br/> There is also an adjustable initial "placement chance" to make the placement even more randomized.
         /// </summary>
-        /// <param name="area">The straight line (must be a horizontal or vertical line!) where the object shall be placed at random</param>
+        /// <param name="area">The straight line (must be a horizontal or vertical line!) where the object shall be placed at random. </param>
+        /// <param name="blockedArea">And area that will be ignored when randomizing the placement position. If not desired make it an empty area. </param>
         /// <param name="type">TileID</param>
         /// <param name="style">Specification of the TileID (f.ex. TileID 215 (Campfire) -> style 3 = Frozen Campfire)</param>
         /// <param name="maxTry">Maximum count of tries to place the object</param>
@@ -583,11 +599,13 @@ namespace WorldGenMod
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
         ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
-        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
+        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, Rectangle2P blockedArea, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
         {
-            if ( !Chance.Perc(chance))   return (false, 0, 0);
+            if (chance < 100) if ( !Chance.Perc(chance))   return (false, 0, 0);
 
             bool randomizeX = area.YTiles == 1;
+            bool considerBlockedArea = !(blockedArea.IsEmpty());
+            bool placementPosBlocked;
 
             int x, y, actTry = 0;
             Tile actTile;
@@ -595,16 +613,25 @@ namespace WorldGenMod
             do
             {
                 // randomize placement position
-                if (randomizeX)
+                do
                 {
-                    x = Main.rand.Next(area.X0, area.X1 + 1); // X0 <= x <= X1
-                    y = area.Y0;
+                    if (randomizeX)
+                    {
+                        x = WorldGen.genRand.Next(area.X0, area.X1 + 1); // X0 <= x <= X1
+                        y = area.Y0;
+                    }
+                    else
+                    {
+                        x = area.X0;
+                        y = WorldGen.genRand.Next(area.Y0, area.Y1 + 1); // Y0 <= y <= Y1
+                    }
+
+                    if (considerBlockedArea) placementPosBlocked = blockedArea.Contains(x, y);
+                    else placementPosBlocked = false;
                 }
-                else
-                {
-                    x = area.X0;
-                    y = Main.rand.Next(area.Y0, area.Y1 + 1); // Y0 <= y <= Y1
-                }
+                while ( placementPosBlocked);
+
+
 
                 // try placement
                 if (!Main.tile[x, y].HasTile)
@@ -612,13 +639,13 @@ namespace WorldGenMod
                     if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
                     if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
                     else WorldGen.PlaceTile(x, y, type, style: style);
-                }
 
-                // check placement
-                actTile = Main.tile[x, y];
-                if (actTile.HasTile && actTile.TileType == type) // placement successful
-                {
-                    return (true, x, y);
+                    // check placement
+                    actTile = Main.tile[x, y];
+                    if (actTile.HasTile && actTile.TileType == type) // placement successful
+                    {
+                        return (true, x, y);
+                    }
                 }
 
                 actTry++;
@@ -635,25 +662,25 @@ namespace WorldGenMod
         /// <summary> Returns true every "1 out of x times" (2 .. x .. maxInt)</summary>
         public static bool OneOut(int x)
         {
-            return Main.rand.NextBool(Math.Max(1, x));
+            return WorldGen.genRand.NextBool(Math.Max(1, x));
         }
 
         /// <summary> Returns true in x percent of cases (0 .. x .. 100) </summary>
         public static bool Perc(float x)
         {
-            return (Main.rand.NextFloat() < (Math.Clamp(x, 0f, 100f) / 100.0f));
+            return (WorldGen.genRand.NextFloat() < (Math.Clamp(x, 0f, 100f) / 100.0f));
         }
 
         /// <summary> Returns true in x percent of cases (0 .. x .. 1)</summary>
         public static bool Perc2(float x)
         {
-            return (Main.rand.NextFloat() < Math.Clamp(x, 0f, 1f));
+            return (WorldGen.genRand.NextFloat() < Math.Clamp(x, 0f, 1f));
         }
 
         /// <summary> Just a shorter way for </summary>
         public static bool Simple()
         {
-            return (Main.rand.NextBool());
+            return (WorldGen.genRand.NextBool());
         }
     }
 }
