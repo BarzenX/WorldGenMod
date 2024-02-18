@@ -107,8 +107,12 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.Chest, 0);
             Deco.Add(S.Campfire, 0);
             Deco.Add(S.Table, 0);
+            Deco.Add(S.Workbench, 0);
+            Deco.Add(S.Chair, 0);
             Deco.Add(S.MainPainting, 0);
             Deco.Add(S.Chandelier, 0);
+            Deco.Add(S.Candelabra, 0);
+            Deco.Add(S.Candle, 0);
             Deco.Add(S.Lamp, 0);
             Deco.Add(S.Torch, 0);
             Deco.Add(S.Lantern, 0);
@@ -116,6 +120,8 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.DecoPlat, 0);
             Deco.Add(S.StylePaint, 0);
             Deco.Add(S.HangingPot, 0);
+            Deco.Add(S.Bookcase, 0);
+            Deco.Add(S.Sofa, 0);
 
             //choose a random style and define it's types
             int chooseStyle = WorldGen.genRand.Next(3);
@@ -133,15 +139,21 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chest] = 11;    // Tile ID 21 (Cests) -> Type 11=Frozen
                     Deco[S.Campfire] = 3;  // Tile ID 215 (Campfire) -> Type 3=Frozen
                     Deco[S.Table] = 24;    // Tile ID 14 (Tables) -> Type 24=Frozen
+                    Deco[S.Workbench] = 20;// Tile ID 18 (Workbenches) -> Type 20=Frozen
+                    Deco[S.Chair] = 28;    // Tile ID 15 (Chairs) -> Type 28=Frozen
                     Deco[S.MainPainting] = 26;// Tile ID 240 (Painting3X3) -> Type 26=Discover
                     Deco[S.Chandelier] = 11;// Tile ID 34 (Chandeliers) -> Type 11=Frozen
+                    Deco[S.Candelabra] = 9;// Tile ID 100 (Candelabras) -> Type 9=Frozen
+                    Deco[S.Candle] = 8;    // Tile ID 33 (Candles) -> Type 8=Frozen
                     Deco[S.Lamp] = 5;      // Tile ID 93 (Lamps) -> Type 5=Frozen
                     Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
                     Deco[S.Lantern] = 18;  // Tile ID 42 (Lanterns) -> Type 18=Frozen
                     Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
                     Deco[S.DecoPlat] = 19; //TODO: Tile ID 19 (Plattforms) -> Type 19=Boreal
                     Deco[S.StylePaint] = PaintID.WhitePaint;
-                    Deco[S.HangingPot] = 4; // Tile ID 591 (PotsSuspended) -> Type 4=Shiverthorn
+                    Deco[S.HangingPot] = 4;// Tile ID 591 (PotsSuspended) -> Type 4=Shiverthorn
+                    Deco[S.Bookcase] = 17; // Tile ID 101 (Bookcases) -> Type 17=Frozen
+                    Deco[S.Sofa] = 27    ; // Tile ID 89 (Sofas) -> Type 27=Frozen
                     break;
 
                 case S.StyleBoreal: // Boreal
@@ -156,15 +168,21 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Chest] = 33;    // Tile ID 21 (Cests) -> Type 33=Boreal
                     Deco[S.Campfire] = 0;  // Tile ID 215 (Campfire) -> Type 0=Normal
                     Deco[S.Table] = 28;    // Tile ID 14 (Tables) -> Type 33=Boreal
+                    Deco[S.Workbench] = 23;// Tile ID 18 (Workbenches) -> Type 23=Boreal
+                    Deco[S.Chair] = 30;    // Tile ID 15 (Chairs) -> Type 30=Boreal
                     Deco[S.MainPainting] = 34;// Tile ID 240 (Painting3X3) -> Type 34=Crowno Devours His Lunch
                     Deco[S.Chandelier] = 25;// Tile ID 34 (Chandeliers) -> Type 25=Boreal
+                    Deco[S.Candelabra] = 20;// Tile ID 100 (Candelabras) -> Type 20=Boreal
+                    Deco[S.Candle] = 20;   // Tile ID 33 (Candles) -> Type 20=Boreal
                     Deco[S.Lamp] = 20;     // Tile ID 93 (Lamps) -> Type 20=Boreal
                     Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
                     Deco[S.Lantern] = 29;  // Tile ID 42 (Lanterns) -> Type 29=Boreal
                     Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
                     Deco[S.DecoPlat] = 19; // Tile ID 19 (Plattforms) -> Type 19=Boreal
                     Deco[S.StylePaint] = 0;// no paint, leave boreal brown
-                    Deco[S.HangingPot] = 5; // Tile ID 591 (PotsSuspended) -> Type 5=Blinkrot
+                    Deco[S.HangingPot] = 5;// Tile ID 591 (PotsSuspended) -> Type 5=Blinkrot
+                    Deco[S.Bookcase] = 25; // Tile ID 101 (Bookcases) -> Type 25=Boreal
+                    Deco[S.Sofa] = 24; // Tile ID 89 (Sofas) -> Type 24=Frozen
                     break;
 
                 case S.StyleDarkLead: // Dark Lead
@@ -178,9 +196,13 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Door] = 16;     // Tile ID 10 (Doors) -> Type 16=Blue Dungeon (Closed)
                     Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
                     Deco[S.Campfire] = 7;  // Tile ID 215 (Campfire) -> Type 0=Bone
-                    Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood Table
+                    Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood
+                    Deco[S.Workbench] = 1; // Tile ID 18 (Workbenches) -> Type 1=Ebonwood
+                    Deco[S.Chair] = 2;     // Tile ID 15 (Chairs) -> Type 2=Ebonwood
                     Deco[S.MainPainting] = 35;// Tile ID 240 (Painting3X3) -> Type 35=Rare Enchantment
                     Deco[S.Chandelier] = 32;// Tile ID 34 (Chandeliers) -> Type 32=Obsidian
+                    Deco[S.Candelabra] = 2;// Tile ID 100 (Candelabras) -> Type 2=Ebonwood
+                    Deco[S.Candle] = 5;    // Tile ID 33 (Candles) -> Type 5=Ebonwood
                     Deco[S.Lamp] = 23;     // Tile ID 93 (Lamps) -> Type 23=Obsidian
                     Deco[S.Torch] = 7;     // Tile ID 93 (Torches) -> Type 7=Demon
                     Deco[S.Lantern] = 0;   // Tile ID 42 (Lanterns) -> Type 0=Chain Lantern
@@ -188,6 +210,9 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.DecoPlat] = 19; //TODO: Tile ID 19 (Plattforms) -> Type 19=Boreal
                     Deco[S.StylePaint] = PaintID.GrayPaint;
                     Deco[S.HangingPot] = 6; // Tile ID 591 (PotsSuspended) -> Type 6=Corrupt Deathweed
+                    Deco[S.Bookcase] = 7;  // Tile ID 101 (Bookcases) -> Type 7=Ebonwood
+                    Deco[S.Sofa] = 2;      // Tile ID 89 (Sofas) -> Type 2=Ebonwood
+                    //TODO: decide if everything obsidian / demon or ebonwood!
                     break;
             }
             
@@ -638,7 +663,6 @@ namespace WorldGenMod.Structures.Ice
             }
             #endregion
 
-            //TODO: do decoration in separate method
             DecorateRoom(room: room,
                          roomType: roomType,
                          doors: doors);
@@ -959,12 +983,12 @@ namespace WorldGenMod.Structures.Ice
             // init variables
             bool placed;
             (bool success, int x, int y) placeResult;
-            Rectangle2P area1, area2, noBlock = Rectangle2P.Empty; // for creating areas for random placement
+            Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = new List<(int, int)>(); // for remembering positions
 
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(1,2); //TODO
+            int roomDeco = WorldGen.genRand.Next(2,3); //TODO: don't forget to put the correct values in the end
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, maybe another and a painting
@@ -1133,8 +1157,10 @@ namespace WorldGenMod.Structures.Ice
                             placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
                             if (placeResult.success) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
 
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
@@ -1145,13 +1171,16 @@ namespace WorldGenMod.Structures.Ice
                         {
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
                         }
@@ -1205,8 +1234,10 @@ namespace WorldGenMod.Structures.Ice
                             placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
                             if (placeResult.success) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
 
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
@@ -1217,13 +1248,16 @@ namespace WorldGenMod.Structures.Ice
                         {
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
                             Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
+                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
                             Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
                         }
@@ -1250,18 +1284,162 @@ namespace WorldGenMod.Structures.Ice
                     // cobwebs
                     PlaceCobWeb(freeR, 1, 25);
 
-
-
-                    //TODO: hier weiter
-
-                    //keg
-                    //trash can
-                    //sink
-                    //pots with herbs?
-                    //"hanging" pots
-
                     break;
 
+                case 2: // library style 1
+
+                    // wooden beams left and right
+                    for (y = freeR.Y0; y <= freeR.Y1; y++)
+                    {
+                        WorldGen.PlaceTile(doors[Door.Down].doorRect.X0 - 1, y, TileID.BorealBeam);
+                        WorldGen.paintTile(doors[Door.Down].doorRect.X0 - 1, y, (byte)Deco[S.StylePaint]);
+
+                        WorldGen.PlaceTile(doors[Door.Down].doorRect.X1 + 1, y, TileID.BorealBeam);
+                        WorldGen.paintTile(doors[Door.Down].doorRect.X1 + 1, y, (byte)Deco[S.StylePaint]);
+                    }
+                    WorldGen.SlopeTile(doors[Door.Up].doorRect.X0 - 1, doors[Door.Up].doorRect.Y1, 0); // undo possible slope of the updoor so the beams blend better
+                    WorldGen.SlopeTile(doors[Door.Up].doorRect.X1 + 1, doors[Door.Up].doorRect.Y1, 0); // undo possible slope of the updoor so the beams blend better
+
+                    //choose side for bookcase + candelabra and for working bench + books
+                    area1 = new Rectangle2P(freeR.X0, freeR.Y1, doors[Door.Down].doorRect.X0 - 2, freeR.Y1, "dummyString"); // left side
+                    area2 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y1, freeR.X1, freeR.Y1, "dummyString"); // right side
+
+                    if (Chance.Simple()) // randomize side
+                    {
+                        area3 = area1; //change area1 and 2 by using area3
+                        area1 = area2;
+                        area2 = area3;
+                    }
+
+                    // side 1: bookcase and candelabra
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Bookcases, style: Deco[S.Bookcase]); // Bookcase
+                    if (placeResult.success) placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -4), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on bookcase
+                    if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
+
+                    // side 2: workbench and candle and chair
+                    rememberPos.Clear(); //init
+                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 75); // Workbench
+                    if (placeResult.success)
+                    {
+                        rememberPos.Add((placeResult.x, placeResult.y));
+                        placeResult = Func.TryPlaceTile(area2.CloneAndMove(0, -1), noBlock, TileID.Candles, style: Deco[S.Candle], chance: 75); // Try put candle on workbench
+                        if (placeResult.success) Func.Unlight1x1(placeResult.x, placeResult.y); // unlight candle
+
+                        if ( !Main.tile[rememberPos[0].x - 1, rememberPos[0].y].HasTile) // left of workbench is free
+                        {
+                            x = rememberPos[0].x - 1;
+                            y = rememberPos[0].y;
+                            if (Chance.Simple()) WorldGen.PlaceTile(x, y, TileID.Chairs, style: Deco[S.Chair]); // try place chair
+                            if (Main.tile[x, y].HasTile) Func.ChairTurnRight(x, y); // if placed, change the facing direction of the chair
+                        }
+                        if (!Main.tile[rememberPos[0].x + 2, rememberPos[0].y].HasTile) // right of workbench is free
+                        {
+                            x = rememberPos[0].x + 2;
+                            y = rememberPos[0].y;
+                            if (Chance.Simple()) WorldGen.PlaceTile(x, y, TileID.Chairs, style: Deco[S.Chair]); // try place chair
+                        }
+                    }
+
+                    // side 2: shelf with books above workbench and chair
+                    if (freeR.YTiles >= 6)
+                    {
+                        area2.Move(0, -4);
+                        for (x = area2.X0; x <= area2.X1; x++)
+                        {
+                            WorldGen.PlaceTile(x, area2.Y0, TileID.Platforms, style: 19); // Boreal wood platform
+                            WorldGen.paintTile(x, area2.Y0, (byte)Deco[S.StylePaint]);
+
+                            if(Chance.Simple()) WorldGen.PlaceTile(x, area2.Y0 - 1, TileID.Books, style: WorldGen.genRand.Next(5)); // normal book
+                        }
+                    }
+
+                    //__________________________________________________________________________________________________________________________________
+                    // second part of the room...basically the same but sides randomized again
+                    area1 = new Rectangle2P(freeR.X0, freeR.Y1 - 7, doors[Door.Down].doorRect.X0 - 2, freeR.Y1 - 7, "dummyString"); // left side
+                    area2 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y1 - 7, freeR.X1, freeR.Y1 - 7, "dummyString"); // right side
+                    if (freeR.YTiles >= 9)
+                    {
+                        // platform left
+                        for (x = area1.X0; x <= area1.X1; x++)
+                        {
+                            WorldGen.PlaceTile(x, area1.Y0, TileID.Platforms, style: 19); // Boreal wood platform
+                            WorldGen.paintTile(x, area1.Y0, (byte)Deco[S.StylePaint]);
+                        }
+
+                        // platform right
+                        for (x = area2.X0; x <= area2.X1; x++)
+                        {
+                            WorldGen.PlaceTile(x, area2.Y0, TileID.Platforms, style: 19); // Boreal wood platform
+                            WorldGen.paintTile(x, area2.Y0, (byte)Deco[S.StylePaint]);
+                        }
+
+                        area1.Move(0, -1); // 1 tile above platform
+                        area2.Move(0, -1); //
+
+                        if (freeR.YTiles >= 12)
+                        {
+                            if (Chance.Simple()) // randomize side
+                            {
+                                area3 = area1; //change area1 and 2 by using area3
+                                area1 = area2;
+                                area2 = area3;
+                            }
+
+                            // side 1: bookcase and lamp
+                            Func.TryPlaceTile(area1, noBlock, TileID.Bookcases, style: Deco[S.Bookcase]); // bookcase
+                            placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Lamps, style: Deco[S.Lamp], chance: 75); // lamp
+                            if (placeResult.success) Func.UnlightLamp(placeResult.x, placeResult.y);
+
+                            // side 2: sofa and books
+                            placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Benches, style: Deco[S.Sofa], chance: 80); // Sofa
+                            if (!placeResult.success)
+                            {
+                                // place books on shelf
+                                for (x = area2.X0; x <= area2.X1; x++)
+                                {
+                                    if (Chance.Simple()) WorldGen.PlaceTile(x, area2.Y0, TileID.Books, style: WorldGen.genRand.Next(5)); // normal book
+                                }
+                            }
+                            placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 80); // Candelabra
+                            if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y);
+                            else
+                            {
+                                placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Candles, style: Deco[S.Candle]); // Candle
+                                if (placeResult.success) Func.Unlight1x1(placeResult.x, placeResult.y);
+                            }
+
+                            area2.Move(0, -2); // shift area to next platform hight
+                            // another book shelf
+                            for (x = area2.X0; x <= area2.X1; x++)
+                            {
+                                WorldGen.PlaceTile(x, area2.Y0, TileID.Platforms, style: 19); // Boreal wood platform
+                                WorldGen.paintTile(x, area2.Y0, (byte)Deco[S.StylePaint]);
+
+                                if (Chance.Simple()) WorldGen.PlaceTile(x, area2.Y0 - 1, TileID.Books, style: WorldGen.genRand.Next(5)); // normal book
+                            }
+                        }
+                        else // too few space for the bookcase
+                        {
+                            // place books on left shelf
+                            for (x = area1.X0; x <= area1.X1; x++)
+                            {
+                                if (Chance.Simple()) WorldGen.PlaceTile(x, area1.Y0, TileID.Books, style: WorldGen.genRand.Next(5)); // normal book
+                            }
+
+                            // place books on right shelf
+                            for (x = area2.X0; x <= area2.X1; x++)
+                            {
+                                if (Chance.Simple()) WorldGen.PlaceTile(x, area2.Y0, TileID.Books, style: WorldGen.genRand.Next(5)); // normal book
+                            }
+                        }
+                    }
+
+                    // cobwebs
+                    PlaceCobWeb(freeR, 1, 25);
+
+                    //TODO: maybe place "stairs" in the middle, between the two beams?
+
+                    break;
 
             }
 
@@ -1405,7 +1583,7 @@ namespace WorldGenMod.Structures.Ice
                                 break;
                         }
                         
-                        //TODO: overthink case 2
+                        //TODO: overthink case 2...üutting it as described would more or less create an ellipse...and I already have one :-/
                     }
                 }
             }
@@ -1784,6 +1962,39 @@ namespace WorldGenMod.Structures.Ice
         }
     }
 
+    internal class S //Style
+    {
+        public const String StyleSave = "Style";
+        public const String Brick = "Brick";
+        public const String Floor = "Floor";
+        public const String BackWall = "BackWall";
+        public const String DoorWall = "DoorWall";
+        public const String DoorPlat = "DoorPlatform";
+        public const String Door = "Door";
+        public const String Chest = "Chest";
+        public const String Campfire = "Campfire";
+        public const String Table = "Table";
+        public const String Workbench = "Workbench";
+        public const String Chair = "Chair";
+        public const String MainPainting = "MainPainting";
+        public const String Chandelier = "Chandelier";
+        public const String Candelabra = "Candelabra";
+        public const String Candle = "Candle";
+        public const String Lamp = "Lamp";
+        public const String Torch = "Torch";
+        public const String Lantern = "Lantern";
+        public const String Banner = "Banner";
+        public const String DecoPlat = "DecoPlatform";
+        public const String StylePaint = "StylePaint";
+        public const String HangingPot = "HangingPot";
+        public const String Bookcase = "Bookcase";
+        public const String Sofa = "Sofa";
+
+        public const int StyleSnow = 0;
+        public const int StyleBoreal = 1;
+        public const int StyleDarkLead = 2;
+    }
+
     internal class RoomID
     {
         public const short MainRoom = 0;
@@ -1799,32 +2010,5 @@ namespace WorldGenMod.Structures.Ice
         public const short Right = 1;
         public const short Up = 2;
         public const short Down = 3;
-    }
-
-    internal class S //Style
-    {
-        public const String StyleSave = "Style";
-        public const String Brick = "Brick";
-        public const String Floor = "Floor";
-        public const String BackWall = "BackWall";
-        public const String DoorWall = "DoorWall";
-        public const String DoorPlat = "DoorPlatform";
-        public const String Door = "Door";
-        public const String Chest = "Chest";
-        public const String Campfire = "Campfire";
-        public const String Table = "Table";
-        public const String MainPainting = "MainPainting";
-        public const String Chandelier = "Chandelier";
-        public const String Lamp = "Lamp";
-        public const String Torch = "Torch";
-        public const String Lantern = "Lantern";
-        public const String Banner = "Banner";
-        public const String DecoPlat = "DecoPlatform";
-        public const String StylePaint = "StylePaint";
-        public const String HangingPot = "HangingPot";
-
-        public const int StyleSnow = 0;
-        public const int StyleBoreal = 1;
-        public const int StyleDarkLead = 2;
     }
 }

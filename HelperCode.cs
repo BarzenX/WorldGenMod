@@ -11,6 +11,324 @@ using WorldGenMod.Structures.Ice;
 
 namespace WorldGenMod
 {
+
+
+    class Func
+    {
+        /// <summary>
+        /// Turns a chandelier from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the chandelier</param>
+        /// <param name="y">The y-coordinate used for placing the chandelier</param>
+        public static void UnlightChandelier(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 54) //chandelier is lit
+            {
+                for (int i = x - 1; i <= x + 1; i++)
+                {
+                    for (int j = y; j <= y + 2; j++)
+                    {
+                        Main.tile[i, j].TileFrameX += 54; // make the chandelier unlit
+                        // Explanation:
+                        // A chandelier is a 3x3 multitile. Each tile consists of 18 pixels. The unlit appearance is just at the right of the lit one on the Tile Spritesheet.
+                        // So each of the 3x3 unlit tiles has an offset of 3*18 pixels to is lit appearance.
+                    }
+                }
+            }
+            //TODO: expand method for other light sources?
+        }
+
+        /// <summary>
+        /// Turns a fireplace from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the fireplace</param>
+        /// <param name="y">The y-coordinate used for placing the fireplace</param>
+        public static void UnlightFireplace(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 54) //fireplace is lit
+            {
+                for (int i = x - 1; i <= x + 1; i++)
+                {
+                    for (int j = y - 1; j <= y; j++)
+                    {
+                        Main.tile[i, j].TileFrameX += 54; // make the fireplace unlit
+                        if (j == y - 1)   Main.tile[i, j].TileFrameY = 0; // make the fireplace unlit
+                        if (j == y    )   Main.tile[i, j].TileFrameY = 18; // make the fireplace unlit
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Turns a lantern from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the lantern</param>
+        /// <param name="y">The y-coordinate used for placing the lantern</param>
+        public static void UnlightLantern(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 18) //lantern is lit
+            {
+                for (int j = y; j <= y + 1; j++)
+                {
+                    Main.tile[x, j].TileFrameX += 18; // make the lantern unlit
+                }
+            }
+        }
+
+        /// <summary>
+        /// Turns a candelabra from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the candelabra</param>
+        /// <param name="y">The y-coordinate used for placing the candelabra</param>
+        public static void UnlightCandelabra(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 36) //candelabra is lit
+            {
+                for (int i = x - 1; i <= x; i++)  // don't know why the PlaceTile anker point bottom right and ingame placing is bottom left...
+                {
+                    for (int j = y - 1; j <= y; j++)
+                    {
+                        Main.tile[i, j].TileFrameX += 36; // make the candelabra unlit
+                    }
+                }
+
+            }
+        }
+
+        /// <summary>
+        /// Turns a 1x1 light source from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the 1x1 light source</param>
+        /// <param name="y">The y-coordinate used for placing the 1x1 light source</param>
+        public static void Unlight1x1(int x, int y)
+        {
+            Tile tile = Main.tile[x, y];
+            if (tile.TileType == 33) // candles
+            {
+                if (Main.tile[x, y].TileFrameX < 18) // candle is lit
+                {
+                    Main.tile[x, y].TileFrameX += 18; // make the candle unlit
+                }
+            }
+            else if (tile.TileType == 4) // torches
+            {
+                if (Main.tile[x, y].TileFrameX < 54) // torch is lit
+                {
+                    Main.tile[x, y].TileFrameX += 54; // make the torch unlit
+                }
+            }
+        }
+
+        /// <summary>
+        /// Turns a lamp from it's lit appearance (standard appearance after placing) to it's unlit appearance
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the lamp</param>
+        /// <param name="y">The y-coordinate used for placing the lamp</param>
+        public static void UnlightLamp(int x, int y)
+        {
+            Tile tile = Main.tile[x, y];
+            if (tile.TileFrameX < 18 || (tile.TileFrameX > 18 && tile.TileFrameX < 54) ) //lamp is lit....there are 2 colums of lamps in the spritesheet
+            {
+                for (int j = y - 2; j <= y; j++)
+                {
+                    Main.tile[x, j].TileFrameX += 18; // make the lamp unlit
+                }
+            }
+        }
+
+        /// <summary>
+        /// Changes a chair's facing direction from "to the left" (standard appearance after placing) to "to the right"
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the chair</param>
+        /// <param name="y">The y-coordinate used for placing the chair</param>
+        public static void ChairTurnRight(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 18) //chair is facing "to the left"
+            {
+                Main.tile[x, y].TileFrameX += 18; // make the chair face "to the right"
+                Main.tile[x, y - 1].TileFrameX += 18; // make the chair face "to the right"
+            }
+        }
+
+        /// <summary>
+        /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187).
+        /// <br/>Has an option for painting the pile.
+        /// </summary>
+        /// <param name="xPlace">x-coordinate of world placement position</param>
+        /// <param name="yPlace">y-coordinate of world placement position</param>
+        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Broken Chandelier covered in CobWeb" is 25)</param>
+        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0 (type 186 only has Y=0) </param>
+        /// <param name="type">TileID</param>
+        /// <param name="paint">State a PaintID bigger than 0 to automatically paint the pile</param>
+        public static void PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187, byte paint = 0)
+        {
+            if (type < 186 || type > 187) return;
+
+            WorldGen.PlaceTile(xPlace, yPlace, type);
+
+            for (int x = xPlace - 1; x <= xPlace + 1; x++)
+            {
+                for (int y = yPlace - 1; y <= yPlace; y++)
+                {
+                    Main.tile[x, y].TileFrameX += (short)(XSprite * 18 * 3);
+                    Main.tile[x, y].TileFrameY += (short)(YSprite * 18 * 2);
+
+                    if (paint > 0)   WorldGen.paintTile(x, y, paint);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Places a specific SubID of a 1x1 tile 
+        /// </summary>
+        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="yPlace">y-coordinate (in world coordinates) of the placement position</param>
+        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Mug" in Tile-ID#13 is 4)</param>
+        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
+        /// <param name="type">TileID</param>
+        public static void Place1x1SubID(int xPlace, int yPlace, ushort type, int XSprite, int YSprite)
+        {
+            WorldGen.PlaceTile(xPlace, yPlace, type);
+            Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
+            Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
+        }
+
+        /// <summary>
+        /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <param name="type"></param>
+        /// <param name="style"></param>
+        /// <returns></returns>
+        public static bool PlaceHangingLantern(int x, int y, ushort type, int style = 0)
+        {
+            if (!Main.tile[x, y - 1].HasTile || !Main.tile[x + 1, y - 1].HasTile) return false; // no solid tiles to hang to
+
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y; j <= y + 2; j++)
+                {
+                    if (Main.tile[i, j].HasTile)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            int num2 = style * 36;
+            int num3 = 0;
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y; j <= y + 2; j++)
+                {
+                    Main.tile[i, j].CopyFrom(Main.tile[x, y - 1]);
+                    Main.tile[i, j].TileType = type;
+                    Main.tile[i, j].TileFrameX = (short)(num2 + 18 * (i - x));
+                    Main.tile[i, j].TileFrameY = (short)(num3 + 18 * (j - y));
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to place a tile repeatedly in a given space (a straight line), each time variating the placement position.
+        /// <br/> There is also an adjustable initial "placement chance" to make the placement even more randomized.
+        /// </summary>
+        /// <param name="area">The straight line (must be a horizontal or vertical line!) where the object shall be placed at random. </param>
+        /// <param name="blockedArea">And area that will be ignored when randomizing the placement position. If not desired make it an empty area. </param>
+        /// <param name="type">TileID</param>
+        /// <param name="style">Specification of the TileID (f.ex. TileID 215 (Campfire) -> style 3 = Frozen Campfire)</param>
+        /// <param name="maxTry">Maximum count of tries to place the object</param>
+        /// <param name="chance">Chance of the part to be actual placed (1% .. chance .. 100%) </param>
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
+        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
+        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, Rectangle2P blockedArea, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
+        {
+            if (chance < 100) if ( !Chance.Perc(chance))   return (false, 0, 0);
+
+            bool randomizeX = area.YTiles == 1;
+            bool considerBlockedArea = !(blockedArea.IsEmpty());
+            bool placementPosBlocked;
+
+            int x, y, actTry = 0;
+            Tile actTile;
+
+            do
+            {
+                // randomize placement position
+                do
+                {
+                    if (randomizeX)
+                    {
+                        x = WorldGen.genRand.Next(area.X0, area.X1 + 1); // X0 <= x <= X1
+                        y = area.Y0;
+                    }
+                    else
+                    {
+                        x = area.X0;
+                        y = WorldGen.genRand.Next(area.Y0, area.Y1 + 1); // Y0 <= y <= Y1
+                    }
+
+                    if (considerBlockedArea) placementPosBlocked = blockedArea.Contains(x, y);
+                    else placementPosBlocked = false;
+                }
+                while ( placementPosBlocked);
+
+
+
+                // try placement
+                if (!Main.tile[x, y].HasTile)
+                {
+                    if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
+                    if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
+                    else WorldGen.PlaceTile(x, y, type, style: style);
+
+                    // check placement
+                    actTile = Main.tile[x, y];
+                    if (actTile.HasTile && actTile.TileType == type) // placement successful
+                    {
+                        return (true, x, y);
+                    }
+                }
+
+                actTry++;
+            }
+            while ( actTry < maxTry );
+
+            return (false, 0, 0);
+        }
+    }
+
+    internal class Chance
+    {
+        /// <summary> Returns true every "1 out of x times" (2 .. x .. maxInt)</summary>
+        public static bool OneOut(int x)
+        {
+            return WorldGen.genRand.NextBool(Math.Max(1, x));
+        }
+
+        /// <summary> Returns true in x percent of cases (0 .. x .. 100) </summary>
+        public static bool Perc(float x)
+        {
+            return (WorldGen.genRand.NextFloat() < (Math.Clamp(x, 0f, 100f) / 100.0f));
+        }
+
+        /// <summary> Returns true in x percent of cases (0 .. x .. 1)</summary>
+        public static bool Perc2(float x)
+        {
+            return (WorldGen.genRand.NextFloat() < Math.Clamp(x, 0f, 1f));
+        }
+
+        /// <summary> Just a shorter way for </summary>
+        public static bool Simple()
+        {
+            return (WorldGen.genRand.NextBool());
+        }
+    }
+
     public struct Rectangle2P
     {
         public static readonly Rectangle2P Empty; // an empty rectangle for cases when one wants to say "there is nothing"
@@ -440,247 +758,5 @@ namespace WorldGenMod
         /// Converts the attributes of this Ellipse to a human readable string.
         /// </summary>
         public override readonly string ToString() => $"{{X0={x0}, Y0={y0}, xRadius={xRadius}, yRadius={yRadius}, xTiles={xTiles}, yTiles={yTiles}, xForm={xForm}}}";
-    }
-
-    class Func
-    {
-        /// <summary>
-        /// Turns a chandelier from it's lit appearance (standard appearance after placing) to it's unlit appearance
-        /// </summary>
-        /// <param name="x">The x-coordinate used for placing the chandelier</param>
-        /// <param name="y">The y-coordinate used for placing the chandelier</param>
-        public static void UnlightChandelier(int x, int y)
-        {
-            if (Main.tile[x, y].TileFrameX < 54) //chandelier is lit
-            {
-                for (int i = x - 1; i <= x + 1; i++)
-                {
-                    for (int j = y; j <= y + 2; j++)
-                    {
-                        Main.tile[i, j].TileFrameX += 54; // make the chandelier unlit
-                        // Explanation:
-                        // A chandelier is a 3x3 multitile. Each tile consists of 18 pixels. The unlit appearance is just at the right of the lit one on the Tile Spritesheet.
-                        // So each of the 3x3 unlit tiles has an offset of 3*18 pixels to is lit appearance.
-                    }
-                }
-            }
-            //TODO: expand method for other light sources?
-        }
-
-        /// <summary>
-        /// Turns a lantern from it's lit appearance (standard appearance after placing) to it's unlit appearance
-        /// </summary>
-        /// <param name="x">The x-coordinate used for placing the lantern</param>
-        /// <param name="y">The y-coordinate used for placing the lantern</param>
-        public static void UnlightLantern(int x, int y)
-        {
-            if (Main.tile[x, y].TileFrameX < 18) //lantern is lit
-            {
-                for (int j = y; j <= y + 1; j++)
-                {
-                    Main.tile[x, j].TileFrameX += 18; // make the lantern unlit
-                }
-            }
-        }
-
-        /// <summary>
-        /// Turns a fireplace from it's lit appearance (standard appearance after placing) to it's unlit appearance
-        /// </summary>
-        /// <param name="x">The x-coordinate used for placing the fireplace</param>
-        /// <param name="y">The y-coordinate used for placing the fireplace</param>
-        public static void UnlightFireplace(int x, int y)
-        {
-            if (Main.tile[x, y].TileFrameX < 54) //fireplace is lit
-            {
-                for (int i = x - 1; i <= x + 1; i++)
-                {
-                    for (int j = y - 1; j <= y; j++)
-                    {
-                        Main.tile[i, j].TileFrameX += 54; // make the fireplace unlit
-                        if (j == y - 1)   Main.tile[i, j].TileFrameY = 0; // make the fireplace unlit
-                        if (j == y    )   Main.tile[i, j].TileFrameY = 18; // make the fireplace unlit
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187).
-        /// <br/>Has an option for painting the pile.
-        /// </summary>
-        /// <param name="xPlace">x-coordinate of world placement position</param>
-        /// <param name="yPlace">y-coordinate of world placement position</param>
-        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Broken Chandelier covered in CobWeb" is 25)</param>
-        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0 (type 186 only has Y=0) </param>
-        /// <param name="type">TileID</param>
-        /// <param name="paint">State a PaintID bigger than 0 to automatically paint the pile</param>
-        public static void PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187, byte paint = 0)
-        {
-            if (type < 186 || type > 187) return;
-
-            WorldGen.PlaceTile(xPlace, yPlace, type);
-
-            for (int x = xPlace - 1; x <= xPlace + 1; x++)
-            {
-                for (int y = yPlace - 1; y <= yPlace; y++)
-                {
-                    Main.tile[x, y].TileFrameX += (short)(XSprite * 18 * 3);
-                    Main.tile[x, y].TileFrameY += (short)(YSprite * 18 * 2);
-
-                    if (paint > 0)   WorldGen.paintTile(x, y, paint);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Places a specific SubID of a 1x1 tile 
-        /// </summary>
-        /// <param name="xPlace">x-coordinate (in world coordinates) of the placement position</param>
-        /// <param name="yPlace">y-coordinate (in world coordinates) of the placement position</param>
-        /// <param name="XSprite">Horizontal count of chosen sprite, counting starts at 0 (f.ex. "Mug" in Tile-ID#13 is 4)</param>
-        /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0</param>
-        /// <param name="type">TileID</param>
-        public static void Place1x1SubID(int xPlace, int yPlace, ushort type, int XSprite, int YSprite)
-        {
-            WorldGen.PlaceTile(xPlace, yPlace, type);
-            Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
-            Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
-        }
-
-        /// <summary>
-        /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="type"></param>
-        /// <param name="style"></param>
-        /// <returns></returns>
-        public static bool PlaceHangingLantern(int x, int y, ushort type, int style = 0)
-        {
-            if (!Main.tile[x, y - 1].HasTile || !Main.tile[x + 1, y - 1].HasTile) return false; // no solid tiles to hang to
-
-            for (int i = x; i <= x + 1; i++)
-            {
-                for (int j = y; j <= y + 2; j++)
-                {
-                    if (Main.tile[i, j].HasTile)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            int num2 = style * 36;
-            int num3 = 0;
-            for (int i = x; i <= x + 1; i++)
-            {
-                for (int j = y; j <= y + 2; j++)
-                {
-                    Main.tile[i, j].CopyFrom(Main.tile[x, y - 1]);
-                    Main.tile[i, j].TileType = type;
-                    Main.tile[i, j].TileFrameX = (short)(num2 + 18 * (i - x));
-                    Main.tile[i, j].TileFrameY = (short)(num3 + 18 * (j - y));
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Tries to place a tile repeatedly in a given space (a straight line), each time variating the placement position.
-        /// <br/> There is also an adjustable initial "placement chance" to make the placement even more randomized.
-        /// </summary>
-        /// <param name="area">The straight line (must be a horizontal or vertical line!) where the object shall be placed at random. </param>
-        /// <param name="blockedArea">And area that will be ignored when randomizing the placement position. If not desired make it an empty area. </param>
-        /// <param name="type">TileID</param>
-        /// <param name="style">Specification of the TileID (f.ex. TileID 215 (Campfire) -> style 3 = Frozen Campfire)</param>
-        /// <param name="maxTry">Maximum count of tries to place the object</param>
-        /// <param name="chance">Chance of the part to be actual placed (1% .. chance .. 100%) </param>
-        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
-        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
-        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
-        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, Rectangle2P blockedArea, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
-        {
-            if (chance < 100) if ( !Chance.Perc(chance))   return (false, 0, 0);
-
-            bool randomizeX = area.YTiles == 1;
-            bool considerBlockedArea = !(blockedArea.IsEmpty());
-            bool placementPosBlocked;
-
-            int x, y, actTry = 0;
-            Tile actTile;
-
-            do
-            {
-                // randomize placement position
-                do
-                {
-                    if (randomizeX)
-                    {
-                        x = WorldGen.genRand.Next(area.X0, area.X1 + 1); // X0 <= x <= X1
-                        y = area.Y0;
-                    }
-                    else
-                    {
-                        x = area.X0;
-                        y = WorldGen.genRand.Next(area.Y0, area.Y1 + 1); // Y0 <= y <= Y1
-                    }
-
-                    if (considerBlockedArea) placementPosBlocked = blockedArea.Contains(x, y);
-                    else placementPosBlocked = false;
-                }
-                while ( placementPosBlocked);
-
-
-
-                // try placement
-                if (!Main.tile[x, y].HasTile)
-                {
-                    if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
-                    if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
-                    else WorldGen.PlaceTile(x, y, type, style: style);
-
-                    // check placement
-                    actTile = Main.tile[x, y];
-                    if (actTile.HasTile && actTile.TileType == type) // placement successful
-                    {
-                        return (true, x, y);
-                    }
-                }
-
-                actTry++;
-            }
-            while ( actTry < maxTry );
-
-            return (false, 0, 0);
-            //TODO: add placement chance
-        }
-    }
-
-    internal class Chance
-    {
-        /// <summary> Returns true every "1 out of x times" (2 .. x .. maxInt)</summary>
-        public static bool OneOut(int x)
-        {
-            return WorldGen.genRand.NextBool(Math.Max(1, x));
-        }
-
-        /// <summary> Returns true in x percent of cases (0 .. x .. 100) </summary>
-        public static bool Perc(float x)
-        {
-            return (WorldGen.genRand.NextFloat() < (Math.Clamp(x, 0f, 100f) / 100.0f));
-        }
-
-        /// <summary> Returns true in x percent of cases (0 .. x .. 1)</summary>
-        public static bool Perc2(float x)
-        {
-            return (WorldGen.genRand.NextFloat() < Math.Clamp(x, 0f, 1f));
-        }
-
-        /// <summary> Just a shorter way for </summary>
-        public static bool Simple()
-        {
-            return (WorldGen.genRand.NextBool());
-        }
     }
 }
