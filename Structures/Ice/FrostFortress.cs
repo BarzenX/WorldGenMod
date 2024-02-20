@@ -266,6 +266,9 @@ namespace WorldGenMod.Structures.Ice
 
 
             // generate all other rooms
+            int sideRoomWidthMin = 16;
+            int sideRoomWidthMax = 22;
+            int forceEvenRoom = 1; // 1 = force all side rooms to have an even XTiles count; 0 = force all side rooms to have an odd XTiles count
             int sideRoomX0, sideRoomY0, sideRoomX1, sideRoomY1; //create variables
             int verticalRoomX0, verticalRoomY0, verticalRoomX1, verticalRoomY1; //create variables
 
@@ -273,11 +276,11 @@ namespace WorldGenMod.Structures.Ice
             // generate rooms to the right of the main room
             sideRoomX0 = mainRoom.X1 + 1 + gap; // init value for first iteration
             sideRoomY1 = mainRoom.Y1; // this value is constant
-            int sideRoomCount = WorldGen.genRand.Next(3, 7); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
+            int sideRoomCount = WorldGen.genRand.Next(3, 6); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
             for (int i = 1; i <= sideRoomCount; i++)
             {
-                int sideRoomXTiles = WorldGen.genRand.Next(15,21);
-                if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors (default 4 tiles wide) are centered in the room
+                int sideRoomXTiles = WorldGen.genRand.Next(sideRoomWidthMin, sideRoomWidthMax);
+                if (sideRoomXTiles % 2 == forceEvenRoom) sideRoomXTiles++; //forces all rooms to be even or odd 
                 sideRoomX1 = sideRoomX0 + (sideRoomXTiles - 1);
 
                 int sideRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
@@ -371,11 +374,11 @@ namespace WorldGenMod.Structures.Ice
 
             sideRoomX1 = mainRoom.X0 - 1 - gap; // init value for first iteration
             sideRoomY1 = mainRoom.Y1; // this value is constant
-            sideRoomCount = WorldGen.genRand.Next(3, 7); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
+            sideRoomCount = WorldGen.genRand.Next(3, 6); //the rooms are arranged in shape of columns and each column has a fixed width. This is the amount of columns on a side of the main room
             for (int i = 1; i <= sideRoomCount; i++)
             {
-                int sideRoomXTiles = WorldGen.genRand.Next(15, 21);
-                if (sideRoomXTiles % 2 == 1) sideRoomXTiles++; //make room width always even, so the up/down doors (default 4 tiles wide) are centered in the room
+                int sideRoomXTiles = WorldGen.genRand.Next(sideRoomWidthMin, sideRoomWidthMax);
+                if (sideRoomXTiles % 2 == forceEvenRoom) sideRoomXTiles++; //forces all rooms to be even or odd 
                 sideRoomX0 = sideRoomX1 - (sideRoomXTiles - 1);
 
                 int sideRoomYTiles = (int)(sideRoomXTiles * WorldGen.genRand.NextFloat(0.6f, 1f));
@@ -505,8 +508,10 @@ namespace WorldGenMod.Structures.Ice
             Rectangle2P rightDoorRect = new(hollowRect.X1 + 1, y, wThick, leftRightDoorsYTiles);
 
             int upDownDoorXTiles = 4; // how many tiles the up and down doors are wide
-            if (hollowRect.XTiles % 2 == 1)   upDownDoorXTiles++; // an odd number of x-tiles in the room also requires an odd number of platforms so the door is symmetrical
-            x = (hollowRect.X0 + hollowRect.X1) / 2 - (upDownDoorXTiles / 2 - 1);
+            int adjustX = 0; // init
+            if (hollowRect.XTiles % 2 == 1 && upDownDoorXTiles % 2 == 0) upDownDoorXTiles++; // an odd number of x-tiles in the room also requires an odd number of platforms so the door is symmetrical
+            else adjustX = -1; //in even XTile rooms there is a 2-tile-center and XCenter will be the left tile of the two. To center an even-numberd door in this room, you have to subtract 1. Odd XTile rooms are fine
+            x = (hollowRect.XCenter) - (upDownDoorXTiles / 2 + adjustX);
             Rectangle2P upDoorRect   = new(x, room.Y0          , upDownDoorXTiles, wThick);
             Rectangle2P downDoorRect = new(x, hollowRect.Y1 + 1, upDownDoorXTiles, wThick);
 
@@ -982,6 +987,7 @@ namespace WorldGenMod.Structures.Ice
 
             // init variables
             bool placed;
+            bool stinkbugPlaced = false; //stinkbug for preventing NPCs to move into rooms
             (bool success, int x, int y) placeResult;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = new List<(int, int)>(); // for remembering positions
@@ -1434,7 +1440,9 @@ namespace WorldGenMod.Structures.Ice
                         }
                     }
 
-                    // cobwebs
+                    
+                    // finalization
+                    Func.PlaceStinkbug(freeR);
                     PlaceCobWeb(freeR, 1, 25);
 
                     //TODO: maybe place "stairs" in the middle, between the two beams?
@@ -1583,7 +1591,7 @@ namespace WorldGenMod.Structures.Ice
                                 break;
                         }
                         
-                        //TODO: overthink case 2...üutting it as described would more or less create an ellipse...and I already have one :-/
+                        //TODO: overthink case 2...putting it as described would more or less create an ellipse...and I already have one :-/
                     }
                 }
             }

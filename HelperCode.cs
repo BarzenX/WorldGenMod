@@ -300,6 +300,65 @@ namespace WorldGenMod
 
             return (false, 0, 0);
         }
+
+        /// <summary>
+        /// Places a Ghostly Stinkbug in a room.
+        /// <br/> Order of tries: left or right wall (random), ceiling, floor
+        /// </summary>
+        /// <param name="hollowRoom">The room where the stinkbug shall be placed.
+        ///    <br/> It must be the "hollow" room, meaning not the outside dimension where the walls are placed, but the inside of the room, where stuff is placed </param>
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed stinkbug, otherwise 0
+        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed stinkbug, otherwise 0</returns>
+        public static (bool success, int xPlace, int yPlace) PlaceStinkbug(Rectangle2P hollowRoom)
+        {
+            bool startLeft = Chance.Simple();
+            bool stinkbugPlaced;
+            (bool success, int x, int y) placeResult;
+            Rectangle2P area1 = new Rectangle2P(hollowRoom.X0, hollowRoom.Y0, hollowRoom.X0, hollowRoom.Y1, "dummyString");
+            Rectangle2P area2 = new Rectangle2P(hollowRoom.X1, hollowRoom.Y0, hollowRoom.X1, hollowRoom.Y1, "dummyString");
+
+            // left or right wall
+            if (startLeft)
+            {
+                placeResult = TryPlaceTile(area1, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+                stinkbugPlaced = placeResult.success;
+            }
+            else
+            {
+                placeResult = TryPlaceTile(area2, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+                stinkbugPlaced = placeResult.success;
+            }
+            if ( stinkbugPlaced ) return placeResult;
+
+            // the other wall
+            if (startLeft)
+            {
+                placeResult = TryPlaceTile(area2, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+                stinkbugPlaced = placeResult.success;
+            }
+            else
+            {
+                placeResult = TryPlaceTile(area1, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+                stinkbugPlaced = placeResult.success;
+            }
+            if (stinkbugPlaced) return placeResult;
+
+            // ceiling
+            area1 = new Rectangle2P(hollowRoom.X0, hollowRoom.Y0, hollowRoom.X1, hollowRoom.Y0, "dummyString");
+            placeResult = TryPlaceTile(area1, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+            stinkbugPlaced = placeResult.success;
+            if (stinkbugPlaced) return placeResult;
+
+            // floor
+            area1 = new Rectangle2P(hollowRoom.X0, hollowRoom.Y1, hollowRoom.X1, hollowRoom.Y1, "dummyString");
+            placeResult = TryPlaceTile(area1, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+            stinkbugPlaced = placeResult.success;
+            if (stinkbugPlaced) return placeResult;
+
+            return (false, 0, 0); //if you reach this point something went terribly wrong....most probably the room is not the hollow room
+        }
+
     }
 
     internal class Chance
