@@ -19,6 +19,7 @@ using static Humanizer.On;
 using static Terraria.GameContent.Animations.IL_Actions.NPCs;
 using System.Drawing;
 using System.Threading.Channels;
+using Terraria.GameContent;
 
 //TODO: on small maps sometimes the FrostFortress creates extreme slow - unknown reason
 
@@ -1306,6 +1307,51 @@ namespace WorldGenMod.Structures.Ice
                     WorldGen.SlopeTile(doors[Door.Up].doorRect.X0 - 1, doors[Door.Up].doorRect.Y1, 0); // undo possible slope of the updoor so the beams blend better
                     WorldGen.SlopeTile(doors[Door.Up].doorRect.X1 + 1, doors[Door.Up].doorRect.Y1, 0); // undo possible slope of the updoor so the beams blend better
 
+
+                    // deco in the middle of the room
+                    // statue at floor
+                    if (Chance.Simple())
+                    {
+                        x = freeR.XCenter;
+                        if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of statue (2 xTiles) in an odd xTiles rooms
+                        y = freeR.Y1;
+                        WorldGen.PlaceTile(x, y, TileID.Statues); // armor statue
+                    }
+
+                    // item frames hanging on 2/3's room height
+                    if ((freeR.YTiles >= 12))
+                    {
+                        if (Chance.Simple())
+                        {
+                            // frame 1
+                            x = doors[Door.Up].doorRect.X0;
+                            y = freeR.Y0 + freeR.YTiles / 3 - 1;
+                            Func.PlaceItemFrame(x, y);
+
+                            // frame 2
+                            x = doors[Door.Up].doorRect.X1 - 1;
+                            Func.PlaceItemFrame(x, y);
+
+
+                            // frame 3
+                            x = freeR.XCenter;
+                            if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
+                            y = freeR.Y0 + freeR.YTiles / 3 + 1;
+                            Func.PlaceItemFrame(x, y);
+                        }
+                    }
+                    else if ((freeR.YTiles >= 8))
+                    {
+                        if (Chance.Simple())
+                        {
+                            // frame 1
+                            x = freeR.XCenter;
+                            if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
+                            y = freeR.Y0 + freeR.YTiles / 3;
+                            Func.PlaceItemFrame(x, y);
+                        }
+                    }
+
                     //choose side for bookcase + candelabra and for working bench + books
                     area1 = new Rectangle2P(freeR.X0, freeR.Y1, doors[Door.Down].doorRect.X0 - 2, freeR.Y1, "dummyString"); // left side
                     area2 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y1, freeR.X1, freeR.Y1, "dummyString"); // right side
@@ -1322,9 +1368,9 @@ namespace WorldGenMod.Structures.Ice
                     if (placeResult.success) placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -4), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on bookcase
                     if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
 
-                    // side 2: workbench and candle and chair
+                    // side 2: chest, workbench and candle and chair
                     rememberPos.Clear(); //init
-                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 75); // Workbench
+                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 85); // Workbench
                     if (placeResult.success)
                     {
                         rememberPos.Add((placeResult.x, placeResult.y));
@@ -1345,8 +1391,24 @@ namespace WorldGenMod.Structures.Ice
                             if (Chance.Simple()) WorldGen.PlaceTile(x, y, TileID.Chairs, style: Deco[S.Chair]); // try place chair
                         }
                     }
+                    else
+                    {
+                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Tables, style: Deco[S.Table], chance: 70); // Table
+                        if (placeResult.success)
+                        {
+                            x = placeResult.x - WorldGen.genRand.Next(2);
+                            y = placeResult.y - 2;
+                            WorldGen.PlaceTile(x, y, TileID.MusicBoxes, style: 0); // music box
+                            WorldGen.paintTile(x, y - 1,     (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x, y,         (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x + 1, y - 1, (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x + 1, y,     (byte)Deco[S.StylePaint]);
 
-                    // side 2: shelf with books above workbench and chair
+                        }
+                        Func.TryPlaceTile(area2, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70); // Chest
+                    }
+
+                    // still side 2: shelf with books above workbench and chair
                     if (freeR.YTiles >= 6)
                     {
                         area2.Move(0, -4);
@@ -1414,7 +1476,7 @@ namespace WorldGenMod.Structures.Ice
                                 if (placeResult.success) Func.Unlight1x1(placeResult.x, placeResult.y);
                             }
 
-                            area2.Move(0, -2); // shift area to next platform hight
+                            area2.Move(0, -2); // shift area to next platform height
                             // another book shelf
                             for (x = area2.X0; x <= area2.X1; x++)
                             {
@@ -1424,7 +1486,7 @@ namespace WorldGenMod.Structures.Ice
                                 if (Chance.Simple()) WorldGen.PlaceTile(x, area2.Y0 - 1, TileID.Books, style: WorldGen.genRand.Next(5)); // normal book
                             }
                         }
-                        else // too few space for the bookcase
+                        else // too few YTiles for the bookcase
                         {
                             // place books on left shelf
                             for (x = area1.X0; x <= area1.X1; x++)
@@ -1440,12 +1502,35 @@ namespace WorldGenMod.Structures.Ice
                         }
                     }
 
-                    
+                    // ceiling: banners
+                    if (freeR.YTiles >= 15)
+                    {
+                        if(!doors[Door.Up].doorExist)
+                        {
+                            if (freeR.XTiles % 2 == 1) WorldGen.PlaceTile(freeR.XCenter, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                            else
+                            {
+                                WorldGen.PlaceTile(freeR.XCenter, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                                WorldGen.PlaceTile(freeR.XCenter + 1, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                            }
+                        }
+
+                        area1 = new Rectangle2P(freeR.X0, freeR.Y0, doors[Door.Down].doorRect.X0 - 2, freeR.Y0, "dummyString"); // left side
+                        area2 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y0, freeR.X1, freeR.Y0, "dummyString"); // right side
+
+                        Func.TryPlaceTile(area1, noBlock, TileID.Banners, style: Deco[S.Banner], chance: 75); // banner
+                        Func.TryPlaceTile(area1, noBlock, TileID.Banners, style: Deco[S.Banner], chance: 75); // banner
+                        Func.TryPlaceTile(area2, noBlock, TileID.Banners, style: Deco[S.Banner], chance: 75); // banner
+                        Func.TryPlaceTile(area2, noBlock, TileID.Banners, style: Deco[S.Banner], chance: 75); // banner
+                    }
+
+
+
                     // finalization
                     Func.PlaceStinkbug(freeR);
                     PlaceCobWeb(freeR, 1, 25);
 
-                    //TODO: maybe place "stairs" in the middle, between the two beams?
+                    //TODO: maybe place clock in the middle or angle statue at bottom?
 
                     break;
 

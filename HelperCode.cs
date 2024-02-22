@@ -205,7 +205,7 @@ namespace WorldGenMod
         {
             if (!Main.tile[x, y - 1].HasTile || !Main.tile[x + 1, y - 1].HasTile) return false; // no solid tiles to hang to
 
-            for (int i = x; i <= x + 1; i++)
+            for (int i = x; i <= x + 1; i++) // check if area is free
             {
                 for (int j = y; j <= y + 2; j++)
                 {
@@ -226,6 +226,55 @@ namespace WorldGenMod
                     Main.tile[i, j].TileType = type;
                     Main.tile[i, j].TileFrameX = (short)(num2 + 18 * (i - x));
                     Main.tile[i, j].TileFrameY = (short)(num3 + 18 * (j - y));
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
+        /// </summary>
+        /// <param name="x">Left x-coordinate of the Item Frame placement position</param>
+        /// <param name="y">Top y-coordinate of the Item Frame placement position</param>
+        /// <returns></returns>
+        public static bool PlaceItemFrame(int x, int y)
+        {
+            for (int i = x; i <= x + 1; i++) // check if area is free
+            {
+                for (int j = y; j <= y + 1; j++)
+                {
+                    if (Main.tile[i, j].HasTile)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // I need a tile to copy data from..
+            Tile tile = Main.tile[0, 0]; //init
+            for (int i = x; i <= x + 50; i++) // search to the right for a solid tile
+            {
+                tile = Main.tile[i, y];
+                if (tile.HasTile) break;
+            }
+            if (!tile.HasTile)
+            {
+                for (int j = y; j <= y + 50; j++) // search to the bottom for a solid tile
+                {
+                    tile = Main.tile[x, j];
+                    if (tile.HasTile) break;
+                }
+            }
+
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y; j <= y + 1; j++)
+                {
+                    Main.tile[i, j].CopyFrom(tile);
+                    Main.tile[i, j].TileType = TileID.ItemFrame;
+                    Main.tile[i, j].TileFrameX = (short)(18 * (i - x));
+                    Main.tile[i, j].TileFrameY = (short)(18 * (j - y));
                 }
             }
 
@@ -633,6 +682,16 @@ namespace WorldGenMod
         /// Checks if the Rectangle2Point is empty
         /// </summary>
         public readonly bool IsEmpty() => (this.Equals(Empty));
+
+        /// <summary>
+        /// Returns if the Rectangle2Point has an even amount of xTiles
+        /// </summary>
+        public readonly bool IsEvenX() => (this.xTiles % 2 == 0);
+
+        /// <summary>
+        /// Returns if the Rectangle2Point has an even amount of yTiles
+        /// </summary>
+        public readonly bool IsEvenY() => (this.yTiles % 2 == 0);
 
         /// <summary>
         /// Converts the attributes of this Rectangle2Point to a human readable string.
