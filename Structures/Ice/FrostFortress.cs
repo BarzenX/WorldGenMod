@@ -20,6 +20,9 @@ using static Terraria.GameContent.Animations.IL_Actions.NPCs;
 using System.Drawing;
 using System.Threading.Channels;
 using Terraria.GameContent;
+using Terraria.UI;
+using Terraria.ObjectData;
+using Terraria.GameContent.Tile_Entities;
 
 //TODO: on small maps sometimes the FrostFortress creates extreme slow - unknown reason
 
@@ -995,7 +998,7 @@ namespace WorldGenMod.Structures.Ice
 
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(2,3); //TODO: don't forget to put the correct values in the end
+            int roomDeco = WorldGen.genRand.Next(3,4); //TODO: don't forget to put the correct values in the end
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, maybe another and a painting
@@ -1370,7 +1373,7 @@ namespace WorldGenMod.Structures.Ice
 
                     // side 2: chest, workbench and candle and chair
                     rememberPos.Clear(); //init
-                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 85); // Workbench
+                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 70); // Workbench
                     if (placeResult.success)
                     {
                         rememberPos.Add((placeResult.x, placeResult.y));
@@ -1393,7 +1396,7 @@ namespace WorldGenMod.Structures.Ice
                     }
                     else
                     {
-                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Tables, style: Deco[S.Table], chance: 70); // Table
+                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Tables, style: Deco[S.Table], chance: 85); // Table
                         if (placeResult.success)
                         {
                             x = placeResult.x - WorldGen.genRand.Next(2);
@@ -1531,6 +1534,241 @@ namespace WorldGenMod.Structures.Ice
                     PlaceCobWeb(freeR, 1, 25);
 
                     //TODO: maybe place clock in the middle or angle statue at bottom?
+
+                    break;
+
+                case 3: // armory showroom
+
+                    List<(int, int, int)> armorPool = new List<(int, int, int)>() // the possible styles of armor
+                    {
+                        (ArmorIDs.Head.CopperHelmet, ArmorIDs.Body.CopperChainmail, ArmorIDs.Legs.CopperGreaves),
+                        (ArmorIDs.Head.TinHelmet, ArmorIDs.Body.TinChainmail, ArmorIDs.Legs.TinGreaves),
+                        (ArmorIDs.Head.IronHelmet, ArmorIDs.Body.IronChainmail, ArmorIDs.Legs.IronGreaves),
+                        (ArmorIDs.Head.LeadHelmet, ArmorIDs.Body.LeadChainmail, ArmorIDs.Legs.LeadGreaves),
+                        (ArmorIDs.Head.NinjaHood, ArmorIDs.Body.NinjaShirt, ArmorIDs.Legs.NinjaPants),
+
+                        (ArmorIDs.Head.WoodHelmet, ArmorIDs.Body.WoodBreastplate, ArmorIDs.Legs.WoodGreaves),
+                        (ArmorIDs.Head.BorealWoodHelmet, ArmorIDs.Body.BorealWoodBreastplate, ArmorIDs.Legs.BorealWoodGreaves),
+                        (ArmorIDs.Head.ShadewoodHelmet, ArmorIDs.Body.ShadewoodBreastplate, ArmorIDs.Legs.ShadewoodGreaves),
+                        (ArmorIDs.Head.AshWoodHelmet, ArmorIDs.Body.AshWoodBreastplate, ArmorIDs.Legs.AshWoodGreaves),
+                    };
+
+                    // left Mannequin #1
+                    if (Chance.Simple())
+                    {
+                        int setNum = WorldGen.genRand.Next(armorPool.Count);
+                        (bool successs, int dollID) = Func.PlaceMannequin(freeR.X0 + 1, freeR.Y1, armorPool[setNum], female: Chance.Simple(), direction: 1);
+                        if (successs)
+                        {
+                            armorPool.RemoveAt(setNum); // make sure that this amor set won't appear again in this room
+
+                            //put vitrine
+                            int moveCloser = 0; // init
+                            if (!doors[Door.Left].doorExist)
+                            {
+                                for (int j = freeR.Y1 - 3; j <= freeR.Y1; j++)
+                                {
+                                    WorldGen.PlaceTile(freeR.X0, j, TileID.Glass);
+                                    WorldGen.PlaceTile(freeR.X0 + 3, j, TileID.Glass);
+                                }
+                                WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 3, TileID.Glass);
+                                WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 3, TileID.Glass);
+                            }
+                            else moveCloser = 1; // no vitrine, move lamps closer to Mannequin
+
+                            // lamp before vitrine
+                            if (freeR.X0 + 4 - moveCloser < doors[Door.Down].doorRect.X0)
+                            {
+                                WorldGen.PlaceTile(freeR.X0 + 4 - moveCloser, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]);
+                                Func.UnlightLamp(freeR.X0 + 4 - moveCloser, freeR.Y1);
+                            }
+                            else // put a torch on the Mannequin vitrine
+                            {
+                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 3, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0 + 4, freeR.Y1 - 3);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Chance.Simple()) Func.PlaceLargePile(freeR.X0 + 2, freeR.Y1, 6, 0);
+                    }
+
+                    // right Mannequin #1
+                    if (Chance.Simple())
+                    {
+                        int setNum = WorldGen.genRand.Next(armorPool.Count);
+                        (bool successs, int dollID) = Func.PlaceMannequin(freeR.X1 - 2, freeR.Y1, armorPool[setNum], female: Chance.Simple(), direction: -1);
+                        if (successs)
+                        {
+                            armorPool.RemoveAt(setNum); // make sure that this amor set won't appear again in this room
+
+                            //put vitrine
+                            int moveCloser = 0; // init
+                            if (!doors[Door.Right].doorExist)
+                            {
+                                for (int j = freeR.Y1 - 3; j <= freeR.Y1; j++)
+                                {
+                                    WorldGen.PlaceTile(freeR.X1, j, TileID.Glass);
+                                    WorldGen.PlaceTile(freeR.X1 - 3, j, TileID.Glass);
+                                }
+                                WorldGen.PlaceTile(freeR.X1 - 1, freeR.Y1 - 3, TileID.Glass);
+                                WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 3, TileID.Glass);
+                            }
+                            else moveCloser = 1; // no vitrine, move lamps closer to Mannequin
+
+                            // lamp before vitrine
+                            if (freeR.X1 - 4 + moveCloser > doors[Door.Down].doorRect.X1) // don't put lamp on platform
+                            {
+                                WorldGen.PlaceTile(freeR.X1 - 4 + moveCloser, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]);
+                                Func.UnlightLamp(freeR.X1 - 4 + moveCloser, freeR.Y1);
+                            }
+                            else // put a torch on the Mannequin vitrine
+                            {
+                                WorldGen.PlaceTile(freeR.X1 - 4, freeR.Y1 - 3, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1 - 4, freeR.Y1 - 3);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Chance.Perc(80)) Func.PlaceLargePile(freeR.X1 - 2, freeR.Y1, 6, 0);
+                    }
+
+                    // helmet rack between the #1 Mannequins
+                    if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 2, TileID.Painting3X3, style: 43);
+                    if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 2, TileID.Painting3X3, style: 43);
+
+
+
+                    //__________________________________________________________________________________________________________________________________
+                    // second floor of the room...basically the same again
+
+                    if (freeR.YTiles >= 9)
+                    {
+                        // left Mannequin #2
+
+                        // put platform
+                        for (int i = freeR.X0; i < doors[Door.Down].doorRect.X0; i++)
+                        {
+                            WorldGen.PlaceTile(i, freeR.Y1 - 4, TileID.Platforms, style: Deco[S.DecoPlat]);
+                            WorldGen.paintTile(i, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
+                        }
+
+                        if (Chance.Simple())
+                        {
+                            int setNum = WorldGen.genRand.Next(armorPool.Count);
+                            (bool successs, int dollID) = Func.PlaceMannequin(freeR.X0 + 1, freeR.Y1 - 5, armorPool[setNum], female: Chance.Simple(), direction: 1);
+                            if (successs)
+                            {
+                                armorPool.RemoveAt(setNum); // make sure that this amor set won't appear again in this room
+
+                                //put vitrine
+                                for (int j = freeR.Y1 - 8; j <= freeR.Y1 - 5; j++)
+                                {
+                                    WorldGen.PlaceTile(freeR.X0    , j, TileID.Glass);
+                                    WorldGen.PlaceTile(freeR.X0 + 3, j, TileID.Glass);
+                                }
+                                WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 8, TileID.Glass);
+                                WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 8, TileID.Glass);
+                                
+                                // lamp before vitrine
+                                if (freeR.X0 + 4 < doors[Door.Down].doorRect.X0)
+                                {
+                                    WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 5, TileID.Lamps, style: Deco[S.Lamp]);
+                                    Func.UnlightLamp(freeR.X0 + 4, freeR.Y1 - 5);
+                                }
+                                else // put a torch on the Mannequin vitrine
+                                {
+                                    WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 8, TileID.Torches, style: Deco[S.Torch]);
+                                    Func.Unlight1x1(freeR.X0 + 4, freeR.Y1 - 8);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (Chance.Simple()) Func.PlaceLargePile(freeR.X0 + 2, freeR.Y1 - 5, 6, 0);
+                        }
+
+                        // right Mannequin #2
+
+                        // put platform
+                        for (int i = doors[Door.Down].doorRect.X1 + 1; i <= freeR.X1; i++)
+                        {
+                            WorldGen.PlaceTile(i, freeR.Y1 - 4, TileID.Platforms, style: Deco[S.DecoPlat]);
+                            WorldGen.paintTile(i, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
+                        }
+
+                        if (Chance.Simple())
+                        {
+                            int setNum = WorldGen.genRand.Next(armorPool.Count);
+                            (bool successs, int dollID) = Func.PlaceMannequin(freeR.X1 - 2, freeR.Y1 - 5, armorPool[setNum], female: Chance.Simple(), direction: -1);
+                            if (successs)
+                            {
+                                armorPool.RemoveAt(setNum); // make sure that this amor set won't appear again in this room
+
+                                //put vitrine
+                                for (int j = freeR.Y1 - 8; j <= freeR.Y1 - 5; j++)
+                                {
+                                    WorldGen.PlaceTile(freeR.X1    , j, TileID.Glass);
+                                    WorldGen.PlaceTile(freeR.X1 - 3, j, TileID.Glass);
+                                }
+                                WorldGen.PlaceTile(freeR.X1 - 1, freeR.Y1 - 8, TileID.Glass);
+                                WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 8, TileID.Glass);
+
+                                // lamp before vitrine
+                                if (freeR.X1 - 4 > doors[Door.Down].doorRect.X1) // don't put lamp on platform
+                                {
+                                    WorldGen.PlaceTile(freeR.X1 - 4, freeR.Y1 - 5, TileID.Lamps, style: Deco[S.Lamp]);
+                                    Func.UnlightLamp(freeR.X1 - 4, freeR.Y1 - 5);
+                                }
+                                else // put a torch the Mannequin vitrine
+                                {
+                                    WorldGen.PlaceTile(freeR.X1 - 4, freeR.Y1 - 8, TileID.Torches, style: Deco[S.Torch]);
+                                    Func.Unlight1x1(freeR.X1 - 4, freeR.Y1 - 8);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (Chance.Perc(80)) Func.PlaceLargePile(freeR.X1 - 2, freeR.Y1 - 5, 6, 0);
+                        }
+
+                        // sword rack between the #1 Mannequins
+                        if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 7, TileID.Painting3X3, style: 45);
+                        if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 7, TileID.Painting3X3, style: 45);
+
+                        if (!Main.tile[doors[Door.Down].doorRect.X0 - 1, freeR.Y1 - 5].HasTile && !Main.tile[doors[Door.Down].doorRect.X1 + 1, freeR.Y1 - 5].HasTile) // bot first platforms tiles are free
+                        {
+                            WorldGen.KillTile(doors[Door.Down].doorRect.X0 - 1, freeR.Y1 - 4); // kill platform so the sword racks look nicer
+                            WorldGen.KillTile(doors[Door.Down].doorRect.X1 + 1, freeR.Y1 - 4); // kill platform so the sword racks look nicer
+                        }
+                    }
+
+                    if (freeR.YTiles >= 14)
+                    {
+                        WorldGen.PlaceObject(freeR.X0 + 2, freeR.Y0 + 2, TileID.WeaponsRack2); // don't know why PlaceTile doesn't work
+
+                        // place TileEntity
+                        int id = TEWeaponsRack.Place(freeR.X0 + 2, freeR.Y0 + 2); // the TileEntity always sits at the center of the WeaponsRack
+                        TEWeaponsRack rack = TileEntity.ByID[id] as TEWeaponsRack;
+
+                        // equip sword
+                        Item sword = new Item(ItemID.BoneSword);
+                        rack.item = sword;
+
+
+
+
+                        WorldGen.PlaceObject(freeR.X1 - 2, freeR.Y0 + 2, TileID.WeaponsRack2, direction: 1); // don't know why PlaceTile doesn't work
+                        // Explanation: the right WeaponsRack gets the other direction so the later added swords point to each other
+
+                    }
+
+
+
+
+
 
                     break;
 
@@ -2053,6 +2291,8 @@ namespace WorldGenMod.Structures.Ice
 
             WorldGen.PlaceTile(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
         }
+
+
     }
 
     internal class S //Style
@@ -2103,5 +2343,66 @@ namespace WorldGenMod.Structures.Ice
         public const short Right = 1;
         public const short Up = 2;
         public const short Down = 3;
+    }
+
+
+
+
+    public static class TileUtils
+    {
+        /// <summary>
+        /// Atttempts to find the top-left corner of a multitile at location (<paramref name="x"/>, <paramref name="y"/>)
+        /// </summary>
+        /// <param name="x">The tile X-coordinate</param>
+        /// <param name="y">The tile Y-coordinate</param>
+        /// <returns>The tile location of the multitile's top-left corner, or the input location if no tile is present or the tile is not part of a multitile</returns>
+        public static Point16 GetTopLeftTileInMultitile(int x, int y)
+        {
+            Tile tile = Main.tile[x, y];
+
+            int frameX = 0;
+            int frameY = 0;
+
+            if (tile.HasTile)
+            {
+                int style = 0, alt = 0;
+                TileObjectData.GetTileInfo(tile, ref style, ref alt);
+                TileObjectData data = TileObjectData.GetTileData(tile.TileType, style, alt);
+
+                if (data != null)
+                {
+                    int size = 16 + data.CoordinatePadding;
+
+                    frameX = tile.TileFrameX % (size * data.Width) / size;
+                    frameY = tile.TileFrameY % (size * data.Height) / size;
+                }
+            }
+
+            return new Point16(x - frameX, y - frameY);
+        }
+
+        /// <summary>
+        /// Uses <seealso cref="GetTopLeftTileInMultitile(int, int)" />  to try to get the entity bound to the multitile at (<paramref name="i"/>, <paramref name="j"/>).
+        /// </summary>
+        /// <typeparam name="T">The type to get the entity as</typeparam>
+        /// <param name="i">The tile X-coordinate</param>
+        /// <param name="j">The tile Y-coordinate</param>
+        /// <param name="entity">The found <typeparamref name="T"/> instance, if there was one.</param>
+        /// <returns><see langword="true"/> if there was a <typeparamref name="T"/> instance, or <see langword="false"/> if there was no entity present OR the entity was not a <typeparamref name="T"/> instance.</returns>
+        public static bool TryGetTileEntityAs<T>(int i, int j, out T entity) where T : TileEntity
+        {
+            Point16 origin = GetTopLeftTileInMultitile(i, j);
+
+            // TileEntity.ByPosition is a Dictionary<Point16, TileEntity> which contains all placed TileEntity instances in the world
+            // TryGetValue is used to both check if the dictionary has the key, origin, and get the value from that key if it's there
+            if (TileEntity.ByPosition.TryGetValue(origin, out TileEntity existing) && existing is T existingAsT)
+            {
+                entity = existingAsT;
+                return true;
+            }
+
+            entity = null;
+            return false;
+        }
     }
 }

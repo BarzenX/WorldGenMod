@@ -8,6 +8,8 @@ using Terraria;
 using Terraria.ModLoader;
 using System.Diagnostics;
 using WorldGenMod.Structures.Ice;
+using Terraria.DataStructures;
+using Terraria.GameContent.Tile_Entities;
 
 namespace WorldGenMod
 {
@@ -279,6 +281,66 @@ namespace WorldGenMod
             }
 
             return true;
+            //TODO: maybe hand over a tile to copy data from?
+        }
+
+        /// <summary>
+        /// Checks the space and places a Mannequin at the given world position and equips it with items
+        /// </summary>
+        /// <param name="x">The bottom left x-coordinate of the Mannequin placement position</param>
+        /// <param name="y">The bottom left y-coordinate of the Mannequin placement position</param>
+        /// <param name="female">If the female version of the Mannequin shall be placed</param>
+        /// <param name="headArmorID">The ArmorID of the to be equipped head equipment</param>
+        /// <param name="bodyArmorID">The ArmorID of the to be equipped body equipment</param>
+        /// <param name="legsArmorID">The ArmorID of the to be equipped legs equipment</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>id</b>: The ID of the Mannequins TileEntity. -1 if placement was not successful</returns>
+        public static (bool success, int dollID) PlaceMannequin(int x, int y, (int headArmorID, int bodyArmorID, int legsArmorID) armor, bool female = false, int direction = -1)
+        {
+            // check placement location
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y - 2; j <= y; j++)
+                {
+                    if (Main.tile[i, j].HasTile)
+                    {
+                        return (false, -1);
+                    }
+                }
+            }
+
+            // check floor tiles (where the Mannequin will stand on)
+            for (int i = x; i <= x + 1; i++)
+            { 
+                if (!Main.tile[i, y + 1].HasTile) return (false, -1);
+                if (!WorldGen.SolidTile2(i, y + 1)) return (false, -1);
+            }
+
+            // place Mannequin tiles 
+            int style = 0;
+            if (female) style = 2;
+            WorldGen.PlaceObject(x, y, TileID.DisplayDoll, style: style, direction: direction);
+
+            // check for correct tile placement
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y - 2; j <= y; j++)
+                {
+                    if (!(Main.tile[i, j].TileType == TileID.DisplayDoll))
+                    {
+                        return (false, -1);
+                    }
+                }
+            }
+
+            // place TileEntity
+            int id = TEDisplayDoll.Place(x, y - 2); // the TileEntity always sits at the top left corner of a multitile
+            TEDisplayDoll doll = TileEntity.ByID[id] as TEDisplayDoll;
+
+            // equip armor
+            doll.SetInventoryFromMannequin(armor.headArmorID * 100, armor.bodyArmorID * 100, armor.legsArmorID * 100);
+
+            return (true, id);
         }
 
         /// <summary>
@@ -430,7 +492,7 @@ namespace WorldGenMod
             return (WorldGen.genRand.NextFloat() < Math.Clamp(x, 0f, 1f));
         }
 
-        /// <summary> Just a shorter way for </summary>
+        /// <summary> Just a shorter way for WorldGen.genRand.NextBool()</summary>
         public static bool Simple()
         {
             return (WorldGen.genRand.NextBool());
