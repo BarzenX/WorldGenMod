@@ -8,6 +8,18 @@
     <LangVersion>10</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <AdditionalFiles Remove="Debug\**" />
+    <Compile Remove="Debug\**" />
+    <EmbeddedResource Remove="Debug\**" />
+    <None Remove="Debug\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Structures\DebugSword.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Structures\DebugSword.png" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
   </ItemGroup>
 </Project>

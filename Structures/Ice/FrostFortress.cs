@@ -1329,18 +1329,18 @@ namespace WorldGenMod.Structures.Ice
                             // frame 1
                             x = doors[Door.Up].doorRect.X0;
                             y = freeR.Y0 + freeR.YTiles / 3 - 1;
-                            Func.PlaceItemFrame(x, y);
+                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
 
                             // frame 2
                             x = doors[Door.Up].doorRect.X1 - 1;
-                            Func.PlaceItemFrame(x, y);
+                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
 
 
                             // frame 3
                             x = freeR.XCenter;
                             if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
                             y = freeR.Y0 + freeR.YTiles / 3 + 1;
-                            Func.PlaceItemFrame(x, y);
+                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
                         }
                     }
                     else if ((freeR.YTiles >= 8))
@@ -1351,7 +1351,7 @@ namespace WorldGenMod.Structures.Ice
                             x = freeR.XCenter;
                             if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
                             y = freeR.Y0 + freeR.YTiles / 3;
-                            Func.PlaceItemFrame(x, y);
+                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
                         }
                     }
 
@@ -1554,7 +1554,7 @@ namespace WorldGenMod.Structures.Ice
                     };
 
                     // left Mannequin #1
-                    if (Chance.Simple())
+                    if (Chance.Perc(75))
                     {
                         int setNum = WorldGen.genRand.Next(armorPool.Count);
                         (bool successs, int dollID) = Func.PlaceMannequin(freeR.X0 + 1, freeR.Y1, armorPool[setNum], female: Chance.Simple(), direction: 1);
@@ -1595,7 +1595,7 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     // right Mannequin #1
-                    if (Chance.Simple())
+                    if (Chance.Perc(75))
                     {
                         int setNum = WorldGen.genRand.Next(armorPool.Count);
                         (bool successs, int dollID) = Func.PlaceMannequin(freeR.X1 - 2, freeR.Y1, armorPool[setNum], female: Chance.Simple(), direction: -1);
@@ -1655,7 +1655,7 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.paintTile(i, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
                         }
 
-                        if (Chance.Simple())
+                        if (Chance.Perc(75))
                         {
                             int setNum = WorldGen.genRand.Next(armorPool.Count);
                             (bool successs, int dollID) = Func.PlaceMannequin(freeR.X0 + 1, freeR.Y1 - 5, armorPool[setNum], female: Chance.Simple(), direction: 1);
@@ -1666,12 +1666,12 @@ namespace WorldGenMod.Structures.Ice
                                 //put vitrine
                                 for (int j = freeR.Y1 - 8; j <= freeR.Y1 - 5; j++)
                                 {
-                                    WorldGen.PlaceTile(freeR.X0    , j, TileID.Glass);
+                                    WorldGen.PlaceTile(freeR.X0, j, TileID.Glass);
                                     WorldGen.PlaceTile(freeR.X0 + 3, j, TileID.Glass);
                                 }
                                 WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 8, TileID.Glass);
                                 WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 8, TileID.Glass);
-                                
+
                                 // lamp before vitrine
                                 if (freeR.X0 + 4 < doors[Door.Down].doorRect.X0)
                                 {
@@ -1699,7 +1699,7 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.paintTile(i, freeR.Y1 - 4, (byte)Deco[S.StylePaint]);
                         }
 
-                        if (Chance.Simple())
+                        if (Chance.Perc(75))
                         {
                             int setNum = WorldGen.genRand.Next(armorPool.Count);
                             (bool successs, int dollID) = Func.PlaceMannequin(freeR.X1 - 2, freeR.Y1 - 5, armorPool[setNum], female: Chance.Simple(), direction: -1);
@@ -1710,7 +1710,7 @@ namespace WorldGenMod.Structures.Ice
                                 //put vitrine
                                 for (int j = freeR.Y1 - 8; j <= freeR.Y1 - 5; j++)
                                 {
-                                    WorldGen.PlaceTile(freeR.X1    , j, TileID.Glass);
+                                    WorldGen.PlaceTile(freeR.X1, j, TileID.Glass);
                                     WorldGen.PlaceTile(freeR.X1 - 3, j, TileID.Glass);
                                 }
                                 WorldGen.PlaceTile(freeR.X1 - 1, freeR.Y1 - 8, TileID.Glass);
@@ -1747,26 +1747,34 @@ namespace WorldGenMod.Structures.Ice
 
                     if (freeR.YTiles >= 14)
                     {
-                        WorldGen.PlaceObject(freeR.X0 + 2, freeR.Y0 + 2, TileID.WeaponsRack2); // don't know why PlaceTile doesn't work
-
-                        // place TileEntity
-                        int id = TEWeaponsRack.Place(freeR.X0 + 2, freeR.Y0 + 2); // the TileEntity always sits at the center of the WeaponsRack
-                        TEWeaponsRack rack = TileEntity.ByID[id] as TEWeaponsRack;
-
-                        // equip sword
-                        Item sword = new Item(ItemID.BoneSword);
-                        rack.item = sword;
-
-
-
-
-                        WorldGen.PlaceObject(freeR.X1 - 2, freeR.Y0 + 2, TileID.WeaponsRack2, direction: 1); // don't know why PlaceTile doesn't work
-                        // Explanation: the right WeaponsRack gets the other direction so the later added swords point to each other
-
+                        if (Chance.Perc(75)) Func.PlaceWeaponRack(freeR.X0 + 2, freeR.Y0 + 2, paint: Deco[S.StylePaint], item: ItemID.TungstenBroadsword);
+                        if (Chance.Perc(75)) Func.PlaceWeaponRack(freeR.X1 - 2, freeR.Y0 + 2, paint: Deco[S.StylePaint], item: ItemID.TungstenBroadsword, direction: 1);
                     }
 
+                    // place banners
+                    x = doors[Door.Up].doorRect.X0 - 1;
+                    y = freeR.Y0;
+                    if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                    {
+                        if (Chance.Perc(70))
+                        {
+                            //WorldGen.SlopeTile(x, y - 1, 0); // undo slope
+                            WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                        }
+                    }
 
+                    x = doors[Door.Up].doorRect.X1 + 1;
+                    y = freeR.Y0;
+                    if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                    {
+                        if (Chance.Perc(70))
+                        {
+                            //WorldGen.SlopeTile(x, y - 1, 0); // undo slope
+                            WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                        }
+                    }
 
+                    //TODO: banner schön machen, ob nun door X0 X1 oder 1 daneben? Hängt auch von WeaponRack ab
 
 
 

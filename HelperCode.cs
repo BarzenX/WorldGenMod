@@ -178,6 +178,7 @@ namespace WorldGenMod
                     if (paint > 0)   WorldGen.paintTile(x, y, paint);
                 }
             }
+            //TODO: check if free and check if PlaceTile was successful
         }
 
         /// <summary>
@@ -205,7 +206,7 @@ namespace WorldGenMod
         /// <returns></returns>
         public static bool PlaceHangingLantern(int x, int y, ushort type, int style = 0)
         {
-            if (!Main.tile[x, y - 1].HasTile || !Main.tile[x + 1, y - 1].HasTile) return false; // no solid tiles to hang to
+            if (!Main.tile[x, y - 1].HasTile || !Main.tile[x + 1, y - 1].HasTile) return false; // no solid tiles to hang on to
 
             for (int i = x; i <= x + 1; i++) // check if area is free
             {
@@ -220,14 +221,17 @@ namespace WorldGenMod
 
             int num2 = style * 36;
             int num3 = 0;
+            Tile tile;
             for (int i = x; i <= x + 1; i++)
             {
                 for (int j = y; j <= y + 2; j++)
                 {
-                    Main.tile[i, j].CopyFrom(Main.tile[x, y - 1]);
-                    Main.tile[i, j].TileType = type;
-                    Main.tile[i, j].TileFrameX = (short)(num2 + 18 * (i - x));
-                    Main.tile[i, j].TileFrameY = (short)(num3 + 18 * (j - y));
+                    tile = Main.tile[i, j];
+                    //tile.CopyFrom(Main.tile[x, y - 1]);
+                    tile.HasTile = true;
+                    tile.TileType = type;
+                    tile.TileFrameX = (short)(num2 + 18 * (i - x));
+                    tile.TileFrameY = (short)(num3 + 18 * (j - y));
                 }
             }
 
@@ -235,53 +239,137 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
+        /// Tries to place an ItemFrame.
+        /// <br/>If there is a background wall missing on the 2x2 placement area it can be filled by a wallType > 0. If not, placement will fail
+        /// <br/>Has an option for painting the ItemFrame and for placing an item inside of it.
         /// </summary>
-        /// <param name="x">Left x-coordinate of the Item Frame placement position</param>
-        /// <param name="y">Top y-coordinate of the Item Frame placement position</param>
+        /// <param name="x">Left x-coordinate of the ItemFrame placement position</param>
+        /// <param name="y">Top y-coordinate of the ItemFrame placement position</param>
+        /// <param name="wallType">State a WallID > 0 to automatically place missing background walls</param>
+        /// <param name="paint">State a PaintID >= 0 to automatically paint the ItemFrame</param>
+        /// <param name="item">State an ItemID > 0 to automatically place the stated item inside the ItemFrame</param>
         /// <returns></returns>
-        public static bool PlaceItemFrame(int x, int y)
+        public static bool PlaceItemFrame(int x, int y, int wallType = 0, int paint = -1, int item = 0)
         {
-            for (int i = x; i <= x + 1; i++) // check if area is free
-            {
-                for (int j = y; j <= y + 1; j++)
-                {
-                    if (Main.tile[i, j].HasTile)
-                    {
-                        return false;
-                    }
-                }
-            }
+            bool forceWall = wallType > 0;
+            bool applyPaint = paint >= 0;
 
-            // I need a tile to copy data from..
-            Tile tile = Main.tile[0, 0]; //init
-            for (int i = x; i <= x + 50; i++) // search to the right for a solid tile
-            {
-                tile = Main.tile[i, y];
-                if (tile.HasTile) break;
-            }
-            if (!tile.HasTile)
-            {
-                for (int j = y; j <= y + 50; j++) // search to the bottom for a solid tile
-                {
-                    tile = Main.tile[x, j];
-                    if (tile.HasTile) break;
-                }
-            }
-
+            // pre-checks
             for (int i = x; i <= x + 1; i++)
             {
                 for (int j = y; j <= y + 1; j++)
                 {
-                    Main.tile[i, j].CopyFrom(tile);
-                    Main.tile[i, j].TileType = TileID.ItemFrame;
-                    Main.tile[i, j].TileFrameX = (short)(18 * (i - x));
-                    Main.tile[i, j].TileFrameY = (short)(18 * (j - y));
+                    if (Main.tile[i, j].HasTile)  // check if area is free
+                    {
+                        return false;
+                    }
+                    if (Main.tile[i, j].WallType == 0) // and has background wall
+                    {
+                        if (!forceWall) return false;
+                        else WorldGen.PlaceWall(i, j, wallType);
+                    }
+                }
+            }
+
+            // place tiles
+            Tile tile;
+            for (int i = x; i <= x + 1; i++)
+            {
+                for (int j = y; j <= y + 1; j++)
+                {
+                    tile = Main.tile[i, j];
+                    tile.HasTile = true;
+                    tile.TileType = TileID.ItemFrame;
+                    tile.TileFrameX = (short)(18 * (i - x));
+                    tile.TileFrameY = (short)(18 * (j - y));
+
+                    if (applyPaint) WorldGen.paintTile(i, j, (byte)paint);
+                }
+            }
+
+            // place TileEntity
+            int id = TEItemFrame.Place(x, y); // creates the TileEntity at the top left corner of the multitile (TileEntities are always at the top-left multitile corner)
+
+            //place item inside of the ItemFrame
+            if (item > 0)
+            {
+                TEItemFrame itemFrame = TileEntity.ByID[id] as TEItemFrame;
+                itemFrame.item = new Item(item);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to place a WeaponRack (TileID 471).
+        /// <br/>If there is a background wall missing on the 3x3 placement area it can be filled by a wallType > 0. If not, placement will fail
+        /// <br/>Has an option for painting the WeaponRack and for placing an item inside of it.
+        /// </summary>
+        /// <param name="x">Center x-coordinate of the WeaponRack placement position</param>
+        /// <param name="y">Center y-coordinate of the WeaponRack placement position</param>
+        /// <param name="wallType">State a WallID > 0 to automatically place missing background walls</param>
+        /// <param name="paint">State a PaintID >= 0 to automatically paint the WeaponRack</param>
+        /// <param name="item">State an ItemID > 0 to automatically place the stated item inside the WeaponRack</param>
+        /// <param name="direction">If a placed sword would point from left-to-right (-1) or from right-to-left (+1) - seen from the handle to the tip)</param>
+        /// <returns></returns>
+        public static bool PlaceWeaponRack(int x, int y, int wallType = 0, int paint = -1, int item = 0, int direction = -1)
+        {
+            bool forceWall = wallType > 0;
+            bool applyPaint = paint >= 0;
+            short RightToLeftOffset = 0;
+            if (direction == 1) RightToLeftOffset = 54;
+            int xTL = x - 1; // x-coordinate of the top left point in the WeaponRack
+            int yTL = y - 1; // y-coordinate of the top left point in the WeaponRack
+
+
+            // pre-checks
+            for (int i = xTL; i <= xTL + 2; i++)
+            {
+                for (int j = yTL; j <= yTL + 2; j++)
+                {
+                    if (Main.tile[i, j].HasTile)  // check if area is free
+                    {
+                        return false;
+                    }
+                    if (Main.tile[i, j].WallType == 0) // and has background wall
+                    {
+                        if (!forceWall) return false;
+                        else WorldGen.PlaceWall(i, j, wallType);
+                    }
+                }
+            }
+
+            // place tiles
+            Tile tile;
+            for (int i = xTL; i <= xTL + 2; i++)
+            {
+                for (int j = yTL; j <= yTL + 2; j++)
+                {
+                    tile = Main.tile[i, j];
+                    tile.HasTile = true;
+                    tile.TileType = TileID.WeaponsRack2;
+                    tile.TileFrameX = (short)(18 * (i - xTL) + RightToLeftOffset);
+                    tile.TileFrameY = (short)(18 * (j - yTL));
+
+                    if (applyPaint) WorldGen.paintTile(i, j, (byte)paint);
+                }
+            }
+
+            // place TileEntity
+            int id = TEWeaponsRack.Place(xTL, yTL); // creates the TileEntity at the top left corner of the multitile (TileEntities are always at the top-left multitile corner)
+
+            //place item inside of the WeaponRack
+            if (item > 0)
+            {
+                Item itemToPlace = new Item(item);
+                if (TEWeaponsRack.FitsWeaponFrame(itemToPlace))
+                {
+                    TEWeaponsRack weaponRack = TileEntity.ByID[id] as TEWeaponsRack;
+                    weaponRack.item = itemToPlace;
                 }
             }
 
             return true;
-            //TODO: maybe hand over a tile to copy data from?
         }
 
         /// <summary>
@@ -289,10 +377,11 @@ namespace WorldGenMod
         /// </summary>
         /// <param name="x">The bottom left x-coordinate of the Mannequin placement position</param>
         /// <param name="y">The bottom left y-coordinate of the Mannequin placement position</param>
-        /// <param name="female">If the female version of the Mannequin shall be placed</param>
         /// <param name="headArmorID">The ArmorID of the to be equipped head equipment</param>
         /// <param name="bodyArmorID">The ArmorID of the to be equipped body equipment</param>
         /// <param name="legsArmorID">The ArmorID of the to be equipped legs equipment</param>
+        /// <param name="female">If the female version of the Mannequin shall be placed</param>
+        /// <param name="direction">If the Mannequin shall look to the left (-1) or to the right (+1)</param>
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>id</b>: The ID of the Mannequins TileEntity. -1 if placement was not successful</returns>
         public static (bool success, int dollID) PlaceMannequin(int x, int y, (int headArmorID, int bodyArmorID, int legsArmorID) armor, bool female = false, int direction = -1)
@@ -334,7 +423,7 @@ namespace WorldGenMod
             }
 
             // place TileEntity
-            int id = TEDisplayDoll.Place(x, y - 2); // the TileEntity always sits at the top left corner of a multitile
+            int id = TEDisplayDoll.Place(x, y - 2); // creates the TileEntity at the top left corner of the multitile (TileEntities are always at the top-left multitile corner)
             TEDisplayDoll doll = TileEntity.ByID[id] as TEDisplayDoll;
 
             // equip armor
@@ -468,6 +557,38 @@ namespace WorldGenMod
             if (stinkbugPlaced) return placeResult;
 
             return (false, 0, 0); //if you reach this point something went terribly wrong....most probably the room is not the hollow room
+        }
+
+        /// <summary>
+        /// Checks if the rectangular area is free of any other tiles
+        /// <br/>Has an option for checking if background walls are present and another option to place some at once if missing
+        /// </summary>
+        /// <param name="area">The to be checked area</param>
+        /// <param name="checkWall">If the area shall be checked if background walls are present</param>
+        /// <param name="wallType">If <i>checkWall = true</i> a value > 0 will place background walls where they are missing</param>
+        public static bool CheckFree(Rectangle2P area, bool checkWall = false, int wallType = 0)
+        {
+            // pre-checks
+            for (int i = area.X0; i <= area.X1; i++)
+            {
+                for (int j = area.Y0; j <= area.Y1; j++)
+                {
+                    if (Main.tile[i, j].HasTile)  // check if area is free
+                    {
+                        return false;
+                    }
+                    if (checkWall)
+                    {
+                        if (Main.tile[i, j].WallType == 0) // and has background wall
+                        {
+                            if (wallType > 0) WorldGen.PlaceWall(i, j, wallType);
+                            else return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
 
     }
