@@ -489,11 +489,8 @@ namespace WorldGenMod.Structures.Ice
         /// <returns>Hands back the room dimensions input</returns>
         public Rectangle2P GenerateRoom(Rectangle2P room, int roomType, bool leftDoor = false, bool rightDoor = false, bool upDoor = false, bool downDoor = false)
         {
-            Rectangle2P hollowRect = room; // the "hollow" room.... e.g. without the wall bricks
-            hollowRect.X0 += wThick;
-            hollowRect.Y0 += wThick;
-            hollowRect.X1 -= wThick;
-            hollowRect.Y1 -= wThick;
+            // the "free" room.... e.g. the rooms free inside (not the wall bricks)
+            Rectangle2P freeR = new Rectangle2P(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
 
             int x; //temp variable for later calculations;
             int y; //temp variable for later calculations;
@@ -504,38 +501,47 @@ namespace WorldGenMod.Structures.Ice
 
 
             // create door rectangles
+            #region door rectangles
             IDictionary<int, (bool doorExist ,Rectangle2P doorRect)> doors = new Dictionary<int, (bool, Rectangle2P)>(); // a dictionary for working and sending the doors in a compact way
 
             int leftRightDoorsYTiles = 3; // how many tiles the left and right doors are high
-            y = hollowRect.Y1 - (leftRightDoorsYTiles - 1);
-            Rectangle2P leftDoorRect  = new(room.X0          , y, wThick, leftRightDoorsYTiles);
-            Rectangle2P rightDoorRect = new(hollowRect.X1 + 1, y, wThick, leftRightDoorsYTiles);
+            y = freeR.Y1 - (leftRightDoorsYTiles - 1);
+            Rectangle2P leftDoorRect  = new(room.X0     , y, wThick, leftRightDoorsYTiles);
+            Rectangle2P rightDoorRect = new(freeR.X1 + 1, y, wThick, leftRightDoorsYTiles);
 
             int upDownDoorXTiles = 4; // how many tiles the up and down doors are wide
             int adjustX = 0; // init
-            if (hollowRect.XTiles % 2 == 1 && upDownDoorXTiles % 2 == 0) upDownDoorXTiles++; // an odd number of x-tiles in the room also requires an odd number of platforms so the door is symmetrical
+            if (freeR.XTiles % 2 == 1 && upDownDoorXTiles % 2 == 0) upDownDoorXTiles++; // an odd number of x-tiles in the room also requires an odd number of platforms so the door is symmetrical
             else adjustX = -1; //in even XTile rooms there is a 2-tile-center and XCenter will be the left tile of the two. To center an even-numberd door in this room, you have to subtract 1. Odd XTile rooms are fine
-            x = (hollowRect.XCenter) - (upDownDoorXTiles / 2 + adjustX);
-            Rectangle2P upDoorRect   = new(x, room.Y0          , upDownDoorXTiles, wThick);
-            Rectangle2P downDoorRect = new(x, hollowRect.Y1 + 1, upDownDoorXTiles, wThick);
+            x = (freeR.XCenter) - (upDownDoorXTiles / 2 + adjustX);
+            Rectangle2P upDoorRect   = new(x, room.Y0     , upDownDoorXTiles, wThick);
+            Rectangle2P downDoorRect = new(x, freeR.Y1 + 1, upDownDoorXTiles, wThick);
 
             doors.Add(Door.Left , (leftDoor , leftDoorRect));
             doors.Add(Door.Right, (rightDoor, rightDoorRect));
             doors.Add(Door.Up   , (upDoor   , upDoorRect));
             doors.Add(Door.Down , (downDoor , downDoorRect));
-
+            #endregion
 
 
             // Create room frame, floor and background wall
-            bool lastLeftSideRoom = (roomType == RoomID.SideLeft && !leftDoor);
-            bool lastRightSideRoom = (roomType == RoomID.SideRight && !rightDoor);
-            bool lastSideRoom = lastLeftSideRoom || lastRightSideRoom; //this side room is the last one on this side
+            bool mainRoom = roomType == RoomID.MainRoom;
+
+            bool leftRoom = roomType == RoomID.SideLeft;
+            bool rightRoom = roomType == RoomID.SideRight;
+            bool sideRoom = leftRoom || rightRoom;
+
+            bool lastLeftRoom = leftRoom && !leftDoor;
+            bool lastRightRoom = rightRoom && !rightDoor;
+
+            bool upRoom = roomType == RoomID.AboveSide;
+            bool downRoom = roomType == RoomID.BelowSide;
+
             for (int i = room.X0; i <= room.X1; i++)
             {
                 for (int j = room.Y0; j <= room.Y1; j++)
                 {
                     WorldGen.EmptyLiquid(i, j);
-
 
                     if (i > room.X0 && i < room.X1 && j > room.Y0 && j < room.Y1 && // leave 1 tile distance from the sides (so the background won't overlap to the outside)
                          (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f) || noBreakPoint)) // make here and there some cracks in the background to let it look more "abandoned"
@@ -544,19 +550,33 @@ namespace WorldGenMod.Structures.Ice
                         WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
                     }
 
-                    if ( (j == hollowRect.Y1 + 1) && // the height of this rooms floor
-                          ( ((i >= hollowRect.X0 && i <= hollowRect.X1) || ((roomType == RoomID.SideLeft && !lastSideRoom) || roomType == RoomID.MainRoom || (roomType == RoomID.SideRight && !lastSideRoom)) ) ||  //main rooms and side rooms need the floor on the room frame, up/down rooms mustn't
-                            (i >= hollowRect.X0 && lastLeftSideRoom) ||// the last side room mustn't have the floor on the outer wall
-                            (i <= hollowRect.X1 && lastRightSideRoom) ) ) // the last side room mustn't have the floor on the outer wall
+                    if ((upRoom && j > freeR.Y1) || (downRoom && j < freeR.Y0)) // the parts where above and below rooms overlap
                     {
-                        WorldGen.PlaceTile(i, j, Deco[S.Floor], mute: true, forced: true);
+                        continue; // do nothing, it has already been taken care of
                     }
-                    else if (j == room.Y0 && // the height of this rooms topmost ceiling row
-                             roomType == RoomID.BelowSide) // down-rooms have the floor type of the above room laying at this height. Placing bricks would destroy already placed decoration
+                    else if (j == freeR.Y1 + 1) // the height of this rooms floor
                     {
-                        continue; // don't override anything.
+                        if (((i >= freeR.X0 && i <= freeR.X1) || ((leftRoom && !lastLeftRoom) || mainRoom || (rightRoom && !lastRightRoom))) ||  //main rooms and side rooms need the floor on the room frame, up/down rooms mustn't
+                             (i >= freeR.X0 && lastLeftRoom) || // the last left side room has the floor only on its right side (on the left there is the outer wall)
+                             (i <= freeR.X1 && lastRightRoom)) // the last right side room has the floor only on its left side (on the right there is the outer wall)
+                        {
+                            WorldGen.PlaceTile(i, j, Deco[S.Floor], mute: true, forced: true);
+                        }
+                        else WorldGen.PlaceTile(i, j, Deco[S.Brick], mute: true, forced: true); // normal brick
                     }
-                    else if (i < hollowRect.X0 || i > hollowRect.X1 || j < hollowRect.Y0 || j > hollowRect.Y1 + 1)
+                    else if (j == room.Y0) // the height of this rooms topmost ceiling row
+                    {
+                        if ((sideRoom || upRoom) && upDoor) // prepare the floor for any above laying room
+                        {
+                            if (i >= freeR.X0 && i <= freeR.X1)
+                            {
+                                WorldGen.PlaceTile(i, j, Deco[S.Floor], mute: true, forced: true);
+                            }
+                            else WorldGen.PlaceTile(i, j, Deco[S.Brick], mute: true, forced: true); // normal brick
+                        }
+                        else WorldGen.PlaceTile(i, j, Deco[S.Brick], mute: true, forced: true); // normal brick
+                    }
+                    else if (i < freeR.X0 || i > freeR.X1 || j < freeR.Y0 || j > freeR.Y1 + 1)
                     {
                         WorldGen.PlaceTile(i, j, Deco[S.Brick], mute: true, forced: true); // place the outer wall bricks of the room
                     }
@@ -566,7 +586,26 @@ namespace WorldGenMod.Structures.Ice
 
             #region Doors
             //carve out doors
-            bool aboveRoomFloor;
+            for (int doorNum = 0; doorNum <= doors.Count - 1; doorNum++)
+            {
+                if ((upRoom && doorNum == Door.Down) || (downRoom && doorNum == Door.Up))
+                {
+                    continue; // these door are already created by their previous room, no need to to
+                }
+
+                if (doors[doorNum].doorExist)
+                {
+                    for (int i = doors[doorNum].doorRect.X0; i <= doors[doorNum].doorRect.X1; i++)
+                    {
+                        for (int j = doors[doorNum].doorRect.Y0; j <= doors[doorNum].doorRect.Y1; j++)
+                        {
+                            WorldGen.KillTile(i, j);
+                        }
+                    }
+                }
+            }
+
+            // place background walls
             for (int doorNum = 0; doorNum <= doors.Count - 1; doorNum++)
             {
                 if (doors[doorNum].doorExist)
@@ -575,11 +614,12 @@ namespace WorldGenMod.Structures.Ice
                     {
                         for (int j = doors[doorNum].doorRect.Y0; j <= doors[doorNum].doorRect.Y1; j++)
                         {
-                            aboveRoomFloor = (roomType == RoomID.BelowSide) && (doorNum == Door.Up) && (j == doors[doorNum].doorRect.Y0);
-                            if ( !aboveRoomFloor ) WorldGen.KillTile(i, j); // kill everything but this row of an above room to not destroy decoration
-
                             WorldGen.KillWall(i, j);
-                            if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f) || noBreakPoint)    WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
+
+                            if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f) || noBreakPoint)
+                            {
+                                WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
+                            }
                         }
                     }
                 }
@@ -591,7 +631,7 @@ namespace WorldGenMod.Structures.Ice
                 x = leftDoorRect.X1;
                 y = leftDoorRect.Y0 - 1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will later get a slope. Put the doorWallType there so it looks nicer
 
                 x = leftDoorRect.X0;
                 y = leftDoorRect.Y1 + 1;
@@ -603,7 +643,7 @@ namespace WorldGenMod.Structures.Ice
                 x = rightDoorRect.X0;
                 y = rightDoorRect.Y0 - 1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will later get a slope. Put the doorWallType there so it looks nicer
 
                 x = rightDoorRect.X1;
                 y = rightDoorRect.Y1 + 1;
@@ -660,12 +700,12 @@ namespace WorldGenMod.Structures.Ice
             {
                 WorldGen.SlopeTile(rightDoorRect.X0, rightDoorRect.Y0 - 1, 4); // door left corner
             }
-            if (upDoor)
+            if (upDoor && !downRoom)
             {
                 WorldGen.SlopeTile(upDoorRect.X0 - 1, upDoorRect.Y1, 3); // updoor left corner
                 WorldGen.SlopeTile(upDoorRect.X1 + 1, upDoorRect.Y1, 4); // updoor right corner
             }
-            if (downDoor)
+            if (downDoor && !upRoom)
             {
                 WorldGen.SlopeTile(downDoorRect.X0 - 1, downDoorRect.Y1, 3); // updoor left corner
                 WorldGen.SlopeTile(downDoorRect.X1 + 1, downDoorRect.Y1, 4); // updoor right corner
@@ -998,7 +1038,7 @@ namespace WorldGenMod.Structures.Ice
 
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(3,4); //TODO: don't forget to put the correct values in the end
+            int roomDeco = WorldGen.genRand.Next(4,5); //TODO: don't forget to put the correct values in the end
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, maybe another and a painting
@@ -1778,6 +1818,25 @@ namespace WorldGenMod.Structures.Ice
 
 
 
+                    break;
+
+                case 4:
+                    WorldGen.PlaceObject(freeR.X0, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                    WorldGen.PlaceObject(freeR.X0+1, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                    WorldGen.PlaceObject(freeR.X0+2, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                    WorldGen.SlopeTile(doors[Door.Up].doorRect.X0 - 1, freeR.Y0 - 1, 0); // undo slope
+                    WorldGen.PlaceObject(doors[Door.Up].doorRect.X0 - 1, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+                    WorldGen.SlopeTile(doors[Door.Up].doorRect.X1 + 1, freeR.Y0 - 1, 0); // undo slope
+                    WorldGen.PlaceObject(doors[Door.Up].doorRect.X1 + 1, freeR.Y0, TileID.Banners, style: Deco[S.Banner]); // banner
+
+                    WorldGen.PlaceObject(freeR.X0, freeR.Y1, TileID.Chairs); // chair
+                    WorldGen.PlaceObject(freeR.X0+1, freeR.Y1, TileID.Chairs); // chair
+                    WorldGen.PlaceObject(freeR.XCenter, freeR.Y1, TileID.Chairs); // chair
+                    WorldGen.PlaceObject(freeR.X1, freeR.Y1, TileID.Chairs); // chair
+
+                    break;
+
+                case 100:
                     break;
 
             }
