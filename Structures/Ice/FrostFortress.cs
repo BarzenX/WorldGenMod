@@ -126,6 +126,7 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.HangingPot, 0);
             Deco.Add(S.Bookcase, 0);
             Deco.Add(S.Sofa, 0);
+            Deco.Add(S.Clock, 0);
 
             //choose a random style and define it's types
             int chooseStyle = WorldGen.genRand.Next(3);
@@ -158,6 +159,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.HangingPot] = 4;// Tile ID 591 (PotsSuspended) -> Type 4=Shiverthorn
                     Deco[S.Bookcase] = 17; // Tile ID 101 (Bookcases) -> Type 17=Frozen
                     Deco[S.Sofa] = 27    ; // Tile ID 89 (Sofas) -> Type 27=Frozen
+                    Deco[S.Clock] = 11;    // Tile ID 104 (GrandfatherClocks) -> Type 11=Frozen
                     break;
 
                 case S.StyleBoreal: // Boreal
@@ -186,7 +188,8 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.StylePaint] = 0;// no paint, leave boreal brown
                     Deco[S.HangingPot] = 5;// Tile ID 591 (PotsSuspended) -> Type 5=Blinkrot
                     Deco[S.Bookcase] = 25; // Tile ID 101 (Bookcases) -> Type 25=Boreal
-                    Deco[S.Sofa] = 24; // Tile ID 89 (Sofas) -> Type 24=Frozen
+                    Deco[S.Sofa] = 24;     // Tile ID 89 (Sofas) -> Type 24=Boreal
+                    Deco[S.Clock] = 6;     // Tile ID 104 (GrandfatherClocks) -> Type 6=Boreal
                     break;
 
                 case S.StyleDarkLead: // Dark Lead
@@ -216,6 +219,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.HangingPot] = 6; // Tile ID 591 (PotsSuspended) -> Type 6=Corrupt Deathweed
                     Deco[S.Bookcase] = 7;  // Tile ID 101 (Bookcases) -> Type 7=Ebonwood
                     Deco[S.Sofa] = 2;      // Tile ID 89 (Sofas) -> Type 2=Ebonwood
+                    Deco[S.Clock] = 10;    // Tile ID 104 (GrandfatherClocks) -> Type 10=Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
                     break;
             }
@@ -1038,7 +1042,7 @@ namespace WorldGenMod.Structures.Ice
 
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(4,5); //TODO: don't forget to put the correct values in the end
+            int roomDeco = WorldGen.genRand.Next(100,101); //TODO: don't forget to put the correct values in the end
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, maybe another and a painting
@@ -1728,6 +1732,7 @@ namespace WorldGenMod.Structures.Ice
                         else
                         {
                             if (Chance.Simple()) Func.PlaceLargePile(freeR.X0 + 2, freeR.Y1 - 5, 6, 0);
+                            //TODO: change it to a damaged vitrine with a small skeleton inside
                         }
 
                         // right Mannequin #2
@@ -1774,7 +1779,7 @@ namespace WorldGenMod.Structures.Ice
                             if (Chance.Perc(80)) Func.PlaceLargePile(freeR.X1 - 2, freeR.Y1 - 5, 6, 0);
                         }
 
-                        // sword rack between the #1 Mannequins
+                        // sword rack between the #2 Mannequins
                         if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 7, TileID.Painting3X3, style: 45);
                         if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 7, TileID.Painting3X3, style: 45);
 
@@ -1791,28 +1796,60 @@ namespace WorldGenMod.Structures.Ice
                         if (Chance.Perc(75)) Func.PlaceWeaponRack(freeR.X1 - 2, freeR.Y0 + 2, paint: Deco[S.StylePaint], item: ItemID.TungstenBroadsword, direction: 1);
                     }
 
-                    // place banners
-                    x = doors[Door.Up].doorRect.X0 - 1;
-                    y = freeR.Y0;
-                    if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                    // place banners at ceiling
+                    // (checks only for left side, but rooms are symmetrical...so I can place on both sides)
+                    if (freeR.X0 + 5 == doors[Door.Up].doorRect.X0 - 1) // 1 space + 3 tiles WeaponRack + 1 space = at corner of updoor
                     {
+                        // left banner
                         if (Chance.Perc(70))
                         {
-                            //WorldGen.SlopeTile(x, y - 1, 0); // undo slope
-                            WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                            x = doors[Door.Up].doorRect.X0 - 1;
+                            y = freeR.Y0;
+                            if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                            {
+                                WorldGen.SlopeTile(x, y - 1, 0); // undo slope
+                                WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                            } 
                         }
-                    }
 
-                    x = doors[Door.Up].doorRect.X1 + 1;
-                    y = freeR.Y0;
-                    if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
-                    {
+                        // right banner
                         if (Chance.Perc(70))
                         {
-                            //WorldGen.SlopeTile(x, y - 1, 0); // undo slope
-                            WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                            x = doors[Door.Up].doorRect.X1 + 1;
+                            y = freeR.Y0;
+                            if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                            {
+                                WorldGen.SlopeTile(x, y - 1, 0); // undo slope
+                                WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                            }
                         }
                     }
+                    else if (freeR.X0 + 5 < doors[Door.Up].doorRect.X0 - 1) // 1 space + 3 tiles WeaponRack + 1 space = before corner of updoor
+                    {
+                        // left banner
+                        if (Chance.Perc(70))
+                        {
+                            x = freeR.X0 + 5;
+                            y = freeR.Y0;
+                            if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                            } 
+                        }
+
+                        // right banner
+                        if (Chance.Perc(70))
+                        {
+                            x = freeR.X1 - 5;
+                            y = freeR.Y0;
+                            if (Func.CheckFree(new Rectangle2P(x, y, x, y + 2, "dummyString")))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.Banners, style: Deco[S.Banner]); // banner
+                            }
+                        }
+                    }
+                    //else { }// 1 space + 3 tiles WeaponRack + 1 space = already inside updoor -> too few space to look good...do nothing
+
 
                     //TODO: banner schön machen, ob nun door X0 X1 oder 1 daneben? Hängt auch von WeaponRack ab
 
@@ -2389,6 +2426,7 @@ namespace WorldGenMod.Structures.Ice
         public const String HangingPot = "HangingPot";
         public const String Bookcase = "Bookcase";
         public const String Sofa = "Sofa";
+        public const String Clock = "Clock";
 
         public const int StyleSnow = 0;
         public const int StyleBoreal = 1;
