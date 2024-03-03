@@ -111,11 +111,11 @@ namespace WorldGenMod
                     Main.tile[x, y].TileFrameX += 18; // make the candle unlit
                 }
             }
-            else if (tile.TileType == 4) // torches
+            else if (tile.TileType == 4) // torch tiles are actually 22 x 22 pixels wide big! 
             {
-                if (Main.tile[x, y].TileFrameX < 54) // torch is lit
+                if (Main.tile[x, y].TileFrameX < 66) // torch is lit
                 {
-                    Main.tile[x, y].TileFrameX += 54; // make the torch unlit
+                    Main.tile[x, y].TileFrameX += 66; // make the torch unlit
                 }
             }
             //TODO: somehow doesn't work for Torches with TileFrameX = 0
