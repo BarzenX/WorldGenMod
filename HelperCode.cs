@@ -37,7 +37,6 @@ namespace WorldGenMod
                     }
                 }
             }
-            //TODO: expand method for other light sources?
         }
 
         /// <summary>
@@ -119,6 +118,7 @@ namespace WorldGenMod
                     Main.tile[x, y].TileFrameX += 54; // make the torch unlit
                 }
             }
+            //TODO: somehow doesn't work for Torches with TileFrameX = 0
         }
 
         /// <summary>
@@ -149,6 +149,26 @@ namespace WorldGenMod
             {
                 Main.tile[x, y].TileFrameX += 18; // make the chair face "to the right"
                 Main.tile[x, y - 1].TileFrameX += 18; // make the chair face "to the right"
+            }
+        }
+
+        /// <summary>
+        /// Changes a bed's facing direction from "to the right" (standard appearance after placing) to "to the left"
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the bed</param>
+        /// <param name="y">The y-coordinate used for placing the bed</param>
+        public static void BedTurnLeft(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX >= 72) //bed is facing "to the right"
+            {
+                for (int i = x - 1; i <= x + 2; i++)
+                {
+                    for (int j = y - 1; j <= y; j++)
+                    {
+                        Main.tile[i, j].TileFrameX -= 72; // make the bed face "to the left"
+                    }
+                }
+
             }
         }
 
