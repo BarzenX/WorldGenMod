@@ -10,6 +10,7 @@ using Terraria.DataStructures;
 using System;
 using Terraria.ObjectData;
 using System.Diagnostics;
+using Terraria.UI;
 
 //TODO: sometimes the FrostFortress creates extremely slow - supposedly because of the frequent PlaceTile calls...what to do?
 
@@ -186,7 +187,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.StyleSave] = S.StyleDarkLead;
                     Deco[S.Brick] = TileID.LeadBrick;
                     Deco[S.Floor] = TileID.EbonstoneBrick;
-                    //TODO: find something     if (Chance.Simple())   Deco[Style.Floor] = TileID.AncientSilverBrick;
+                    //TODO: find something (Platinum Brick?)     if (Chance.Simple())   Deco[Style.Floor] = TileID.AncientSilverBrick;
                     Deco[S.BackWall] = WallID.BlueDungeonSlab;
                     Deco[S.DoorWall] = WallID.Bone;
                     Deco[S.DoorPlat] = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
@@ -1007,7 +1008,7 @@ namespace WorldGenMod.Structures.Ice
 
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(4,5); //TODO: don't forget to put the correct values in the end
+            int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, maybe another and a painting
@@ -2168,7 +2169,62 @@ namespace WorldGenMod.Structures.Ice
 
                     break;
 
-                case 5: //empty room because I don't have enough room templates and the other rooms repeat too much!
+                case 5: // armory
+
+                    // floor
+                    area1 = new Rectangle2P(freeR.X0, freeR.Y1, freeR.X1, freeR.Y1, "dummyString");
+
+                    int chestID = WorldGen.PlaceChest(freeR.X0 + WorldGen.genRand.Next(freeR.XDiff), freeR.Y1, style: Deco[S.Chest]);
+                    if (chestID != -1) FillChest(Main.chest[chestID], 4);
+
+                    placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.WorkBenches, style: Deco[S.Workbench], chance: 50); // workbench
+                    if (placeResult.success)
+                    {
+                        if (Chance.Perc(65))
+                        {
+                            WorldGen.PlaceTile(placeResult.x + 1, placeResult.y - 1, TileID.Candelabras, style: Deco[S.Candelabra]);
+                            Func.UnlightCandelabra(placeResult.x + 1, placeResult.y - 1);
+                        }
+                    }
+
+                    List<(ushort TileID, int style)> floorItems = new List<(ushort, int)>()
+                    {
+                        (TileID.FishingCrate, 0),  // wooden crate
+                        (TileID.FishingCrate, 1),  // iron crate
+                        (TileID.Containers, 5),  // wooden barrel
+                        (TileID.Statues, 3),  // sword statue
+                        (TileID.Statues, 6),  // shield statue
+                        (TileID.Statues, 21),  // spear statue
+
+                    };
+
+                    for (int i = 1; i <= 6; i++)
+                    {
+                        int num = WorldGen.genRand.Next(floorItems.Count);
+                        Func.TryPlaceTile(area1, Rectangle2P.Empty, floorItems[num].TileID, style: floorItems[num].style, chance: 50); // one random item of the list
+                    }
+                    //TODO: make the same thing here for the kitchen and library shelves!
+
+
+                    if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
+                    if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
+
+                    if (freeR.YTiles >= 9)
+                    {
+                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
+                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
+                    }
+
+                    if (freeR.YTiles >= 12)
+                    {
+                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
+                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
+                    }
+
+                    PlaceCobWeb(freeR, 1, 25);
+                    break;
+
+                case 6: //empty room because I don't have enough room templates and the other rooms repeat too much!
 
                     PlaceCobWeb(freeR, 1, 25);
                     break;
@@ -2240,7 +2296,6 @@ namespace WorldGenMod.Structures.Ice
                 ItemID.SpelunkerGlowstick
             };
 
-            //WorldGen.PlaceTile(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
             int nextItem = 0;
 
             chest.item[nextItem].SetDefaults(mainItem[WorldGen.genRand.Next(mainItem.Count)]);
