@@ -53,8 +53,8 @@ namespace WorldGenMod
                     for (int j = y - 1; j <= y; j++)
                     {
                         Main.tile[i, j].TileFrameX += 54; // make the fireplace unlit
-                        if (j == y - 1)   Main.tile[i, j].TileFrameY = 0; // make the fireplace unlit
-                        if (j == y    )   Main.tile[i, j].TileFrameY = 18; // make the fireplace unlit
+                        if (j == y - 1) Main.tile[i, j].TileFrameY = 0; // make the fireplace unlit
+                        if (j == y) Main.tile[i, j].TileFrameY = 18; // make the fireplace unlit
                     }
                 }
             }
@@ -118,7 +118,7 @@ namespace WorldGenMod
                     Main.tile[x, y].TileFrameX += 66; // make the torch unlit
                 }
             }
-            //TODO: somehow doesn't work for Torches with TileFrameX = 0
+        //TODO: somehow doesn't work for Torches with TileFrameX = 0
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace WorldGenMod
         public static void UnlightLamp(int x, int y)
         {
             Tile tile = Main.tile[x, y];
-            if (tile.TileFrameX < 18 || (tile.TileFrameX > 18 && tile.TileFrameX < 54) ) //lamp is lit....there are 2 colums of lamps in the spritesheet
+            if (tile.TileFrameX < 18 || (tile.TileFrameX > 18 && tile.TileFrameX < 54)) //lamp is lit....there are 2 colums of lamps in the spritesheet
             {
                 for (int j = y - 2; j <= y; j++)
                 {

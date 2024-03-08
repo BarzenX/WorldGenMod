@@ -51,7 +51,7 @@ namespace WorldGenMod.Structures.Ice
             int amount = (int)(Main.maxTilesX * 0.0004f);
             int amountGenerated = 0;
 
-            while (amountGenerated < amount)
+            while (amountGenerated == 0) // reduced to only 1 Fortress per map. was: (amountGenerated < amount)
             {
                 int x = WorldGen.genRand.Next(200, Main.maxTilesX - 200);
                 int y = WorldGen.genRand.Next((int)GenVars.rockLayer, Main.maxTilesY - 200);
@@ -78,7 +78,6 @@ namespace WorldGenMod.Structures.Ice
                         }
                     }
                 }
-                //TODO: create just one fortress
 
                 amountGenerated++;
                 fortresses.Add(position);
@@ -712,37 +711,6 @@ namespace WorldGenMod.Structures.Ice
                          roomType: roomType,
                          doors: doors);
 
-
-            //int decoration = WorldGen.genRand.Next(4);
-            //int chest = -1;
-            //switch (decoration)
-            //{
-            //    default:
-            //        break;
-            //    case 0:
-            //        if (Chance.Simple())
-            //        {
-            //            chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: 4);
-            //            if (chest != -1) FillChest(Main.chest[chest], 4);
-            //        }
-            //        else
-            //        {
-            //            chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: defaultChestType);
-            //            if (chest != -1) FillChest(Main.chest[chest], defaultChestType);
-            //        }
-            //        break;
-            //    case 1:
-            //        chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: defaultChestType);
-            //        if (chest != -1) FillChest(Main.chest[chest], defaultChestType);
-            //        break;
-            //    case 2:
-            //        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Campfire, style: defaultCampfireType);
-            //        break;
-            //    case 3:
-            //        WorldGen.PlaceTile(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, TileID.Tables, style: defaultTableType);
-            //        break;
-            //}
-
             traps.Add(new Point16(room.X0 + WorldGen.genRand.Next(room.XDiff), room.Y0 + WorldGen.genRand.Next(room.YDiff)));
 
             return room;
@@ -1005,7 +973,7 @@ namespace WorldGenMod.Structures.Ice
             (bool success, int x, int y) placeResult;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = new List<(int, int)>(); // for remembering positions
-
+            int chestID;
 
             //choose room decoration at random
             int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
@@ -1136,7 +1104,7 @@ namespace WorldGenMod.Structures.Ice
                         // put deco on bar
                         area1 = new Rectangle2P(placeResult.x - 1, placeResult.y - 2, placeResult.x + 1, placeResult.y - 2, "dummyString");
                         Func.TryPlaceTile(area1, noBlock, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                        placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Candles, style: 0, chance: 50); // Candle
+                        placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Candles, style: 0, chance: 50); // normal candle (blends better with the wooden bar)
                         if (placeResult.success) Func.Unlight1x1(placeResult.x, placeResult.y);
                         Func.TryPlaceTile(area1, noBlock, TileID.Bottles, style: 4, chance: 50); // Mug
 
@@ -1421,7 +1389,12 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.paintTile(x + 1, y,     (byte)Deco[S.StylePaint]);
 
                         }
-                        Func.TryPlaceTile(area2, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70); // Chest
+                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70); // Chest
+                        if (placeResult.success)
+                        {
+                            chestID = Chest.FindChest(placeResult.x, placeResult.y - 1);
+                            if (chestID != -1) FillChest(Main.chest[chestID], WorldGen.genRand.Next(2));
+                        }
                     }
 
                     // still side 2: shelf with books above workbench and chair
@@ -2174,8 +2147,12 @@ namespace WorldGenMod.Structures.Ice
                     // floor
                     area1 = new Rectangle2P(freeR.X0, freeR.Y1, freeR.X1, freeR.Y1, "dummyString");
 
-                    int chestID = WorldGen.PlaceChest(freeR.X0 + WorldGen.genRand.Next(freeR.XDiff), freeR.Y1, style: Deco[S.Chest]);
-                    if (chestID != -1) FillChest(Main.chest[chestID], 4);
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70); // Chest
+                    if (placeResult.success)
+                    {
+                        chestID = Chest.FindChest(placeResult.x, placeResult.y - 1);
+                        if (chestID != -1) FillChest(Main.chest[chestID], WorldGen.genRand.Next(2));
+                    }
 
                     placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.WorkBenches, style: Deco[S.Workbench], chance: 50); // workbench
                     if (placeResult.success)
@@ -2241,7 +2218,7 @@ namespace WorldGenMod.Structures.Ice
         public void FillChest(Chest chest, int style)
         {
             List<int> mainItem = new List<int>();
-            if (style == 4)
+            if (style == 1)
             {
                 mainItem.Add(ItemID.Frostbrand);
                 mainItem.Add(ItemID.IceBow);
@@ -2263,7 +2240,7 @@ namespace WorldGenMod.Structures.Ice
 
 
             List<int> potionItem = new List<int>();
-            if (style == 4)
+            if (style == 1)
             {
                 potionItem.Add(ItemID.RagePotion);
                 potionItem.Add(ItemID.WrathPotion);

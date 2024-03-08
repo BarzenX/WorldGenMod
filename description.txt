@@ -5,6 +5,7 @@ I also took the opportunity to
 - create a new variation of the "Canyon", called "Fissure" which looks more natural
 - reduce the size of the Underground Lakes
 - make the count of created Fissures, Underground Lakes and Abandoned Hellevators configurable
+- almost completely rewrite the Frost Fortress
 
 The legacy version of the Canyon and the Underground Lakes are still available if someone misses them.
 
