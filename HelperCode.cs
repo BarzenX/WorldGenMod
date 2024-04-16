@@ -118,7 +118,6 @@ namespace WorldGenMod
                     Main.tile[x, y].TileFrameX += 66; // make the torch unlit
                 }
             }
-        //TODO: somehow doesn't work for Torches with TileFrameX = 0
         }
 
         /// <summary>

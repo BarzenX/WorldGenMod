@@ -973,13 +973,15 @@ namespace WorldGenMod.Structures.Ice
             (bool success, int x, int y) placeResult;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = new List<(int, int)>(); // for remembering positions
+            List<(ushort TileID, int style, byte chance)> randomItems = new List<(ushort, int, byte)>(); // for random item placement
             int chestID;
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
+            //int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
+            int roomDeco = 4;
             switch (roomDeco)
             {
-                case 0: // two tables, two lamps, a beam line, maybe another and a painting
+                case 0: // two tables, two lamps, a beam line, high rooms get another beam line and a painting
 
                     // table left
                     x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
@@ -1133,6 +1135,18 @@ namespace WorldGenMod.Structures.Ice
                         area1 = new Rectangle2P(freeR.X0, freeR.Y1 - 5, freeR.X1, freeR.Y1 - 5, "dummyString");
                         area2 = doors[Door.Down].doorRect.CloneAndMove(0, -6);
 
+                        randomItems.Add((TileID.Bowls, 0, 50)); // bowl
+                        randomItems.Add((TileID.FoodPlatter, style: 17, 50)); // food plate
+                        randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                        randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                        randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+                        randomItems.Add((TileID.Bottles, 3, 50)); // Pink Vase
+                        randomItems.Add((TileID.Bottles, 4, 50)); // Mug
+                        randomItems.Add((TileID.Bottles, 5, 50)); // Dynasty Cup
+                        randomItems.Add((TileID.Bottles, 6, 50)); // Wine Glass
+                        randomItems.Add((TileID.Bottles, 7, 50)); // Honey Cup
+                        randomItems.Add((TileID.Bottles, 8, 50)); // Chalice
+
                         if (freeR.YTiles >= 7)
                         {
                             Func.TryPlaceTile(area1, area2, TileID.Kegs, style: 0, chance: 50); // wooden keg
@@ -1146,32 +1160,20 @@ namespace WorldGenMod.Structures.Ice
                             placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
                             if (placeResult.success) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
 
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+
+                            for (int i = 1; i <= 9; i++)
+                            {
+                                int num = WorldGen.genRand.Next(randomItems.Count);
+                                Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            }
                         }
                         else
                         {
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            for (int i = 1; i <= 15; i++)
+                            {
+                                int num = WorldGen.genRand.Next(randomItems.Count);
+                                Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            }
                         }
                     }
 
@@ -1223,32 +1225,19 @@ namespace WorldGenMod.Structures.Ice
                             placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
                             if (placeResult.success) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
 
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            for (int i = 1; i <= 9; i++)
+                            {
+                                int num = WorldGen.genRand.Next(randomItems.Count);
+                                Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            }
                         }
                         else
                         {
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.Bowls, style: 0, chance: 50); // bowl
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
+                            for (int i = 1; i <= 15; i++)
+                            {
+                                int num = WorldGen.genRand.Next(randomItems.Count);
+                                Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            }
                         }
 
                         // try stacking wooden crates
@@ -1831,7 +1820,7 @@ namespace WorldGenMod.Structures.Ice
                     }
                     else // case: < 4
                     {
-                        //this should never happen...just put the value for == 3 and debug later if ever somebody should reduce the room YTiles
+                        //this should never happen...just put the value for "== 3" and debug later if ever somebody should reduce the room YTiles
                         beamLeftStart = doors[Door.Down].doorRect.X0 + 1;
                         beamRightStart = doors[Door.Down].doorRect.X1 - 1;
                     }
@@ -2134,7 +2123,7 @@ namespace WorldGenMod.Structures.Ice
 
 
                     //TODO: room just finished fast to have some variety...elaborate it more.
-                    // ideas: 1) maybe put beams always on the door and put chest in front of bed?
+                    // ideas: 1) maybe put beams always on the up/down door and put a chest in front of the bed?
                     //        2) put banners in front of beds. hanging from the above platform
                     //        3) put something in the middle
 
@@ -2172,7 +2161,6 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.Statues, 3),  // sword statue
                         (TileID.Statues, 6),  // shield statue
                         (TileID.Statues, 21),  // spear statue
-
                     };
 
                     for (int i = 1; i <= 6; i++)
@@ -2180,8 +2168,7 @@ namespace WorldGenMod.Structures.Ice
                         int num = WorldGen.genRand.Next(floorItems.Count);
                         Func.TryPlaceTile(area1, Rectangle2P.Empty, floorItems[num].TileID, style: floorItems[num].style, chance: 50); // one random item of the list
                     }
-                    //TODO: make the same thing here for the kitchen and library shelves!
-
+                    
 
                     if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
                     if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
