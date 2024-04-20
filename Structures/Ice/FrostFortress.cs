@@ -115,6 +115,8 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.Sofa, 0);
             Deco.Add(S.Clock, 0);
             Deco.Add(S.Bed, 0);
+            Deco.Add(S.BedWallpaper, 0);
+            Deco.Add(S.Dresser, 0);
 
             //choose a random style and define it's types
             int chooseStyle = WorldGen.genRand.Next(3);
@@ -149,6 +151,8 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Sofa] = 27    ; // Tile ID 89 (Sofas) -> Type 27=Frozen
                     Deco[S.Clock] = 11;    // Tile ID 104 (GrandfatherClocks) -> Type 11=Frozen
                     Deco[S.Bed] = 15;      // Tile ID 79 (Beds) -> Type 15=Frozen
+                    Deco[S.BedWallpaper] = WallID.StarsWallpaper;
+                    Deco[S.Dresser] = 30;  // Tile ID 88 (Dressers) -> Type 30=Frozen
                     break;
 
                 case S.StyleBoreal: // Boreal
@@ -180,6 +184,8 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Sofa] = 24;     // Tile ID 89 (Sofas) -> Type 24=Boreal
                     Deco[S.Clock] = 6;     // Tile ID 104 (GrandfatherClocks) -> Type 6=Boreal
                     Deco[S.Bed] = 24;      // Tile ID 79 (Beds) -> Type 24=Boreal
+                    Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
+                    Deco[S.Dresser] = 18;  // Tile ID 88 (Dressers) -> Type 18=Boreal
                     break;
 
                 case S.StyleDarkLead: // Dark Lead
@@ -211,6 +217,8 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Sofa] = 2;      // Tile ID 89 (Sofas) -> Type 2=Ebonwood
                     Deco[S.Clock] = 10;    // Tile ID 104 (GrandfatherClocks) -> Type 10=Ebonwood
                     Deco[S.Bed] = 1;      // Tile ID 79 (Beds) -> Type 1=Ebonwood
+                    Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
+                    Deco[S.Dresser] = 1;  // Tile ID 88 (Dressers) -> Type 1=Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
                     break;
             }
@@ -1802,146 +1810,173 @@ namespace WorldGenMod.Structures.Ice
 
                 case 4: // dormitory
 
-                    // wooden beams left and right
-                    int beamLeftStart;
-                    int beamRightStart;
-                    
-                    if ((doors[Door.Down].doorRect.X0 - freeR.X0) == 4)
-                    {
-                        // beams on the down door or there will be no place for beds
-                        beamLeftStart = doors[Door.Down].doorRect.X0;
-                        beamRightStart = doors[Door.Down].doorRect.X1;
-                    }
-                    else if ((doors[Door.Down].doorRect.X0 - freeR.X0) > 4)
-                    {
-                        // beams next to the down door, looks better
-                        beamLeftStart = doors[Door.Down].doorRect.X0 - 1;
-                        beamRightStart = doors[Door.Down].doorRect.X1 + 1;
-                    }
-                    else // case: < 4
-                    {
-                        //this should never happen...just put the value for "== 3" and debug later if ever somebody should reduce the room YTiles
-                        beamLeftStart = doors[Door.Down].doorRect.X0 + 1;
-                        beamRightStart = doors[Door.Down].doorRect.X1 - 1;
-                    }
-
-                    for (y = freeR.Y0; y <= freeR.Y1; y++)
-                    {
-                        WorldGen.PlaceTile(beamLeftStart, y, TileID.BorealBeam);
-                        WorldGen.paintTile(beamLeftStart, y, (byte)Deco[S.StylePaint]);
-
-                        WorldGen.PlaceTile(beamRightStart, y, TileID.BorealBeam);
-                        WorldGen.paintTile(beamRightStart, y, (byte)Deco[S.StylePaint]);
-                    }
+                    // place the platforms for the "bunk beds" on the down door or there will be no place for the banners beside the bed in small rooms
+                    // also to have more space to place chests
+                    int PlatformLeftStart = doors[Door.Down].doorRect.X0;
+                    int PlatformRightStart = doors[Door.Down].doorRect.X1;
+                    int lastFloorHeight;
 
                     //__________________________________________________________________________________________________________________________________
-                    // ground floor beds
+                    // ground floor: dressers and lanterns
 
-                    // left bed
-                    if ( Chance.Perc(65))
+                    lastFloorHeight = freeR.Y1 + 1;
+
+                    // left dresser
+                    area1 = new Rectangle2P(freeR.X0 + 1, freeR.Y1, doors[Door.Down].doorRect.X0 - 2, freeR.Y1, "dummyString");
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Dressers, style: Deco[S.Dresser], chance: 70); // Dresser
+                    if (placeResult.success)
                     {
-                        WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1, TileID.Beds, style: Deco[S.Bed]);
-
-                        if (Chance.Perc(75))
+                        if (Chance.Perc(80))
                         {
-                            WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 2, TileID.Torches, style: Deco[S.Torch]);
-                            Func.Unlight1x1(freeR.X0, freeR.Y1 - 2);
+                            if (placeResult.x - 2 >= freeR.X0)
+                            {
+                                WorldGen.PlaceTile(placeResult.x - 2, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]); // Lamp on the left
+                                Func.UnlightLamp(placeResult.x - 2, freeR.Y1);
+                            }
+                            else if (placeResult.x + 2 <= doors[Door.Down].doorRect.X0)
+                            {
+                                WorldGen.PlaceTile(placeResult.x + 2, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]); // Lamp on the right
+                                Func.UnlightLamp(placeResult.x + 2, freeR.Y1);
+                            }
+                        }
+                    }
+                    if ( (freeR.YTiles >= 4) && (Chance.Perc(75)) )
+                    {
+                        Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 2, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                    }
+
+                    // right dresser
+                    area1 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y1, freeR.X1 - 1, freeR.Y1, "dummyString");
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Dressers, style: Deco[S.Dresser], chance: 70); // Dresser
+                    if (placeResult.success)
+                    {
+                        if (Chance.Perc(80))
+                        {
+                            if (placeResult.x + 2 <= freeR.X1)
+                            {
+                                WorldGen.PlaceTile(placeResult.x + 2, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]); // Lamp on the right
+                                Func.UnlightLamp(placeResult.x + 2, freeR.Y1);
+                            }
+                            else if (placeResult.x - 2 >= doors[Door.Down].doorRect.X1)
+                            {
+                                WorldGen.PlaceTile(placeResult.x - 2, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]); // Lamp on the left
+                                Func.UnlightLamp(placeResult.x - 2, freeR.Y1);
+                            }
                         }
 
                     }
-
-                    // right bed
-                    if (Chance.Perc(65))
+                    if ((freeR.YTiles >= 4) && (Chance.Perc(75)))
                     {
-                        WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1, TileID.Beds, style: Deco[S.Bed]);
-                        Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1);
-
-                        if (Chance.Perc(75))
-                        {
-                            WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 2, TileID.Torches, style: Deco[S.Torch]);
-                            Func.Unlight1x1(freeR.X1, freeR.Y1 - 2);
-                        }
+                        Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 2, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                     }
 
                     //__________________________________________________________________________________________________________________________________
-                    // second floor of the room
+                    // second floor of the room: beds
 
                     if (freeR.YTiles >= 7)
                     {
-                        // left platform and bed
+                        lastFloorHeight = freeR.Y1 - 3;
+
+                        // left bed
                         if (Chance.Perc(70))
                         {
-                            for (x = freeR.X0; x <= beamLeftStart - 1; x++)
+                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
                             {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 3, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, freeR.Y1 - 3, (byte)Deco[S.StylePaint]);
+                                y = freeR.Y1 - 3;
 
-                                WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 4, TileID.Beds, style: Deco[S.Bed]);
+                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
 
-                                if (Chance.Perc(75))
-                                {
-                                    WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X0, freeR.Y1 - 6);
-                                }
+                            WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 4, TileID.Beds, style: Deco[S.Bed]);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 6, 4, 2), Deco[S.BedWallpaper]);
 
+                            if (Chance.Perc(75))
+                            {
+                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 6);
+                            }
+
+                            if ((freeR.YTiles >= 8) && (Chance.Perc(75)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                         else
                         {
                             // put only damaged platform
-                            for (x = freeR.X0; x <= beamLeftStart - 1; x++)
+                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
                             {
                                 if (Chance.Perc(65))
                                 {
-                                    WorldGen.PlaceTile(x, freeR.Y1 - 3, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, freeR.Y1 - 3, (byte)Deco[S.StylePaint]);
-                                }
+                                    y = freeR.Y1 - 3;
 
-                                if (Chance.Perc(40))
-                                {
-                                    WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X0, freeR.Y1 - 6);
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                                 }
+                            }
 
+                            if (Chance.Perc(40))
+                            {
+                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 6);
+                            }
+
+                            if ((freeR.YTiles >= 8) && (Chance.Perc(40)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
 
                         // right platform and bed
                         if (Chance.Perc(70))
                         {
-                            for (x = beamRightStart + 1; x <= freeR.X1; x++)
+                            for (x = PlatformRightStart; x <= freeR.X1; x++)
                             {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 3, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, freeR.Y1 - 3, (byte)Deco[S.StylePaint]);
+                                y = freeR.Y1 - 3;
 
-                                WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 4, TileID.Beds, style: Deco[S.Bed]);
-                                Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 4);
+                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
 
-                                if (Chance.Perc(75))
-                                {
-                                    WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X1, freeR.Y1 - 6);
-                                }
+                            WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 4, TileID.Beds, style: Deco[S.Bed]);
+                            Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 4);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, freeR.Y1 - 6, 4, 2), Deco[S.BedWallpaper]);
 
+                            if (Chance.Perc(75))
+                            {
+                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 6);
+                            }
+
+                            if ((freeR.YTiles >= 8) && (Chance.Perc(75)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                         else
                         {
                             // put only damaged platform
-                            for (x = beamRightStart + 1; x <= freeR.X1; x++)
+                            for (x = PlatformRightStart; x <= freeR.X1; x++)
                             {
                                 if (Chance.Perc(65))
                                 {
-                                    WorldGen.PlaceTile(x, freeR.Y1 - 3, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, freeR.Y1 - 3, (byte)Deco[S.StylePaint]);
-                                }
+                                    y = freeR.Y1 - 3;
 
-                                if (Chance.Perc(40))
-                                {
-                                    WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X1, freeR.Y1 - 6);
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                                 }
+                            }
 
+                            if (Chance.Perc(40))
+                            {
+                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 6);
+                            }
+
+                            if ((freeR.YTiles >= 8) && (Chance.Perc(40)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                     }
@@ -1951,80 +1986,104 @@ namespace WorldGenMod.Structures.Ice
 
                     if (freeR.YTiles >= 11)
                     {
+                        lastFloorHeight = freeR.Y1 - 7;
+
                         // left platform and bed
                         if (Chance.Perc(70))
                         {
-                            for (x = freeR.X0; x <= beamLeftStart -1; x++)
+                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
                             {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
+                                y = freeR.Y1 - 7;
+                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
 
-                                WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 8, TileID.Beds, style: Deco[S.Bed]);
+                            WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 8, TileID.Beds, style: Deco[S.Bed]);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 10, 4, 2), Deco[S.BedWallpaper]);
 
-                                if (Chance.Perc(75))
-                                {
-                                    WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X0, freeR.Y1 - 10);
-                                }
+                            if (Chance.Perc(75))
+                            {
+                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 10);
+                            }
 
+                            if ((freeR.YTiles >= 12) && (Chance.Perc(75)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                         else
                         {
                             // put only damaged platform
-                            for (x = freeR.X0; x <= beamLeftStart - 1; x++)
+                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
                             {
                                 if (Chance.Perc(65))
                                 {
-                                    WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
+                                    y = freeR.Y1 - 7;
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                                 }
+                            }
 
-                                if (Chance.Perc(40))
-                                {
-                                    WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X0, freeR.Y1 - 10);
-                                }
+                            if (Chance.Perc(40))
+                            {
+                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 10);
+                            }
 
+                            if ((freeR.YTiles >= 12) && (Chance.Perc(40)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
 
                         // right platform and bed
                         if (Chance.Perc(70))
                         {
-                            for (x = beamRightStart + 1; x <= freeR.X1; x++)
+                            for (x = PlatformRightStart; x <= freeR.X1; x++)
                             {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
+                                y = freeR.Y1 - 7;
+                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
 
-                                WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 8, TileID.Beds, style: Deco[S.Bed]);
-                                Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 8);
+                            WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 8, TileID.Beds, style: Deco[S.Bed]);
+                            Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 8);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, freeR.Y1 - 10, 4, 2), Deco[S.BedWallpaper]);
 
-                                if (Chance.Perc(75))
-                                {
-                                    WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X1, freeR.Y1 - 10);
-                                }
+                            if (Chance.Perc(75))
+                            {
+                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 10);
+                            }
 
+                            if ((freeR.YTiles >= 12) && (Chance.Perc(75)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                         else
                         {
                             // put only damaged platform
-                            for (x = beamRightStart + 1; x <= freeR.X1; x++)
+                            for (x = PlatformRightStart; x <= freeR.X1; x++)
                             {
                                 if (Chance.Perc(65))
                                 {
-                                    WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
+                                    y = freeR.Y1 - 7;
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                                 }
+                            }
 
-                                if (Chance.Perc(40))
-                                {
-                                    WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X1, freeR.Y1 - 10);
-                                }
+                            if (Chance.Perc(40))
+                            {
+                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 10);
+                            }
 
+                            if ((freeR.YTiles >= 12) && (Chance.Perc(40)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                     }
@@ -2034,92 +2093,132 @@ namespace WorldGenMod.Structures.Ice
 
                     if (freeR.YTiles >= 15)
                     {
+                        lastFloorHeight = freeR.Y1 - 11;
+
                         // left platform and bed
                         if (Chance.Perc(70))
                         {
-                            for (x = freeR.X0; x <= beamLeftStart - 1; x++)
+                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
                             {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 11, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, freeR.Y1 - 11, (byte)Deco[S.StylePaint]);
+                                y = freeR.Y1 - 11;
+                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
 
-                                WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 12, TileID.Beds, style: Deco[S.Bed]);
+                            WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 12, TileID.Beds, style: Deco[S.Bed]);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 14, 4, 2), Deco[S.BedWallpaper]);
 
-                                if (Chance.Perc(75))
-                                {
-                                    WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X0, freeR.Y1 - 14);
-                                }
+                            if (Chance.Perc(75))
+                            {
+                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 14);
+                            }
 
+                            if ((freeR.YTiles >= 16) && (Chance.Perc(75)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                         else
                         {
                             // put only damaged platform
-                            for (x = freeR.X0; x <= beamLeftStart - 1; x++)
+                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
                             {
                                 if (Chance.Perc(65))
                                 {
-                                    WorldGen.PlaceTile(x, freeR.Y1 - 11, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, freeR.Y1 - 11, (byte)Deco[S.StylePaint]);
+                                    y = freeR.Y1 - 11;
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                                 }
+                            }
 
-                                if (Chance.Perc(40))
-                                {
-                                    WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X0, freeR.Y1 - 14);
-                                }
+                            if (Chance.Perc(40))
+                            {
+                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 14);
+                            }
 
+                            if ((freeR.YTiles >= 16) && (Chance.Perc(40)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
 
                         // right platform and bed
                         if (Chance.Perc(70))
                         {
-                            for (x = beamRightStart + 1; x <= freeR.X1; x++)
+                            for (x = PlatformRightStart; x <= freeR.X1; x++)
                             {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 11, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, freeR.Y1 - 11, (byte)Deco[S.StylePaint]);
+                                y = freeR.Y1 - 11;
+                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                            }
 
-                                WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 12, TileID.Beds, style: Deco[S.Bed]);
-                                Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 12);
+                            WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 12, TileID.Beds, style: Deco[S.Bed]);
+                            Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 12);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, freeR.Y1 - 14, 4, 2), Deco[S.BedWallpaper]);
 
-                                if (Chance.Perc(75))
-                                {
-                                    WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X1, freeR.Y1 - 14);
-                                }
+                            if (Chance.Perc(75))
+                            {
+                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 14);
+                            }
 
+                            if ((freeR.YTiles >= 16) && (Chance.Perc(75)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                         else
                         {
                             // put only damaged platform
-                            for (x = beamRightStart + 1; x <= freeR.X1; x++)
+                            for (x = PlatformRightStart; x <= freeR.X1; x++)
                             {
                                 if (Chance.Perc(65))
                                 {
-                                    WorldGen.PlaceTile(x, freeR.Y1 - 11, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, freeR.Y1 - 11, (byte)Deco[S.StylePaint]);
+                                    y = freeR.Y1 - 11;
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                                 }
+                            }
 
-                                if (Chance.Perc(40))
-                                {
-                                    WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                    Func.Unlight1x1(freeR.X1, freeR.Y1 - 14);
-                                }
+                            if (Chance.Perc(40))
+                            {
+                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
+                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 14);
+                            }
 
+                            if ((freeR.YTiles >= 16) && (Chance.Perc(40)))
+                            {
+                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
                     }
 
                     //__________________________________________________________________________________________________________________________________
-                    // ceiling banners
-                    area1 = new Rectangle2P(freeR.X0, freeR.Y0, beamRightStart - 1, freeR.Y0, "dummyString"); // left side
-                    area2 = new Rectangle2P(beamRightStart + 1, freeR.Y0, freeR.X1, freeR.Y0, "dummyString"); // right side
-                    noBlock = doors[Door.Up].doorRect.CloneAndMove(0, 2);
+                    // ceiling stuff
 
-                    Func.TryPlaceTile(area1, noBlock, TileID.Banners, style: Deco[S.Banner], chance: 75); // banner
-                    Func.TryPlaceTile(area2, noBlock, TileID.Banners, style: Deco[S.Banner], chance: 75); // banner
+                    int leftSpace = (lastFloorHeight - 4) - freeR.Y0; // calculate how much space there is left
+
+                    if (leftSpace >= 0)
+                    {
+                        // at least one line: put platforms
+                        for (x = freeR.X0; x <= PlatformLeftStart; x++)
+                        {
+                            y = lastFloorHeight - 4;
+                            WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                            WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                        }
+
+                        for (x = PlatformRightStart; x <= freeR.X1; x++)
+                        {
+                            y = lastFloorHeight - 4;
+                            WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                            WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                        }
+                    }
+
+                    // TODO: replace banners as there are already enough at the beds? Maybe put item frames?
 
 
                     //TODO: room just finished fast to have some variety...elaborate it more.
@@ -2127,6 +2226,8 @@ namespace WorldGenMod.Structures.Ice
                     //        2) put banners in front of beds. hanging from the above platform
                     //        3) put something in the middle
 
+                    // finalization
+                    Func.PlaceStinkbug(freeR);
                     PlaceCobWeb(freeR, 1, 25);
 
                     break;
@@ -2724,6 +2825,8 @@ namespace WorldGenMod.Structures.Ice
         public const String Sofa = "Sofa";
         public const String Clock = "Clock";
         public const String Bed = "Bed";
+        public const String BedWallpaper = "BedWallpaper";
+        public const String Dresser = "Dresser";
 
         public const int StyleSnow = 0;
         public const int StyleBoreal = 1;

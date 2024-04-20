@@ -10,6 +10,7 @@ using System.Diagnostics;
 using WorldGenMod.Structures.Ice;
 using Terraria.DataStructures;
 using Terraria.GameContent.Tile_Entities;
+using Microsoft.VisualBasic;
 
 namespace WorldGenMod
 {
@@ -24,7 +25,10 @@ namespace WorldGenMod
         /// <param name="y">The y-coordinate used for placing the chandelier</param>
         public static void UnlightChandelier(int x, int y)
         {
-            if (Main.tile[x, y].TileFrameX < 54) //chandelier is lit
+            Tile tile = Main.tile[x, y];
+            if (tile.TileType != TileID.Chandeliers) return; // check if it's really a chandelier
+
+            if (tile.TileFrameX < 54) // chandelier is lit
             {
                 for (int i = x - 1; i <= x + 1; i++)
                 {
@@ -46,7 +50,10 @@ namespace WorldGenMod
         /// <param name="y">The y-coordinate used for placing the fireplace</param>
         public static void UnlightFireplace(int x, int y)
         {
-            if (Main.tile[x, y].TileFrameX < 54) //fireplace is lit
+            Tile tile = Main.tile[x, y];
+            if (tile.TileType != TileID.Fireplace) return; // check if it's really a fireplace
+
+            if (tile.TileFrameX < 54) // fireplace is lit
             {
                 for (int i = x - 1; i <= x + 1; i++)
                 {
@@ -67,7 +74,10 @@ namespace WorldGenMod
         /// <param name="y">The y-coordinate used for placing the lantern</param>
         public static void UnlightLantern(int x, int y)
         {
-            if (Main.tile[x, y].TileFrameX < 18) //lantern is lit
+            Tile tile = Main.tile[x, y];
+            if (tile.TileType != TileID.Candelabras) return; // check if it's really a lantern
+
+            if (tile.TileFrameX < 18) // lantern is lit
             {
                 for (int j = y; j <= y + 1; j++)
                 {
@@ -83,7 +93,10 @@ namespace WorldGenMod
         /// <param name="y">The y-coordinate used for placing the candelabra</param>
         public static void UnlightCandelabra(int x, int y)
         {
-            if (Main.tile[x, y].TileFrameX < 36) //candelabra is lit
+            Tile tile = Main.tile[x, y];
+            if (tile.TileType != TileID.Candelabras) return; // check if it's really a candelabra
+
+            if (tile.TileFrameX < 36) // candelabra is lit
             {
                 for (int i = x - 1; i <= x; i++)  // don't know why the PlaceTile anker point bottom right and ingame placing is bottom left...
                 {
@@ -104,16 +117,17 @@ namespace WorldGenMod
         public static void Unlight1x1(int x, int y)
         {
             Tile tile = Main.tile[x, y];
-            if (tile.TileType == 33) // candles
+
+            if (tile.TileType == TileID.Candles) // candles
             {
-                if (Main.tile[x, y].TileFrameX < 18) // candle is lit
+                if (tile.TileFrameX < 18) // candle is lit
                 {
                     Main.tile[x, y].TileFrameX += 18; // make the candle unlit
                 }
             }
-            else if (tile.TileType == 4) // torch tiles are actually 22 x 22 pixels wide big! 
+            else if (tile.TileType == TileID.Torches) // torch tiles are actually 22 x 22 pixels wide big! 
             {
-                if (Main.tile[x, y].TileFrameX < 66) // torch is lit
+                if (tile.TileFrameX < 66) // torch is lit
                 {
                     Main.tile[x, y].TileFrameX += 66; // make the torch unlit
                 }
@@ -128,7 +142,9 @@ namespace WorldGenMod
         public static void UnlightLamp(int x, int y)
         {
             Tile tile = Main.tile[x, y];
-            if (tile.TileFrameX < 18 || (tile.TileFrameX > 18 && tile.TileFrameX < 54)) //lamp is lit....there are 2 colums of lamps in the spritesheet
+            if (tile.TileType != TileID.Lamps) return; // check if it's really a lamp
+
+            if (tile.TileFrameX < 18 || (tile.TileFrameX > 18 && tile.TileFrameX < 54)) // lamp is lit....there are 2 colums of lamps in the spritesheet
             {
                 for (int j = y - 2; j <= y; j++)
                 {
@@ -587,7 +603,6 @@ namespace WorldGenMod
         /// <param name="wallType">If <i>checkWall = true</i> a value > 0 will place background walls where they are missing</param>
         public static bool CheckFree(Rectangle2P area, bool checkWall = false, int wallType = 0)
         {
-            // pre-checks
             for (int i = area.X0; i <= area.X1; i++)
             {
                 for (int j = area.Y0; j <= area.Y1; j++)
@@ -606,6 +621,58 @@ namespace WorldGenMod
                     }
                 }
             }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Places background walls in the given area
+        /// </summary>
+        /// <param name="area">The to be filled area</param>
+        /// <param name="wallType">The ID of the to be placed wall</param>
+        public static bool PlaceWallArea(Rectangle2P area, int wallType)
+        {
+            // pre-checks
+            if (wallType <= 0) return false;
+
+            for (int i = area.X0; i <= area.X1; i++)
+            {
+                for (int j = area.Y0; j <= area.Y1; j++)
+                {
+                    WorldGen.KillWall(i, j);
+                    WorldGen.PlaceWall(i, j, wallType);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Checks for free space, places a tile (option to paint it) and attaches a banner to it
+        /// </summary>
+        /// <param name="x">The x coordinate of where the banner shall be placed at</param>
+        /// <param name="y">The y coordinate of where the banner shall be placed at</param>
+        /// <param name="bannerStyle">The BannerID of the to-be-placed banner</param>
+        /// <param name="tileType">The TileID of the tile, where the banner will be attached to</param>
+        /// <param name="tileStyle">The Style of the tile, where the banner will be attached to</param>
+        /// <param name="paintType">The PaintID of the tile, where the banner will be attached to</param>
+        public static bool PlaceTileAndBanner(int x, int y, int bannerStyle, int tileType, int tileStyle, int paintType = 0)
+        {
+            // pre-checks
+            if (bannerStyle < 0 || tileType <= 0 || tileStyle < 0) return false;
+
+            // check free
+            for (int j = y - 1; j <= y + 2; j++)
+            {
+                if (Main.tile[x, j].HasTile) return false;
+            }
+
+            WorldGen.PlaceTile(x, y - 1, tileType, style: tileStyle); // Tile
+            if (paintType > 0)   WorldGen.paintTile(x, y - 1, (byte)paintType);
+
+            WorldGen.PlaceObject(x, y, TileID.Banners, style: bannerStyle); // Banner
+
+            if (!Main.tile[x, y].HasTile)  return false; // banner wasn't created, who knows why!
 
             return true;
         }
