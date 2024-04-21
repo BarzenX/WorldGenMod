@@ -978,7 +978,7 @@ namespace WorldGenMod.Structures.Ice
             // init variables
             bool placed;
             bool stinkbugPlaced = false; //stinkbug for preventing NPCs to move into rooms
-            (bool success, int x, int y) placeResult;
+            (bool success, int x, int y) placeResult, placeResult2;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = new List<(int, int)>(); // for remembering positions
             List<(ushort TileID, int style, byte chance)> randomItems = new List<(ushort, int, byte)>(); // for random item placement
@@ -1828,6 +1828,20 @@ namespace WorldGenMod.Structures.Ice
                     {
                         if (Chance.Perc(80))
                         {
+                            area1 = new Rectangle2P(placeResult.x - 1, placeResult.y - 2, placeResult.x + 1, placeResult.y - 2, "dummyString");
+                            placeResult2 = Func.TryPlaceTile(area1, noBlock, TileID.Candles, style: Deco[S.Candle], chance: 50); // Candle on dresser
+                            if (placeResult2.success) Func.Unlight1x1(placeResult2.x, placeResult2.y);
+                        }
+                    }
+                    else
+                    {
+                        placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Benches, style: Deco[S.Sofa], chance: 70); // Sofa
+                    }
+
+                    if (placeResult.success) // dresser or sofa
+                    {
+                        if (Chance.Perc(80))
+                        {
                             if (placeResult.x - 2 >= freeR.X0)
                             {
                                 WorldGen.PlaceTile(placeResult.x - 2, freeR.Y1, TileID.Lamps, style: Deco[S.Lamp]); // Lamp on the left
@@ -1839,7 +1853,22 @@ namespace WorldGenMod.Structures.Ice
                                 Func.UnlightLamp(placeResult.x + 2, freeR.Y1);
                             }
                         }
+
+                        if (Chance.Perc(80))
+                        {
+                            if (placeResult.x + 2 < doors[Door.Down].doorRect.X0)
+                            {
+                                WorldGen.PlaceTile(placeResult.x + 2, freeR.Y1, TileID.Chairs, style: Deco[S.Chair]); // Chair on the right
+                                Func.ChairTurnRight(placeResult.x + 2, freeR.Y1);
+                            }
+                            else if (placeResult.x - 2 >= freeR.X0)
+                            {
+                                WorldGen.PlaceTile(placeResult.x - 2, freeR.Y1, TileID.Chairs, style: Deco[S.Chair]); // Chair on the left
+                                Func.UnlightLamp(placeResult.x - 2, freeR.Y1);
+                            }
+                        }
                     }
+
                     if ( (freeR.YTiles >= 4) && (Chance.Perc(75)) )
                     {
                         Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 2, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
@@ -1847,8 +1876,22 @@ namespace WorldGenMod.Structures.Ice
 
                     // right dresser
                     area1 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y1, freeR.X1 - 1, freeR.Y1, "dummyString");
-                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Dressers, style: Deco[S.Dresser], chance: 70); // Dresser
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Dressers, style: Deco[S.Dresser], chance: 45); // Dresser
                     if (placeResult.success)
+                    {
+                        if (Chance.Perc(80))
+                        {
+                            area1 = new Rectangle2P(placeResult.x - 1, placeResult.y - 2, placeResult.x + 1, placeResult.y - 2, "dummyString");
+                            placeResult2 = Func.TryPlaceTile(area1, noBlock, TileID.Candles, style: Deco[S.Candle], chance: 50); // Candle on dresser
+                            if (placeResult2.success) Func.Unlight1x1(placeResult2.x, placeResult2.y);
+                        }
+                    }
+                    else
+                    {
+                        placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Benches, style: Deco[S.Sofa], chance: 75); // Sofa
+                    }
+
+                    if (placeResult.success) // dresser or sofa
                     {
                         if (Chance.Perc(80))
                         {
@@ -1864,10 +1907,28 @@ namespace WorldGenMod.Structures.Ice
                             }
                         }
 
+                        if (Chance.Perc(80))
+                        {
+                            if (placeResult.x - 2 > doors[Door.Down].doorRect.X1)
+                            {
+                                WorldGen.PlaceTile(placeResult.x - 2, freeR.Y1, TileID.Chairs, style: Deco[S.Chair]); // Chair on the left
+                            }
+                            else if (placeResult.x + 2 <= freeR.X1)
+                            {
+                                WorldGen.PlaceTile(placeResult.x + 2, freeR.Y1, TileID.Chairs, style: Deco[S.Chair]); // chair on the right
+                                Func.ChairTurnRight(placeResult.x + 2, freeR.Y1);
+                            }
+                        }
                     }
+
                     if ((freeR.YTiles >= 4) && (Chance.Perc(75)))
                     {
                         Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 2, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                    }
+
+                    if (Chance.Perc(40))
+                    {
+                        Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 2, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
                     }
 
                     //__________________________________________________________________________________________________________________________________
@@ -1900,6 +1961,16 @@ namespace WorldGenMod.Structures.Ice
                             if ((freeR.YTiles >= 8) && (Chance.Perc(75)))
                             {
                                 Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                            }
+
+                            if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 4, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 4, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+                                //TODO: with drink
                             }
                         }
                         else
@@ -1953,6 +2024,11 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
+
+                            if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X1 - 5, freeR.Y1 - 4, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
                         }
                         else
                         {
@@ -1978,6 +2054,11 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
+                        }
+
+                        if (Chance.Perc(40))
+                        {
+                            Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 6, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
                         }
                     }
 
@@ -2010,6 +2091,11 @@ namespace WorldGenMod.Structures.Ice
                             if ((freeR.YTiles >= 12) && (Chance.Perc(75)))
                             {
                                 Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                            }
+
+                            if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 8, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
                             }
                         }
                         else
@@ -2061,6 +2147,11 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
+
+                            if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X1 - 5, freeR.Y1 - 8, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
                         }
                         else
                         {
@@ -2085,6 +2176,11 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
+                        }
+
+                        if (Chance.Perc(40))
+                        {
+                            Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 10, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
                         }
                     }
 
@@ -2117,6 +2213,11 @@ namespace WorldGenMod.Structures.Ice
                             if ((freeR.YTiles >= 16) && (Chance.Perc(75)))
                             {
                                 Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                            }
+
+                            if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 12, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
                             }
                         }
                         else
@@ -2168,6 +2269,11 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
+
+                            if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(freeR.X1 - 5, freeR.Y1 - 12, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
                         }
                         else
                         {
@@ -2193,6 +2299,11 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
                         }
+
+                        if (Chance.Perc(40))
+                        {
+                            Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 14, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
+                        }
                     }
 
                     //__________________________________________________________________________________________________________________________________
@@ -2203,19 +2314,65 @@ namespace WorldGenMod.Structures.Ice
                     if (leftSpace >= 0)
                     {
                         // at least one line: put platforms
+                        y = lastFloorHeight - 4;
                         for (x = freeR.X0; x <= PlatformLeftStart; x++)
                         {
-                            y = lastFloorHeight - 4;
                             WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
                             WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                         }
 
                         for (x = PlatformRightStart; x <= freeR.X1; x++)
                         {
-                            y = lastFloorHeight - 4;
                             WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
                             WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                         }
+                    }
+
+                    if (leftSpace == 1)
+                    {
+                        // exactly two lines: put chain deco "on" the platforms
+                        y = lastFloorHeight - 5;
+
+                        if (doors[Door.Up].doorExist)
+                        {
+                            for (x = freeR.X0; x <= doors[Door.Up].doorRect.X0 - 1; x++)
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.Chain);
+                            }
+
+                            for (x = doors[Door.Up].doorRect.X1 + 1; x <= freeR.X1; x++)
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.Chain);
+                            }
+                        }
+                        else
+                        {
+                            for (x = freeR.X0; x <= freeR.X1; x++)
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.Chain);
+                            }
+                        }
+                    }
+
+                    if (leftSpace == 2)
+                    {
+                        // exactly three lines: chests and wooden crates on the platform
+                        y = lastFloorHeight - 5;
+
+                        randomItems.Clear();
+                        randomItems.Add((TileID.Containers, Deco[S.Chest], 65)); // Chest
+                        randomItems.Add((TileID.FishingCrate, 0, 65)); // wooden crate
+
+                        area1 = new Rectangle2P(freeR.X0, y, freeR.X1 - 1, y, "dummyString");
+                        if (doors[Door.Up].doorExist)   area2 = new Rectangle2P(doors[Door.Up].doorRect.X0 - 3, y, doors[Door.Up].doorRect.X1 + 2, y, "dummyString");
+                        else                            area2 = new Rectangle2P(doors[Door.Up].doorRect.X0    , y, doors[Door.Up].doorRect.X1 - 1, y, "dummyString");
+
+                        for (int i = 1; i <= 6; i++)
+                        {
+                            int num = WorldGen.genRand.Next(randomItems.Count);
+                            Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                        }
+
                     }
 
                     // TODO: replace banners as there are already enough at the beds? Maybe put item frames?
