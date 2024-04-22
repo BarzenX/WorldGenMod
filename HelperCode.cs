@@ -648,6 +648,27 @@ namespace WorldGenMod
         }
 
         /// <summary>
+        /// Paints tiles in the given area
+        /// </summary>
+        /// <param name="area">The to be painted area</param>
+        /// <param name="paintType">The ID of the to be painted color</param>
+        public static bool PaintArea(Rectangle2P area, int paintType)
+        {
+            // pre-checks
+            if (paintType <= 0) return false;
+
+            for (int i = area.X0; i <= area.X1; i++)
+            {
+                for (int j = area.Y0; j <= area.Y1; j++)
+                {
+                    WorldGen.paintTile(i, j, (byte)paintType);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Checks for free space, places a tile (option to paint it) and attaches a banner to it
         /// </summary>
         /// <param name="x">The x coordinate of where the banner shall be placed at</param>

@@ -1963,14 +1963,30 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
 
+
+                            x = freeR.X0 + 4;
+                            y = freeR.Y1 - 4;
                             if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 4, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
                             }
                             else if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 4, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-                                //TODO: with drink
+                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                // and a drink on it
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                for (int i = 1; i <= 3; i++)
+                                {
+                                    int num = WorldGen.genRand.Next(randomItems.Count);
+                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                }
                             }
                         }
                         else
@@ -2025,9 +2041,29 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
 
+                            x = freeR.X1 - 5;
+                            y = freeR.Y1 - 4;
                             if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X1 - 5, freeR.Y1 - 4, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                // and a drink on it
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                for (int i = 1; i <= 3; i++)
+                                {
+                                    int num = WorldGen.genRand.Next(randomItems.Count);
+                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                }
                             }
                         }
                         else
@@ -2093,9 +2129,29 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
 
+                            x = freeR.X0 + 4;
+                            y = freeR.Y1 - 8;
                             if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 8, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                // and a drink on it
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                for (int i = 1; i <= 3; i++)
+                                {
+                                    int num = WorldGen.genRand.Next(randomItems.Count);
+                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                }
                             }
                         }
                         else
@@ -2148,9 +2204,29 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
 
+                            x = freeR.X1 - 5;
+                            y = freeR.Y1 - 8;
                             if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X1 - 5, freeR.Y1 - 8, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                // and a drink on it
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                for (int i = 1; i <= 3; i++)
+                                {
+                                    int num = WorldGen.genRand.Next(randomItems.Count);
+                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                }
                             }
                         }
                         else
@@ -2215,9 +2291,29 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
 
+                            x = freeR.X0 + 4;
+                            y = freeR.Y1 - 12;
                             if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X0 + 4, freeR.Y1 - 12, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                // and a drink on it
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                for (int i = 1; i <= 3; i++)
+                                {
+                                    int num = WorldGen.genRand.Next(randomItems.Count);
+                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                }
                             }
                         }
                         else
@@ -2270,9 +2366,29 @@ namespace WorldGenMod.Structures.Ice
                                 Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                             }
 
+                            x = freeR.X1 - 5;
+                            y = freeR.Y1 - 12;
                             if (Chance.Perc(50))
                             {
-                                WorldGen.PlaceTile(freeR.X1 - 5, freeR.Y1 - 12, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                // and a drink on it
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                for (int i = 1; i <= 3; i++)
+                                {
+                                    int num = WorldGen.genRand.Next(randomItems.Count);
+                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                }
                             }
                         }
                         else
@@ -2370,18 +2486,15 @@ namespace WorldGenMod.Structures.Ice
                         for (int i = 1; i <= 6; i++)
                         {
                             int num = WorldGen.genRand.Next(randomItems.Count);
-                            Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            placeResult = Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            if (placeResult.success && randomItems[num].TileID == TileID.FishingCrate)
+                            {
+                                area1 = new Rectangle2P(placeResult.x, placeResult.y - 1, 2, 2);
+                                Func.PaintArea(area1, (byte)Deco[S.StylePaint]);
+                            }
                         }
 
                     }
-
-                    // TODO: replace banners as there are already enough at the beds? Maybe put item frames?
-
-
-                    //TODO: room just finished fast to have some variety...elaborate it more.
-                    // ideas: 1) maybe put beams always on the up/down door and put a chest in front of the bed?
-                    //        2) put banners in front of beds. hanging from the above platform
-                    //        3) put something in the middle
 
                     // finalization
                     Func.PlaceStinkbug(freeR);
