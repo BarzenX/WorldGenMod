@@ -42,6 +42,11 @@ Configs: {
 			Tooltip: Whether or not the 'Frost Fortress' microdungeon will generate (requires you to generate a new world in order to affect anything)
 		}
 
+		configFrostFortressCobwebFilling: {
+			Label: Frost Fortress cobweb density
+			Tooltip: "   How dense the cobweb in the Frost Fortress shall generate (0..100%; 0=no cobwebs)"
+		}
+
 		configGenerateCanyon: {
 			Label: Canyons
 			Tooltip: Whether or not 'Canyons' (legacy version of "Fissures") will generate (requires you to generate a new world in order to affect anything)
@@ -55,6 +60,11 @@ Configs: {
 		configChastisedChurchGenerationSide: {
 			Label: "   Chastised Church Generation Side"
 			Tooltip: Force the Chastised Church to be generated on a specific world side
+		}
+
+		configChastisedChurchCobwebFilling: {
+			Label: Chastised Church cobweb density
+			Tooltip: "   How dense the cobweb in the Chastised Church shall generate (0..100%; 0=no cobwebs)"
 		}
 
 		configGenerateFissure: {

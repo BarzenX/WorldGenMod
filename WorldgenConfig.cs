@@ -21,6 +21,12 @@ namespace WorldGenMod
         //[BackgroundColor(116, 201, 164)]
         public bool configGenerateFrostFortress;
 
+        [Increment(1)]
+        [Range(0, 100)]
+        [DefaultValue(25)]
+        [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
+        public int configFrostFortressCobwebFilling;
+
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
         public bool configGenerateChastisedChurch;
@@ -30,6 +36,12 @@ namespace WorldGenMod
         [OptionStrings(new string[] { "Left", "Right", "Both", "Random" })]
         [DefaultValue("Random")]
         public string configChastisedChurchGenerationSide;
+
+        [Increment(1)]
+        [Range(0, 100)]
+        [DefaultValue(25)]
+        [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
+        public int configChastisedChurchCobwebFilling;
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
@@ -89,6 +101,7 @@ namespace WorldGenMod
             WorldGenMod.fissureCount = configFissureCount;
 
             WorldGenMod.generateFrostFortresses = configGenerateFrostFortress;
+            WorldGenMod.configFrostFortressCobwebFilling = configFrostFortressCobwebFilling;
 
             WorldGenMod.generateLakes = configGenerateLakes;
             WorldGenMod.lakeCount = configLakesCount;
@@ -100,6 +113,7 @@ namespace WorldGenMod
 
             WorldGenMod.generateChastisedChurch = configGenerateChastisedChurch;
             WorldGenMod.chastisedChurchGenerationSide = configChastisedChurchGenerationSide;
+            WorldGenMod.configChastisedChurchCobwebFilling = configChastisedChurchCobwebFilling;
 
 
             // legacy

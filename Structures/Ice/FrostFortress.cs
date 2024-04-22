@@ -1069,9 +1069,6 @@ namespace WorldGenMod.Structures.Ice
                     if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
                     if (placed) Func.UnlightLantern(x, y);
 
-                    // cobwebs
-                    PlaceCobWeb(freeR, 1, 25);
-
                     break;
 
                 case 1: // kitchen with shelves
@@ -1266,9 +1263,6 @@ namespace WorldGenMod.Structures.Ice
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: Deco[S.HangingPot], chance: 50); // hanging pot with herb
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: 0, chance: 50); // hanging empty pot
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: Deco[S.HangingPot], chance: 50); // hanging pot with herb
-
-                    // cobwebs
-                    PlaceCobWeb(freeR, 1, 25);
 
                     break;
 
@@ -1514,8 +1508,7 @@ namespace WorldGenMod.Structures.Ice
 
                     // finalization
                     Func.PlaceStinkbug(freeR);
-                    PlaceCobWeb(freeR, 1, 25);
-
+                    
                     break;
 
                 case 3: // armory showroom
@@ -1803,9 +1796,7 @@ namespace WorldGenMod.Structures.Ice
                     }
                     //else { }// 1 space + 3 tiles WeaponRack + 1 space = already inside updoor -> too few space to look good...do nothing
 
-                    // finalization
-                    PlaceCobWeb(freeR, 1, 25);
-
+                    
                     break;
 
                 case 4: // dormitory
@@ -1814,7 +1805,7 @@ namespace WorldGenMod.Structures.Ice
                     // also to have more space to place chests
                     int PlatformLeftStart = doors[Door.Down].doorRect.X0;
                     int PlatformRightStart = doors[Door.Down].doorRect.X1;
-                    int lastFloorHeight;
+                    int lastFloorHeight; // for later calculating remaining YTiles for the ceiling stuff
 
                     //__________________________________________________________________________________________________________________________________
                     // ground floor: dressers and lanterns
@@ -1932,494 +1923,176 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     //__________________________________________________________________________________________________________________________________
-                    // second floor of the room: beds
+                    // second ... fourth floor of the room: beds
 
-                    if (freeR.YTiles >= 7)
+                    int floorStart = freeR.Y1 - 3; // init: floor 2 platform
+                    for (int f = 1; f <= 3; f++)
                     {
-                        lastFloorHeight = freeR.Y1 - 3;
-
-                        // left bed
-                        if (Chance.Perc(70))
+                        if (freeR.YTiles >= 3 + f*4)
                         {
-                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
+                            lastFloorHeight = floorStart;
+
+                            // left bed
+                            if (Chance.Perc(70))
                             {
-                                y = freeR.Y1 - 3;
-
-                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                            }
-
-                            WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 4, TileID.Beds, style: Deco[S.Bed]);
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 6, 4, 2), Deco[S.BedWallpaper]);
-
-                            if (Chance.Perc(75))
-                            {
-                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 6);
-                            }
-
-                            if ((freeR.YTiles >= 8) && (Chance.Perc(75)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-
-
-                            x = freeR.X0 + 4;
-                            y = freeR.Y1 - 4;
-                            if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-
-                                // and a drink on it
-                                randomItems.Clear();
-                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-
-                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
-
-                                for (int i = 1; i <= 3; i++)
+                                for (x = freeR.X0; x <= PlatformLeftStart; x++)
                                 {
-                                    int num = WorldGen.genRand.Next(randomItems.Count);
-                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // put only damaged platform
-                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
-                            {
-                                if (Chance.Perc(65))
-                                {
-                                    y = freeR.Y1 - 3;
+                                    y = floorStart;
 
                                     WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
                                     WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                }
+
+                                WorldGen.PlaceTile(freeR.X0 + 1, floorStart - 1, TileID.Beds, style: Deco[S.Bed]);
+                                Func.PlaceWallArea(new Rectangle2P(freeR.X0, floorStart - 3, 4, 2), Deco[S.BedWallpaper]);
+
+                                if (Chance.Perc(75))
+                                {
+                                    WorldGen.PlaceTile(freeR.X0, floorStart - 3, TileID.Torches, style: Deco[S.Torch]);
+                                    Func.Unlight1x1(freeR.X0, floorStart - 3);
+                                }
+
+                                if ((freeR.YTiles >= 4 + f*4) && (Chance.Perc(75)))
+                                {
+                                    Func.PlaceTileAndBanner(PlatformLeftStart, floorStart - 3, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                                }
+
+
+                                x = freeR.X0 + 4;
+                                y = floorStart - 1;
+                                if (Chance.Perc(50))
+                                {
+                                    WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                }
+                                else if (Chance.Perc(50))
+                                {
+                                    WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                    // and a drink on it
+                                    randomItems.Clear();
+                                    randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                    randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                    randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                    area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                    for (int i = 1; i <= 3; i++)
+                                    {
+                                        int num = WorldGen.genRand.Next(randomItems.Count);
+                                        Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // put only damaged platform
+                                for (x = freeR.X0; x <= PlatformLeftStart; x++)
+                                {
+                                    if (Chance.Perc(65))
+                                    {
+                                        y = floorStart;
+
+                                        WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                        WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                    }
+                                }
+
+                                if (Chance.Perc(40))
+                                {
+                                    WorldGen.PlaceTile(freeR.X0, floorStart - 3, TileID.Torches, style: Deco[S.Torch]);
+                                    Func.Unlight1x1(freeR.X0, floorStart - 3);
+                                }
+
+                                if ((freeR.YTiles >= 4 + f*4) && (Chance.Perc(40)))
+                                {
+                                    Func.PlaceTileAndBanner(PlatformLeftStart, floorStart - 3, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                                }
+                            }
+
+                            // right platform and bed
+                            if (Chance.Perc(70))
+                            {
+                                for (x = PlatformRightStart; x <= freeR.X1; x++)
+                                {
+                                    y = floorStart;
+
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                }
+
+                                WorldGen.PlaceTile(freeR.X1 - 2, floorStart - 1, TileID.Beds, style: Deco[S.Bed]);
+                                Func.BedTurnLeft(freeR.X1 - 2, floorStart - 1);
+                                Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, floorStart - 3, 4, 2), Deco[S.BedWallpaper]);
+
+                                if (Chance.Perc(75))
+                                {
+                                    WorldGen.PlaceTile(freeR.X1, floorStart - 3, TileID.Torches, style: Deco[S.Torch]);
+                                    Func.Unlight1x1(freeR.X1, floorStart - 3);
+                                }
+
+                                if ((freeR.YTiles >= 4 + f*4) && (Chance.Perc(75)))
+                                {
+                                    Func.PlaceTileAndBanner(PlatformRightStart, floorStart - 3, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                                }
+
+                                x = freeR.X1 - 5;
+                                y = floorStart - 2;
+                                if (Chance.Perc(50))
+                                {
+                                    WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
+                                }
+                                else if (Chance.Perc(50))
+                                {
+                                    WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
+
+                                    // and a drink on it
+                                    randomItems.Clear();
+                                    randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                                    randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                                    randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+
+                                    area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
+
+                                    for (int i = 1; i <= 3; i++)
+                                    {
+                                        int num = WorldGen.genRand.Next(randomItems.Count);
+                                        Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // put only damaged platform
+                                for (x = PlatformRightStart; x <= freeR.X1; x++)
+                                {
+                                    if (Chance.Perc(65))
+                                    {
+                                        y = floorStart;
+
+                                        WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                        WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                    }
+                                }
+
+                                if (Chance.Perc(40))
+                                {
+                                    WorldGen.PlaceTile(freeR.X1, floorStart - 3, TileID.Torches, style: Deco[S.Torch]);
+                                    Func.Unlight1x1(freeR.X1, floorStart - 3);
+                                }
+
+                                if ((freeR.YTiles >= 4 + f*4) && (Chance.Perc(40)))
+                                {
+                                    Func.PlaceTileAndBanner(PlatformRightStart, floorStart - 3, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
                                 }
                             }
 
                             if (Chance.Perc(40))
                             {
-                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 6);
-                            }
-
-                            if ((freeR.YTiles >= 8) && (Chance.Perc(40)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                                Func.PlaceItemFrame(freeR.XCenter, floorStart - 3, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
                             }
                         }
 
-                        // right platform and bed
-                        if (Chance.Perc(70))
-                        {
-                            for (x = PlatformRightStart; x <= freeR.X1; x++)
-                            {
-                                y = freeR.Y1 - 3;
-
-                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                            }
-
-                            WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 4, TileID.Beds, style: Deco[S.Bed]);
-                            Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 4);
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, freeR.Y1 - 6, 4, 2), Deco[S.BedWallpaper]);
-
-                            if (Chance.Perc(75))
-                            {
-                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 6);
-                            }
-
-                            if ((freeR.YTiles >= 8) && (Chance.Perc(75)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-
-                            x = freeR.X1 - 5;
-                            y = freeR.Y1 - 4;
-                            if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-
-                                // and a drink on it
-                                randomItems.Clear();
-                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-
-                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
-
-                                for (int i = 1; i <= 3; i++)
-                                {
-                                    int num = WorldGen.genRand.Next(randomItems.Count);
-                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // put only damaged platform
-                            for (x = PlatformRightStart; x <= freeR.X1; x++)
-                            {
-                                if (Chance.Perc(65))
-                                {
-                                    y = freeR.Y1 - 3;
-
-                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                }
-                            }
-
-                            if (Chance.Perc(40))
-                            {
-                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 6, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 6);
-                            }
-
-                            if ((freeR.YTiles >= 8) && (Chance.Perc(40)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 6, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-                        }
-
-                        if (Chance.Perc(40))
-                        {
-                            Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 6, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
-                        }
-                    }
-
-                    //__________________________________________________________________________________________________________________________________
-                    // third floor of the room
-
-                    if (freeR.YTiles >= 11)
-                    {
-                        lastFloorHeight = freeR.Y1 - 7;
-
-                        // left platform and bed
-                        if (Chance.Perc(70))
-                        {
-                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
-                            {
-                                y = freeR.Y1 - 7;
-                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                            }
-
-                            WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 8, TileID.Beds, style: Deco[S.Bed]);
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 10, 4, 2), Deco[S.BedWallpaper]);
-
-                            if (Chance.Perc(75))
-                            {
-                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 10);
-                            }
-
-                            if ((freeR.YTiles >= 12) && (Chance.Perc(75)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-
-                            x = freeR.X0 + 4;
-                            y = freeR.Y1 - 8;
-                            if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-
-                                // and a drink on it
-                                randomItems.Clear();
-                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-
-                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
-
-                                for (int i = 1; i <= 3; i++)
-                                {
-                                    int num = WorldGen.genRand.Next(randomItems.Count);
-                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // put only damaged platform
-                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
-                            {
-                                if (Chance.Perc(65))
-                                {
-                                    y = freeR.Y1 - 7;
-                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                }
-                            }
-
-                            if (Chance.Perc(40))
-                            {
-                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 10);
-                            }
-
-                            if ((freeR.YTiles >= 12) && (Chance.Perc(40)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-                        }
-
-                        // right platform and bed
-                        if (Chance.Perc(70))
-                        {
-                            for (x = PlatformRightStart; x <= freeR.X1; x++)
-                            {
-                                y = freeR.Y1 - 7;
-                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                            }
-
-                            WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 8, TileID.Beds, style: Deco[S.Bed]);
-                            Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 8);
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, freeR.Y1 - 10, 4, 2), Deco[S.BedWallpaper]);
-
-                            if (Chance.Perc(75))
-                            {
-                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 10);
-                            }
-
-                            if ((freeR.YTiles >= 12) && (Chance.Perc(75)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-
-                            x = freeR.X1 - 5;
-                            y = freeR.Y1 - 8;
-                            if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-
-                                // and a drink on it
-                                randomItems.Clear();
-                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-
-                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
-
-                                for (int i = 1; i <= 3; i++)
-                                {
-                                    int num = WorldGen.genRand.Next(randomItems.Count);
-                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // put only damaged platform
-                            for (x = PlatformRightStart; x <= freeR.X1; x++)
-                            {
-                                if (Chance.Perc(65))
-                                {
-                                    y = freeR.Y1 - 7;
-                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                }
-                            }
-
-                            if (Chance.Perc(40))
-                            {
-                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 10, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 10);
-                            }
-
-                            if ((freeR.YTiles >= 12) && (Chance.Perc(40)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 10, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-                        }
-
-                        if (Chance.Perc(40))
-                        {
-                            Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 10, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
-                        }
-                    }
-
-                    //__________________________________________________________________________________________________________________________________
-                    // fourth floor of the room
-
-                    if (freeR.YTiles >= 15)
-                    {
-                        lastFloorHeight = freeR.Y1 - 11;
-
-                        // left platform and bed
-                        if (Chance.Perc(70))
-                        {
-                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
-                            {
-                                y = freeR.Y1 - 11;
-                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                            }
-
-                            WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y1 - 12, TileID.Beds, style: Deco[S.Bed]);
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 14, 4, 2), Deco[S.BedWallpaper]);
-
-                            if (Chance.Perc(75))
-                            {
-                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 14);
-                            }
-
-                            if ((freeR.YTiles >= 16) && (Chance.Perc(75)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-
-                            x = freeR.X0 + 4;
-                            y = freeR.Y1 - 12;
-                            if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-
-                                // and a drink on it
-                                randomItems.Clear();
-                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-
-                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
-
-                                for (int i = 1; i <= 3; i++)
-                                {
-                                    int num = WorldGen.genRand.Next(randomItems.Count);
-                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // put only damaged platform
-                            for (x = freeR.X0; x <= PlatformLeftStart; x++)
-                            {
-                                if (Chance.Perc(65))
-                                {
-                                    y = freeR.Y1 - 11;
-                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                }
-                            }
-
-                            if (Chance.Perc(40))
-                            {
-                                WorldGen.PlaceTile(freeR.X0, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X0, freeR.Y1 - 14);
-                            }
-
-                            if ((freeR.YTiles >= 16) && (Chance.Perc(40)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformLeftStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-                        }
-
-                        // right platform and bed
-                        if (Chance.Perc(70))
-                        {
-                            for (x = PlatformRightStart; x <= freeR.X1; x++)
-                            {
-                                y = freeR.Y1 - 11;
-                                WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                            }
-
-                            WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 12, TileID.Beds, style: Deco[S.Bed]);
-                            Func.BedTurnLeft(freeR.X1 - 2, freeR.Y1 - 12);
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X1 - 3, freeR.Y1 - 14, 4, 2), Deco[S.BedWallpaper]);
-
-                            if (Chance.Perc(75))
-                            {
-                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 14);
-                            }
-
-                            if ((freeR.YTiles >= 16) && (Chance.Perc(75)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-
-                            x = freeR.X1 - 5;
-                            y = freeR.Y1 - 12;
-                            if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.Containers, style: Deco[S.Chest]); // Chest in front of bed
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                WorldGen.PlaceTile(x, y, TileID.WorkBenches, style: Deco[S.Workbench]); // Workbench in front of bed
-
-                                // and a drink on it
-                                randomItems.Clear();
-                                randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                                randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                                randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-
-                                area1 = new Rectangle2P(x, y - 1, x + 1, y - 1, "dummyString");
-
-                                for (int i = 1; i <= 3; i++)
-                                {
-                                    int num = WorldGen.genRand.Next(randomItems.Count);
-                                    Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // put only damaged platform
-                            for (x = PlatformRightStart; x <= freeR.X1; x++)
-                            {
-                                if (Chance.Perc(65))
-                                {
-                                    y = freeR.Y1 - 11;
-                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                }
-                            }
-
-                            if (Chance.Perc(40))
-                            {
-                                WorldGen.PlaceTile(freeR.X1, freeR.Y1 - 14, TileID.Torches, style: Deco[S.Torch]);
-                                Func.Unlight1x1(freeR.X1, freeR.Y1 - 14);
-                            }
-
-                            if ((freeR.YTiles >= 16) && (Chance.Perc(40)))
-                            {
-                                Func.PlaceTileAndBanner(PlatformRightStart, freeR.Y1 - 14, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
-                            }
-                        }
-
-                        if (Chance.Perc(40))
-                        {
-                            Func.PlaceItemFrame(freeR.XCenter, freeR.Y1 - 14, Deco[S.BackWall], Deco[S.StylePaint]); // Item Frame
-                        }
+                        floorStart -= 4; // next floor
                     }
 
                     //__________________________________________________________________________________________________________________________________
@@ -2498,8 +2171,7 @@ namespace WorldGenMod.Structures.Ice
 
                     // finalization
                     Func.PlaceStinkbug(freeR);
-                    PlaceCobWeb(freeR, 1, 25);
-
+                    
                     break;
 
                 case 5: // armory
@@ -2556,12 +2228,10 @@ namespace WorldGenMod.Structures.Ice
                         if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
                     }
 
-                    PlaceCobWeb(freeR, 1, 25);
                     break;
 
                 case 6: //empty room because I don't have enough room templates and the other rooms repeat too much!
 
-                    PlaceCobWeb(freeR, 1, 25);
                     break;
 
                 case 100: // empty room for display
@@ -2569,8 +2239,7 @@ namespace WorldGenMod.Structures.Ice
 
             }
 
-            //TODO: in the end put on this one instead of every room by itself:
-            //PlaceCobWeb(freeR, 1, 25);
+            PlaceCobWeb(freeR, 1, WorldGenMod.configFrostFortressCobwebFilling);
         }
 
         public void FillChest(Chest chest, int style)

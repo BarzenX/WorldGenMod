@@ -40,6 +40,11 @@ namespace WorldGenMod
         public static bool generateFrostFortresses;
 
         /// <summary>
+        /// How dense the cobweb in the Frost Fortresses shall generate (0..100%)
+        /// </summary>
+        public static int configFrostFortressCobwebFilling;
+
+        /// <summary>
         /// Fissure activated in ServerConfig
         /// </summary>
         public static bool generateFissure;
@@ -58,6 +63,11 @@ namespace WorldGenMod
         /// Slider for Chastised Church generation preference
         /// </summary>
         public static string chastisedChurchGenerationSide;
+
+        /// <summary>
+        /// How dense the cobweb in the Chastised Church shall generate (0..100%)
+        /// </summary>
+        public static int configChastisedChurchCobwebFilling;
 
 
 
