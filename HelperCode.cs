@@ -476,13 +476,17 @@ namespace WorldGenMod
         /// <param name="type">TileID</param>
         /// <param name="style">Specification of the TileID (f.ex. TileID 215 (Campfire) -> style 3 = Frozen Campfire)</param>
         /// <param name="maxTry">Maximum count of tries to place the object</param>
-        /// <param name="chance">Chance of the part to be actual placed (1% .. chance .. 100%) </param>
+        /// <param name="chance">Chance of the part to be actually placed (1% .. chance .. 100%) </param>
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
         ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
         public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, Rectangle2P blockedArea, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
         {
-            if (chance < 100) if ( !Chance.Perc(chance))   return (false, 0, 0);
+            if (chance < 100)
+            {
+                if (!Chance.Perc(chance)) return (false, 0, 0);
+            }
+                
 
             bool randomizeX = area.YTiles == 1;
             bool considerBlockedArea = !(blockedArea.IsEmpty());
@@ -696,6 +700,111 @@ namespace WorldGenMod
             if (!Main.tile[x, y].HasTile)  return false; // banner wasn't created, who knows why!
 
             return true;
+        }
+
+        /// <summary>
+        /// Places patches of CobWeb in an rectangular space and adds some randomness on the edges.
+        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
+        /// </summary>
+        /// <param name="area">The rectangle where CobWeb shall be placed</param>
+        /// <param name="randomize">Whether a CobWeb shall be placed by chance (0=no; 1=with the chance stated in "percChance"; 2=the further away from the rectangle center point, the less likely)</param>
+        /// <param name="percChance">The percentual chance to place a CobWeb tile for randomize = 1</param>
+        public static void PlaceCobWeb(Rectangle2P area, int randomize = 0, int percChance = 50)
+        {
+            for (int x = area.X0; x <= area.X1; x++)
+            {
+                for (int y = area.Y0; y <= area.Y1; y++)
+                {
+                    if (!Main.tile[x, y].HasTile) //first the fast query
+                    {
+                        //then the more compute-heavy check
+                        switch (randomize)
+                        {
+                            case 0:
+                                WorldGen.PlaceTile(x, y, TileID.Cobweb);
+                                break;
+
+                            case 1:
+                                if (WorldGen.genRand.Next(1, 101) <= percChance) WorldGen.PlaceTile(x, y, TileID.Cobweb);
+                                break;
+
+                            case 2:
+
+                                break;
+                        }
+
+                        //TODO: overthink case 2...putting it as described would more or less create an ellipse...and I already have one :-/
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
+        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
+        /// </summary>
+        /// <param name="x0">Center x-coordinate of the CobWeb patch</param>
+        /// <param name="y0">Center y-coordinate of the CobWeb patch</param>
+        /// <param name="xRadius">Radius (written in tiles) in x-direction of the CobWeb patch</param>
+        /// <param name="yRadius">Radius (written in tiles) in y-direction of the CobWeb patch</param>
+        /// <param name="includeBorder">Whether the border of the ellipse shall get CobWeb placed or not</param>
+        /// <param name="randomize">Whether CobWeb shall be placed by chance (the further away from the ellipse center point, the less likely)</param>
+        public static void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, bool includeBorder = false, bool randomize = true)
+        {
+            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
+            Rectangle2P overall = new Rectangle2P(x0 - xRadius, y0 - yRadius, x0 + xRadius, y0 + yRadius, "dummy"); // the rectangle exactly covering the ellipse
+
+            for (int x = overall.X0; x <= overall.X1; x++)
+            {
+                for (int y = overall.Y0; y <= overall.Y1; y++)
+                {
+                    if (!Main.tile[x, y].HasTile) //first the fast query
+                    {
+                        bool contains;
+                        float distance;
+                        (distance, contains) = CobWebs.Distance_Contains(x, y, includeBorder); //then the more compute-heavy check
+
+                        if (contains && (WorldGen.genRand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
+                        {
+                            WorldGen.PlaceTile(x, y, TileID.Cobweb);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
+        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
+        /// </summary>
+        /// <param name="x0">Center x-coordinate of the CobWeb patch</param>
+        /// <param name="y0">Center y-coordinate of the CobWeb patch</param>
+        /// <param name="xRadius">Radius (written in tiles) in x-direction of the CobWeb patch</param>
+        /// <param name="yRadius">Radius (written in tiles) in y-direction of the CobWeb patch</param>
+        /// <param name="room">The rectangular room where the CobWeb is allowed to be placed</param>
+        /// <param name="includeBorder">Whether the border of the ellipse shall get CobWeb placed or not</param>
+        /// <param name="randomize">Whether CobWeb shall be placed by chance (the further away from the ellipse center point, the less likely)</param>
+        public static void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, Rectangle2P room, bool includeBorder = false, bool randomize = true)
+        {
+            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
+
+            for (int x = room.X0; x <= room.X1; x++)
+            {
+                for (int y = room.Y0; y <= room.Y1; y++)
+                {
+                    if (!Main.tile[x, y].HasTile) //first the fast query
+                    {
+                        bool contains;
+                        float distance;
+                        (distance, contains) = CobWebs.Distance_Contains(x, y, includeBorder); //then the more compute-heavy check
+
+                        if (contains && (WorldGen.genRand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
+                        {
+                            WorldGen.PlaceTile(x, y, TileID.Cobweb);
+                        }
+                    }
+                }
+            }
         }
 
     }
@@ -924,7 +1033,7 @@ namespace WorldGenMod
 
         /// <summary>
         /// Gets the x-coordinate of the center point of the rectangular region defined by this Rectangle2Point.
-        /// <br/> If xTiles is even, there is no real middle, and the lower x-coordinate of the "double tile center" will be returned
+        /// <br/> If xTiles is even, there is no exact middle tile, so the lower x-coordinate of the "double tile center" will be returned
         /// </summary>
         public readonly int XCenter
         {
@@ -933,7 +1042,7 @@ namespace WorldGenMod
 
         /// <summary>
         /// Gets the y-coordinate of the center point of the rectangular region defined by this Rectangle2Point.
-        /// <br/> If yTiles is even, there is no real middle, and the lower y-coordinate of the "double tile center" will be returned
+        /// <br/> If yTiles is even, there is no exact middle tile, so the upper y-coordinate of the "double tile center" will be returned
         /// </summary>
         public readonly int YCenter
         {

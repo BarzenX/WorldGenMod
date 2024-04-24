@@ -232,6 +232,7 @@ namespace WorldGenMod.Structures.Underworld
             //    WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 35);
             //}
 
+            
         }
 
         public void GenerateChastisedChurch(int generationSide)

@@ -192,7 +192,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.StyleSave] = S.StyleDarkLead;
                     Deco[S.Brick] = TileID.LeadBrick;
                     Deco[S.Floor] = TileID.EbonstoneBrick;
-                    //TODO: find something (Platinum Brick?)     if (Chance.Simple())   Deco[Style.Floor] = TileID.AncientSilverBrick;
+                    //TODO: find something (Platinum Brick meh, Titanstone block meh)     if (Chance.Simple())   Deco[Style.Floor] = TileID.AncientSilverBrick;
                     Deco[S.BackWall] = WallID.BlueDungeonSlab;
                     Deco[S.DoorWall] = WallID.Bone;
                     Deco[S.DoorPlat] = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
@@ -928,7 +928,7 @@ namespace WorldGenMod.Structures.Ice
                 // Tile ID 240 (Paintings3x3) -> Type 34=Crowno Devours His Lunch
                 // Tile ID 574 -> Boreal Beam
                 // Tile ID 51 -> Cob web
-                PlaceCobWeb(freeR, 1, 25);
+                Func.PlaceCobWeb(freeR, 1, 25);
 
                 return;
             }
@@ -986,7 +986,7 @@ namespace WorldGenMod.Structures.Ice
 
             //choose room decoration at random
             //int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
-            int roomDeco = 4;
+            int roomDeco = 5;
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, high rooms get another beam line and a painting
@@ -2149,21 +2149,22 @@ namespace WorldGenMod.Structures.Ice
                         y = lastFloorHeight - 5;
 
                         randomItems.Clear();
-                        randomItems.Add((TileID.Containers, Deco[S.Chest], 65)); // Chest
-                        randomItems.Add((TileID.FishingCrate, 0, 65)); // wooden crate
+                        randomItems.Add((TileID.Containers, Deco[S.Chest], 70)); // Chest
+                        randomItems.Add((TileID.FishingCrate, 0, 70)); // wooden crate
 
                         area1 = new Rectangle2P(freeR.X0, y, freeR.X1 - 1, y, "dummyString");
-                        if (doors[Door.Up].doorExist)   area2 = new Rectangle2P(doors[Door.Up].doorRect.X0 - 3, y, doors[Door.Up].doorRect.X1 + 2, y, "dummyString");
+                        if (doors[Door.Up].doorExist)   area2 = new Rectangle2P(doors[Door.Up].doorRect.X0 - 2, y, doors[Door.Up].doorRect.X1 + 1, y, "dummyString");
                         else                            area2 = new Rectangle2P(doors[Door.Up].doorRect.X0    , y, doors[Door.Up].doorRect.X1 - 1, y, "dummyString");
 
-                        for (int i = 1; i <= 6; i++)
+                        for (int i = 1; i <= 8; i++)
                         {
                             int num = WorldGen.genRand.Next(randomItems.Count);
                             placeResult = Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            
                             if (placeResult.success && randomItems[num].TileID == TileID.FishingCrate)
                             {
-                                area1 = new Rectangle2P(placeResult.x, placeResult.y - 1, 2, 2);
-                                Func.PaintArea(area1, (byte)Deco[S.StylePaint]);
+                                area3 = new Rectangle2P(placeResult.x, placeResult.y - 1, 2, 2);
+                                Func.PaintArea(area3, (byte)Deco[S.StylePaint]);
                             }
                         }
 
@@ -2176,6 +2177,7 @@ namespace WorldGenMod.Structures.Ice
 
                 case 5: // armory
 
+                    //__________________________________________________________________________________________________________________________________
                     // floor
                     area1 = new Rectangle2P(freeR.X0, freeR.Y1, freeR.X1, freeR.Y1, "dummyString");
 
@@ -2183,7 +2185,7 @@ namespace WorldGenMod.Structures.Ice
                     if (placeResult.success)
                     {
                         chestID = Chest.FindChest(placeResult.x, placeResult.y - 1);
-                        if (chestID != -1) FillChest(Main.chest[chestID], WorldGen.genRand.Next(2));
+                        if (chestID != -1) FillChest(Main.chest[chestID], WorldGen.genRand.Next(2)); // with loot
                     }
 
                     placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.WorkBenches, style: Deco[S.Workbench], chance: 50); // workbench
@@ -2191,7 +2193,7 @@ namespace WorldGenMod.Structures.Ice
                     {
                         if (Chance.Perc(65))
                         {
-                            WorldGen.PlaceTile(placeResult.x + 1, placeResult.y - 1, TileID.Candelabras, style: Deco[S.Candelabra]);
+                            WorldGen.PlaceTile(placeResult.x + 1, placeResult.y - 1, TileID.Candelabras, style: Deco[S.Candelabra]); // with candelabra
                             Func.UnlightCandelabra(placeResult.x + 1, placeResult.y - 1);
                         }
                     }
@@ -2204,6 +2206,8 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.Statues, 3),  // sword statue
                         (TileID.Statues, 6),  // shield statue
                         (TileID.Statues, 21),  // spear statue
+                        (TileID.TargetDummy, 0)  // Target Dummy
+                        // Mannequin with armor
                     };
 
                     for (int i = 1; i <= 6; i++)
@@ -2211,24 +2215,81 @@ namespace WorldGenMod.Structures.Ice
                         int num = WorldGen.genRand.Next(floorItems.Count);
                         Func.TryPlaceTile(area1, Rectangle2P.Empty, floorItems[num].TileID, style: floorItems[num].style, chance: 50); // one random item of the list
                     }
-                    
 
-                    if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
-                    if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
+                    //__________________________________________________________________________________________________________________________________
+                    // hanging items
 
-                    if (freeR.YTiles >= 9)
+                    List<(ushort TileID, int style)> hangItems = new List<(ushort, int)>()
                     {
-                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
-                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
-                    }
+                        (TileID.ItemFrame, 0),  // item frame
+                        (TileID.WeaponsRack2, 0),  // weapon rack
+                        (TileID.Painting3X3, 41),  // blacksmith rack
+                        (TileID.Painting3X3, 42),  // carpentry rack
+                        (TileID.Painting3X3, 43),  // helmet rack
+                        (TileID.Painting3X3, 44),  // spear rack
+                        (TileID.Painting3X3, 45),  // sword rack
+                    };
 
-                    if (freeR.YTiles >= 12)
+                    List<List<short>> itemFrame_Styles = new List<List<short>>
                     {
-                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
-                        if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
-                    }
+                        new List<short>{ // potions
+                            ItemID.ArcheryPotion, ItemID.AmmoReservationPotion, ItemID.BattlePotion ,ItemID.EndurancePotion, ItemID.HealingPotion, ItemID.HunterPotion,
+                            ItemID.IronskinPotion, ItemID.MagicPowerPotion, ItemID.ManaRegenerationPotion, ItemID.NightOwlPotion, ItemID.ObsidianSkinPotion,
+                            ItemID.RagePotion, ItemID.RegenerationPotion, ItemID.SwiftnessPotion, ItemID.ThornsPotion, ItemID.TitanPotion, ItemID.WrathPotion
+                        },
+                        new List<short>{ // bombs
+                            ItemID.Bomb, ItemID.Dynamite, ItemID.Grenade, ItemID.SmokeBomb, ItemID.Beenade, ItemID.ScarabBomb, ItemID.ExplosiveBunny
+                        },
+                        new List<short>{ // metals
+                            ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.Geode
+                        },
+                        new List<short>{ // ammo
+                            ItemID.Bone, ItemID.BoneDagger, ItemID.Shuriken, ItemID.Snowball, ItemID.SpikyBall, ItemID.StarAnise, ItemID.RottenEgg
+                        }
+                    };
+
+                    List<List<short>> weaponRack_Styles = new List<List<short>>
+                    {
+                        new List<short>{ // swords
+                            ItemID.CopperBroadsword, ItemID.TinBroadsword, ItemID.IronBroadsword, ItemID.LeadBroadsword, ItemID.SilverBroadsword, ItemID.TungstenBroadsword, ItemID.GoldBroadsword, ItemID.PlatinumBroadsword, ItemID.BoneSword, ItemID.IceBlade
+                        },
+                        new List<short>{ // bows
+                            ItemID.CopperBow, ItemID.TinBow, ItemID.IronBow, ItemID.LeadBow, ItemID.SilverBow, ItemID.TungstenBow, ItemID.GoldBow, ItemID.BorealWoodBow, ItemID.PalmWoodBow, ItemID.ShadewoodBow, ItemID.EbonwoodBow, ItemID.RichMahoganyBow
+                        },
+                        new List<short>{ // magic
+                            ItemID.WandofSparking, ItemID.WandofFrosting, ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff
+                        },
+                        new List<short>{ // randoms
+                            ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip
+                        },
+                    };
+
+                    int unusedXTiles = freeR.XTiles % 3; // everything is 3 tiles wide, except the item frames, who will get a special treatment anyways
+                    int startX = freeR.XCenter - 1;
+                    if (freeR.XTiles % 2 == 0)   startX = freeR.XCenter; // could also be "-2" to make the room symmetrical around the middle. But as the rooms have always even XTiles safe that problem for the future.
+
+
+
+
+
+                    //if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
+                    //if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
+
+                    //if (freeR.YTiles >= 9)
+                    //{
+                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
+                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
+                    //}
+
+                    //if (freeR.YTiles >= 12)
+                    //{
+                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
+                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
+                    //}
 
                     break;
+                // TODO: ideas:
+                // Banners left and right if there's space
 
                 case 6: //empty room because I don't have enough room templates and the other rooms repeat too much!
 
@@ -2239,7 +2300,7 @@ namespace WorldGenMod.Structures.Ice
 
             }
 
-            PlaceCobWeb(freeR, 1, WorldGenMod.configFrostFortressCobwebFilling);
+            Func.PlaceCobWeb(freeR, 1, WorldGenMod.configFrostFortressCobwebFilling);
         }
 
         public void FillChest(Chest chest, int style)
@@ -2321,111 +2382,6 @@ namespace WorldGenMod.Structures.Ice
             chest.item[nextItem].SetDefaults(ItemID.GoldCoin);
             chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
             if (style == 4) chest.item[nextItem].stack = WorldGen.genRand.Next(6, 20);
-        }
-
-        /// <summary>
-        /// Places patches of CobWeb in an rectangular space and adds some randomness on the edges.
-        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
-        /// </summary>
-        /// <param name="area">The rectangle where CobWeb shall be placed</param>
-        /// <param name="randomize">Whether a CobWeb shall be placed by chance (0=no; 1=with the chance stated in "percChance"; 2=the further away from the rectangle center point, the less likely)</param>
-        /// <param name="percChance">The percentual chance to place a CobWeb tile for randomize = 1</param>
-        public void PlaceCobWeb(Rectangle2P area, int randomize = 0, int percChance = 50)
-        {
-            for (int x = area.X0; x <= area.X1; x++)
-            {
-                for (int y = area.Y0; y <= area.Y1; y++)
-                {
-                    if (!Main.tile[x, y].HasTile) //first the fast query
-                    {
-                        //then the more compute-heavy check
-                        switch (randomize)
-                        {
-                            case 0:
-                                WorldGen.PlaceTile(x, y, TileID.Cobweb);
-                                break;
-
-                            case 1:
-                                if (WorldGen.genRand.Next(1, 101) <= percChance)   WorldGen.PlaceTile(x, y, TileID.Cobweb);
-                                break;
-
-                            case 2:
-                                
-                                break;
-                        }
-                        
-                        //TODO: overthink case 2...putting it as described would more or less create an ellipse...and I already have one :-/
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
-        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
-        /// </summary>
-        /// <param name="x0">Center x-coordinate of the CobWeb patch</param>
-        /// <param name="y0">Center y-coordinate of the CobWeb patch</param>
-        /// <param name="xRadius">Radius (written in tiles) in x-direction of the CobWeb patch</param>
-        /// <param name="yRadius">Radius (written in tiles) in y-direction of the CobWeb patch</param>
-        /// <param name="includeBorder">Whether the border of the ellipse shall get CobWeb placed or not</param>
-        /// <param name="randomize">Whether CobWeb shall be placed by chance (the further away from the ellipse center point, the less likely)</param>
-        public void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, bool includeBorder = false, bool randomize = true)
-        {
-            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
-            Rectangle2P overall = new Rectangle2P(x0 - xRadius, y0 - yRadius, x0 + xRadius, y0 + yRadius, "dummy"); // the rectangle exactly covering the ellipse
-            
-            for (int x = overall.X0; x <= overall.X1; x++) 
-            {
-                for(int y = overall.Y0; y <= overall.Y1; y++) 
-                {
-                    if ( !Main.tile[x, y].HasTile ) //first the fast query
-                    {
-                        bool contains;
-                        float distance;
-                        (distance, contains) = CobWebs.Distance_Contains(x, y, includeBorder); //then the more compute-heavy check
-
-                        if (contains && (WorldGen.genRand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
-                        {
-                            WorldGen.PlaceTile(x, y, TileID.Cobweb);
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
-        /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
-        /// </summary>
-        /// <param name="x0">Center x-coordinate of the CobWeb patch</param>
-        /// <param name="y0">Center y-coordinate of the CobWeb patch</param>
-        /// <param name="xRadius">Radius (written in tiles) in x-direction of the CobWeb patch</param>
-        /// <param name="yRadius">Radius (written in tiles) in y-direction of the CobWeb patch</param>
-        /// <param name="room">The rectangular room where the CobWeb is allowed to be placed</param>
-        /// <param name="includeBorder">Whether the border of the ellipse shall get CobWeb placed or not</param>
-        /// <param name="randomize">Whether CobWeb shall be placed by chance (the further away from the ellipse center point, the less likely)</param>
-        public void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, Rectangle2P room, bool includeBorder = false, bool randomize = true)
-        {
-            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
-
-            for (int x = room.X0; x <= room.X1; x++)
-            {
-                for (int y = room.Y0; y <= room.Y1; y++)
-                {
-                    if (!Main.tile[x, y].HasTile) //first the fast query
-                    {
-                        bool contains;
-                        float distance;
-                        (distance, contains) = CobWebs.Distance_Contains(x, y, includeBorder); //then the more compute-heavy check
-
-                        if (contains && (WorldGen.genRand.NextFloat() > distance || !randomize)) //make the outer cobwebs less likely to appear
-                        {
-                            WorldGen.PlaceTile(x, y, TileID.Cobweb);
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>

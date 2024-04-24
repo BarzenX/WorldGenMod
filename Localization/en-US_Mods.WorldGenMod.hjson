@@ -13,7 +13,7 @@ Configs: {
 		}
 
 		configHellevatorCount: {
-			Label: "   Abandoned Hellevator Count"
+			Label: "   Abandoned Hellevator count"
 			Tooltip: Number of Abandoned Hellevators to be created
 		}
 
@@ -23,7 +23,7 @@ Configs: {
 		}
 
 		configLakesCount: {
-			Label: "   Underground Lakes Count"
+			Label: "   Underground Lakes count"
 			Tooltip: Number of Underground Lakes to be created
 		}
 
@@ -43,8 +43,8 @@ Configs: {
 		}
 
 		configFrostFortressCobwebFilling: {
-			Label: Frost Fortress cobweb density
-			Tooltip: "   How dense the cobweb in the Frost Fortress shall generate (0..100%; 0=no cobwebs)"
+			Label: "   Frost Fortress cobweb density"
+			Tooltip: How dense the cobweb in the Frost Fortress shall generate (0..100%; 0=no cobwebs)
 		}
 
 		configGenerateCanyon: {
@@ -58,13 +58,13 @@ Configs: {
 		}
 
 		configChastisedChurchGenerationSide: {
-			Label: "   Chastised Church Generation Side"
+			Label: "   Chastised Church generation side"
 			Tooltip: Force the Chastised Church to be generated on a specific world side
 		}
 
 		configChastisedChurchCobwebFilling: {
-			Label: Chastised Church cobweb density
-			Tooltip: "   How dense the cobweb in the Chastised Church shall generate (0..100%; 0=no cobwebs)"
+			Label: "   Chastised Church cobweb density"
+			Tooltip: How dense the cobweb in the Chastised Church shall generate (0..100%; 0=no cobwebs) - for future use
 		}
 
 		configGenerateFissure: {
@@ -73,7 +73,7 @@ Configs: {
 		}
 
 		configFissureCount: {
-			Label: "   Fissure Count"
+			Label: "   Fissure count"
 			Tooltip: Number of Fissures to be created
 		}
 
