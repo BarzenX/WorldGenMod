@@ -836,6 +836,26 @@ namespace WorldGenMod
         }
     }
 
+    /// <summary>
+    /// Places objects in a straight line.
+    /// <br/>Works by processing a handed over step list with a fixed interface
+    /// </summary>
+    internal class LineAutomat
+    {
+        /// <summary> Returns true every "1 out of x times" (2 .. x .. maxInt)</summary>
+        public static bool OneOut(int x)
+        {
+            return WorldGen.genRand.NextBool(Math.Max(1, x));
+        }
+        private bool XDir; // If the line will be along x-direction
+        private bool LeftToRight; // If the line moves along x-direction, specify if it's from right to left
+        private bool RightToLeft; // If the line moves along x-direction, specify if it's from left to right
+
+        private bool YDir; // If the line will be along y-direction
+        private bool TopToBottom; // If the line moves along y-direction, specify if it's from top to bottom
+        private bool BottomToTop; // If the line moves along y-direction, specify if it's from bottom to top
+    }
+
     public struct Rectangle2P
     {
         public static readonly Rectangle2P Empty; // an empty rectangle for cases when one wants to say "there is nothing"
