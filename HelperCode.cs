@@ -842,18 +842,219 @@ namespace WorldGenMod
     /// </summary>
     internal class LineAutomat
     {
-        /// <summary> Returns true every "1 out of x times" (2 .. x .. maxInt)</summary>
-        public static bool OneOut(int x)
-        {
-            return WorldGen.genRand.NextBool(Math.Max(1, x));
-        }
-        private bool XDir; // If the line will be along x-direction
-        private bool LeftToRight; // If the line moves along x-direction, specify if it's from right to left
-        private bool RightToLeft; // If the line moves along x-direction, specify if it's from left to right
+        /// <summary> If the line will be along x-direction</summary>
+        private bool XDir;
+        /// <summary> If the line moves along x-direction, specify if it's from right to left</summary>
+        private bool LeftToRight;
+        /// <summary> If the line moves along x-direction, specify if it's from left to right</summary>
+        private bool RightToLeft;
 
-        private bool YDir; // If the line will be along y-direction
-        private bool TopToBottom; // If the line moves along y-direction, specify if it's from top to bottom
-        private bool BottomToTop; // If the line moves along y-direction, specify if it's from bottom to top
+        /// <summary> If the line will be along y-direction</summary>
+        private bool YDir;
+        /// <summary> If the line moves along y-direction, specify if it's from top to bottom</summary>
+        private bool TopToBottom;
+        /// <summary> If the line moves along y-direction, specify if it's from bottom to top</summary>
+        private bool BottomToTop;
+
+        /// <summary> Starting x-coordinate</summary>
+        private int XStart;
+        /// <summary> Starting y-coordinate</summary>
+        private int YStart;
+
+        /// <summary> Actual x-coordinate of the automat</summary>
+        private int XAct;
+        /// <summary> Actual Y-coordinate of the automat</summary>
+        private int YAct;
+
+        /// <summary> Possible directional codes used for the constructor</summary>
+        public enum Dirs
+        {
+            xPlus = 1,
+            xNeg = 2,
+            yPlus = 3,
+            yNeg = 4,
+        }
+
+        /// <summary> Possible command codes for a step</summary>
+        public enum Cmds
+        {
+            Tile = 1,
+            WeaponRack = 2,
+            ItemFrame = 3,
+            Space = 4
+        }
+
+        /// <summary> The list of to-be-worked tasks
+        /// <br/> <b>Cmd</b> (see StepCmd Enum):
+        /// <br/> - Tile, 
+        /// <br/> - WeaponRack,
+        /// <br/> - ItemFrame,
+        /// <br/> - Space
+        /// 
+        /// <br/> <b>Item</b>:
+        /// <br/> - Cmd=Tile: TileID
+        /// <br/> - Cmd=WeaponRack: Item for WeaponRack
+        /// <br/> - Cmd=ItemFrame: Item for ItemFrame
+        /// <br/> - Cmd=Space: *not used*
+        /// 
+        /// <br/> <b>Style</b>:
+        /// <br/> - Cmd=Tile: Style of Tile (e.g. "boreal wood chair" in "chairs")
+        /// <br/> - Cmd=WeaponRack: faced left or right
+        /// <br/> - Cmd=ItemFrame: *not used*
+        /// <br/> - Cmd=Space: *not used*
+        /// 
+        /// <br/> <b>Size</b>
+        /// <br/> - dimensions of the placed object
+        /// 
+        /// <br/> <b>ToAnchor</b>
+        /// <br/> - tile distances leading from the actual automat position to the multitile anchor point (TopToBottom is +Y and RightToLeft is +X)
+        /// 
+        /// <br/> <b>Chance</b>
+        /// <br/> - Pre-Chance-Check to if an object shall be placed or not
+        /// 
+        /// <br/> <b>Add</b>
+        /// <br/> - Additional data for the command, e.g. the wallType and the paint for placing the WeaponRack or ItemFrame
+        /// </summary>
+        public List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, List<short> add)> Steps;
+
+        public LineAutomat((int x, int y) start, int dir)
+        {
+
+            this.XStart = start.x;
+            this.YStart = start.y;
+
+            this.XAct = start.x;
+            this.YAct = start.y;
+
+            switch (dir)
+            {
+                case (int)Dirs.xPlus:
+                case (int)Dirs.xNeg:
+                    this.XDir = true;
+                    this.LeftToRight = (dir == (int)Dirs.xPlus);
+                    this.RightToLeft = (dir == (int)Dirs.xNeg);
+
+                    this.YDir = false;
+                    this.TopToBottom = false;
+                    this.BottomToTop = false;
+
+                    break;
+
+                case (int)Dirs.yPlus:
+                case (int)Dirs.yNeg:
+                    this.YDir = false;
+                    this.LeftToRight = false;
+                    this.RightToLeft = false;
+
+                    this.YDir = true;
+                    this.TopToBottom = (dir == (int)Dirs.yPlus);
+                    this.BottomToTop = (dir == (int)Dirs.yNeg);
+
+                    break;
+            }
+
+            Steps = new List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, List<short> add)> { };
+
+        }
+
+        /// <summary>
+        /// Starts to work the task list
+        /// </summary>
+        public void Start()
+        {
+            if (Steps.Count > 0)
+            {
+                Work();
+            }
+        }
+
+        /// <summary>
+        /// Starts to work the task list
+        /// </summary>
+        private void Work()
+        {
+            do
+            {
+                switch (Steps[0].cmd)
+                {
+                    case (int)Cmds.Tile:
+                        if (Chance.Perc(Steps[0].chance))
+                        {
+                            if (Steps[0].item == TileID.Banners)
+                            {
+                                WorldGen.PlaceObject(this.XAct + Steps[0].toAnchor.x,
+                                                     this.YAct + Steps[0].toAnchor.y,
+                                                     TileID.Banners,
+                                                     style: Steps[0].style); // Banner
+                            }
+                            else
+                            {
+                                WorldGen.PlaceTile(this.XAct + Steps[0].toAnchor.x,
+                                                   this.YAct + Steps[0].toAnchor.y,
+                                                   Steps[0].item,
+                                                   style: Steps[0].style);
+                            }
+                            
+                        }
+                        break;
+
+                    case (int)Cmds.WeaponRack:
+                        if (Chance.Perc(Steps[0].chance))
+                        {
+                            Func.PlaceWeaponRack(this.XAct + Steps[0].toAnchor.x,
+                                                 this.YAct + Steps[0].toAnchor.y,
+                                                 paint: (int)Steps[0].add[0],
+                                                 item: Steps[0].item,
+                                                 direction: Steps[0].style);
+                        }
+                        break;
+
+                    case (int)Cmds.ItemFrame:
+                        if (Chance.Perc(Steps[0].chance))
+                        {
+                            Func.PlaceItemFrame(this.XAct + Steps[0].toAnchor.x,
+                                                this.YAct + Steps[0].toAnchor.y,
+                                                paint: (int)Steps[0].add[0],
+                                                item: Steps[0].item);
+                        }
+                            break;
+
+                    case (int)Cmds.Space:
+                        // do nothing, just advance
+                        break;
+                }
+            } while (NextStep());
+        }
+
+        /// <summary>
+        /// Advances to the next step in the task list, actualizing the position
+        /// </summary>
+        private bool NextStep()
+        {
+            if (Steps.Count > 1)
+            {
+                if (LeftToRight) this.XAct += Steps[0].size.x;
+                else if (RightToLeft) this.XAct -= Steps[0].size.x;
+                else if (TopToBottom) this.YAct += Steps[0].size.y;
+                else if (BottomToTop) this.YAct -= Steps[0].size.y;
+
+                Steps.RemoveAt(0);
+
+                return true;
+            }
+            else return false;
+        }
+
+        /// <summary>
+        /// Resets the automat to its initial state (position and task list)
+        /// </summary>
+        public void Reset()
+        {
+            this.XAct = this.XStart;
+            this.YAct = this.YStart;
+
+            this.Steps.Clear();
+        }
     }
 
     public struct Rectangle2P

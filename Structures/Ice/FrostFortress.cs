@@ -2268,27 +2268,16 @@ namespace WorldGenMod.Structures.Ice
                     int startX = freeR.XCenter - 1;
                     if (freeR.XTiles % 2 == 0)   startX = freeR.XCenter; // could also be "-2" to make the room symmetrical around the middle. But as the rooms have always even XTiles safe that problem for the future.
 
-                    
 
-                    List<(int cmd, int item, int style, (int xSize, int ySize), (int xAnchor, int yAnchor), byte chance, List<short> add)> autoSteps = new List<(int, int, int, (int, int), (int, int), byte, List<short>)>()
-                    {
-                        // Cmd -> Space, WeaponRack, ItemFrame, Tile
-                        // Item -> Space: number of spaces
-                        //         WeaponRack: Item for WeaponRack
-                        //         ItemFrame: Item for ItemFrame
-                        //         Tile: TileID
-                        // Style -> Space: *not used*
-                        //         WeaponRack: faced left or right
-                        //         ItemFrame: *not used*
-                        //         Tile: Style of Tile (e.g. "boreal wood chair" in "chairs")
-                        // (int xSize, int ySize) -> dimensions of the placed object
-                        // (int xAnchor, int yAnchor) -> where the objects anchor point is situated inside of the objects multitile ((0,0) is the upper left corner, down is +Y and right is +X)
-                        // Chance -> Pre-Chance-Check to if an object shall be placed or not
-                        // Add -> Additional data for the command, e.g. the wallType and the paint for placing the WeaponRack or ItemFrame
-                    };
+                    LineAutomat automat = new LineAutomat((freeR.X0, freeR.Y0 + 1), (int)LineAutomat.Dirs.xPlus);
 
-                    // Automat: StartPos(x,y), EndPos(x,y),
+                    automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, new List<short> { }) );
+                    automat.Start();
 
+                    //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
+                    //automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, (1,0),(0,0), 0, new List<short> {}));
+                    //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
+                    //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
 
 
 
