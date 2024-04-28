@@ -11,6 +11,7 @@ using WorldGenMod.Structures.Ice;
 using Terraria.DataStructures;
 using Terraria.GameContent.Tile_Entities;
 using Microsoft.VisualBasic;
+using Terraria.Achievements;
 
 namespace WorldGenMod
 {
@@ -865,6 +866,8 @@ namespace WorldGenMod
         private int XAct;
         /// <summary> Actual Y-coordinate of the automat</summary>
         private int YAct;
+        /// <summary> Actual step of the automat</summary>
+        private (int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<short, List<short>> add) ActStep;
 
         /// <summary> Possible directional codes used for the constructor</summary>
         public enum Dirs
@@ -872,7 +875,7 @@ namespace WorldGenMod
             xPlus = 1,
             xNeg = 2,
             yPlus = 3,
-            yNeg = 4,
+            yNeg = 4
         }
 
         /// <summary> Possible command codes for a step</summary>
@@ -882,6 +885,13 @@ namespace WorldGenMod
             WeaponRack = 2,
             ItemFrame = 3,
             Space = 4
+        }
+
+        /// <summary> Possible additional keys for a step</summary>
+        public enum Adds
+        {
+            Wall = 1, // "data" structure: wallID, leftmost x-coordinate of sprite, given in relation to actual step position
+            Paint = 2 // "data" structure: paintID, topmost y-coordinate of sprite, given in relation to actual step position
         }
 
         /// <summary> The list of to-be-worked tasks
@@ -913,12 +923,14 @@ namespace WorldGenMod
         /// <br/> - Pre-Chance-Check to if an object shall be placed or not
         /// 
         /// <br/> <b>Add</b>
-        /// <br/> - Additional data for the command, e.g. the wallType and the paint for placing the WeaponRack or ItemFrame
+        /// <br/> - Additional data for the command (e.g. the wallType and the paint for placing the WeaponRack or ItemFrame)
+        /// <br/> --> arranged as dictionary of "code" keys and "data" value pairs
         /// </summary>
-        public List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, List<short> add)> Steps;
+        public List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<short, List<short>> add)> Steps;
 
         public LineAutomat((int x, int y) start, int dir)
         {
+            Steps = new List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<short, List<short>> add)> { };
 
             this.XStart = start.x;
             this.YStart = start.y;
@@ -952,9 +964,6 @@ namespace WorldGenMod
 
                     break;
             }
-
-            Steps = new List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, List<short> add)> { };
-
         }
 
         /// <summary>
@@ -973,49 +982,75 @@ namespace WorldGenMod
         /// </summary>
         private void Work()
         {
+            int wall = 0; // init
+            int paint = -1; // init
+            int x, y;
             do
             {
-                switch (Steps[0].cmd)
+                ActStep = Steps[0]; //get actual step data, to not call "Steps[0]" all the time
+
+                if (ActStep.add.ContainsKey((short)Adds.Wall)) wall = ActStep.add[(short)Adds.Wall][0]; // wallID is the first item in the "data" list of the "Wall" key
+                else wall = 0;
+
+                if (ActStep.add.ContainsKey((short)Adds.Paint)) paint = ActStep.add[(short)Adds.Paint][0]; // paintID is the first item in the "data" list of the "Paint" key
+                else paint = 0;
+
+                switch (ActStep.cmd)
                 {
                     case (int)Cmds.Tile:
-                        if (Chance.Perc(Steps[0].chance))
+                        if (Chance.Perc(ActStep.chance))
                         {
-                            if (Steps[0].item == TileID.Banners)
+                            if (wall > 0)
                             {
-                                WorldGen.PlaceObject(this.XAct + Steps[0].toAnchor.x,
-                                                     this.YAct + Steps[0].toAnchor.y,
+                                x = this.XAct + ActStep.add[(short)Adds.Wall][1];
+                                y = this.YAct + ActStep.add[(short)Adds.Wall][2];
+                                Func.PlaceWallArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), wall);
+                            }
+
+                            if (ActStep.item == TileID.Banners)
+                            {
+                                WorldGen.PlaceObject(this.XAct + ActStep.toAnchor.x,
+                                                     this.YAct + ActStep.toAnchor.y,
                                                      TileID.Banners,
-                                                     style: Steps[0].style); // Banner
+                                                     style: ActStep.style); // Banner
                             }
                             else
                             {
-                                WorldGen.PlaceTile(this.XAct + Steps[0].toAnchor.x,
-                                                   this.YAct + Steps[0].toAnchor.y,
-                                                   Steps[0].item,
-                                                   style: Steps[0].style);
+                                WorldGen.PlaceTile(this.XAct + ActStep.toAnchor.x,
+                                                   this.YAct + ActStep.toAnchor.y,
+                                                   ActStep.item,
+                                                   style: ActStep.style);
                             }
-                            
+
+                            if (paint >= 0)
+                            {
+                                x = this.XAct + ActStep.add[(short)Adds.Paint][1];
+                                y = this.YAct + ActStep.add[(short)Adds.Paint][2];
+                                Func.PaintArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), paint);
+                            }
                         }
                         break;
 
                     case (int)Cmds.WeaponRack:
-                        if (Chance.Perc(Steps[0].chance))
+                        if (Chance.Perc(ActStep.chance))
                         {
-                            Func.PlaceWeaponRack(this.XAct + Steps[0].toAnchor.x,
-                                                 this.YAct + Steps[0].toAnchor.y,
-                                                 paint: (int)Steps[0].add[0],
-                                                 item: Steps[0].item,
-                                                 direction: Steps[0].style);
+                            Func.PlaceWeaponRack(this.XAct + ActStep.toAnchor.x,
+                                                 this.YAct + ActStep.toAnchor.y,
+                                                 wallType: wall,
+                                                 paint: paint,
+                                                 item: ActStep.item,
+                                                 direction: ActStep.style);
                         }
                         break;
 
                     case (int)Cmds.ItemFrame:
-                        if (Chance.Perc(Steps[0].chance))
+                        if (Chance.Perc(ActStep.chance))
                         {
-                            Func.PlaceItemFrame(this.XAct + Steps[0].toAnchor.x,
-                                                this.YAct + Steps[0].toAnchor.y,
-                                                paint: (int)Steps[0].add[0],
-                                                item: Steps[0].item);
+                            Func.PlaceItemFrame(this.XAct + ActStep.toAnchor.x,
+                                                this.YAct + ActStep.toAnchor.y,
+                                                wallType: wall,
+                                                paint: paint,
+                                                item: ActStep.item);
                         }
                             break;
 
@@ -1033,10 +1068,10 @@ namespace WorldGenMod
         {
             if (Steps.Count > 1)
             {
-                if (LeftToRight) this.XAct += Steps[0].size.x;
-                else if (RightToLeft) this.XAct -= Steps[0].size.x;
-                else if (TopToBottom) this.YAct += Steps[0].size.y;
-                else if (BottomToTop) this.YAct -= Steps[0].size.y;
+                if      (LeftToRight) this.XAct += ActStep.size.x;
+                else if (RightToLeft) this.XAct -= ActStep.size.x;
+                else if (TopToBottom) this.YAct += ActStep.size.y;
+                else if (BottomToTop) this.YAct -= ActStep.size.y;
 
                 Steps.RemoveAt(0);
 

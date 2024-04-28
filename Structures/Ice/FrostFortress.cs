@@ -2263,6 +2263,7 @@ namespace WorldGenMod.Structures.Ice
                             ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip
                         },
                     };
+                    List<short> noAdd = new List<short> { };
 
                     int unusedXTiles = freeR.XTiles % 3; // everything is 3 tiles wide, except the item frames, who will get a special treatment anyways
                     int startX = freeR.XCenter - 1;
@@ -2271,7 +2272,7 @@ namespace WorldGenMod.Structures.Ice
 
                     LineAutomat automat = new LineAutomat((freeR.X0, freeR.Y0 + 1), (int)LineAutomat.Dirs.xPlus);
 
-                    automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, new List<short> { }) );
+                    automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
                     automat.Start();
 
                     //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
