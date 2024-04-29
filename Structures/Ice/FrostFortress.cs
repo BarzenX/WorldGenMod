@@ -2217,7 +2217,7 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     //__________________________________________________________________________________________________________________________________
-                    // hanging items
+                    // hanging items styles
 
                     List<(ushort TileID, int style)> hangItems = new List<(ushort, int)>()
                     {
@@ -2263,17 +2263,47 @@ namespace WorldGenMod.Structures.Ice
                             ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip
                         },
                     };
-                    List<short> noAdd = new List<short> { };
 
-                    int unusedXTiles = freeR.XTiles % 3; // everything is 3 tiles wide, except the item frames, who will get a special treatment anyways
+                    //__________________________________________________________________________________________________________________________________
+                    // init vars
+
+                    Dictionary<short, List<short>> noAdd = new Dictionary<short, List<short>> { };
+                    int unusedXTiles, leftX;
+                    List<short> itemStyle;
+
                     int startX = freeR.XCenter - 1;
                     if (freeR.XTiles % 2 == 0)   startX = freeR.XCenter; // could also be "-2" to make the room symmetrical around the middle. But as the rooms have always even XTiles safe that problem for the future.
 
+                    //__________________________________________________________________________________________________________________________________
+                    // topmost row: WeaponFrames with some Banners or ItemFrames to fill gaps
 
                     LineAutomat automat = new LineAutomat((freeR.X0, freeR.Y0 + 1), (int)LineAutomat.Dirs.xPlus);
+                    unusedXTiles = freeR.XTiles % 3; // WeaponRacks are 3 tiles wide
+                    leftX = freeR.XTiles; // init
+                    itemStyle = weaponRack_Styles[WorldGen.genRand.Next(weaponRack_Styles.Count)]; // get a random style to later take items from it
+                    int num, facingDir = -1;
 
-                    automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
-                    automat.Start();
+                    if (unusedXTiles == 0) // all WeaponRacks, no free spaces
+                    {
+                        for (int i = 1; i < (freeR.XTiles / 3); i++)
+                        {
+                            num = WorldGen.genRand.Next(itemStyle.Count);
+                            if (i * 3 > freeR.XCenter)    facingDir = 1;
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.WeaponRack,
+                                               item: itemStyle[num],
+                                               style: facingDir,
+                                               size: (3, 3),
+                                               toAnchor: (1, 0),
+                                               chance: 90,
+                                               add: ));
+
+                            itemStyle.RemoveAt(num); // don't repeat the item
+                        }
+                    }
+
+                    //automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
+                    //automat.Start();
 
                     //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
                     //automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, (1,0),(0,0), 0, new List<short> {}));
