@@ -397,7 +397,7 @@ namespace WorldGenMod
             //place item inside of the WeaponRack
             if (item > 0)
             {
-                Item itemToPlace = new Item(item);
+                Item itemToPlace = new(item);
                 if (TEWeaponsRack.FitsWeaponFrame(itemToPlace))
                 {
                     TEWeaponsRack weaponRack = TileEntity.ByID[id] as TEWeaponsRack;
@@ -555,8 +555,8 @@ namespace WorldGenMod
             bool startLeft = Chance.Simple();
             bool stinkbugPlaced;
             (bool success, int x, int y) placeResult;
-            Rectangle2P area1 = new Rectangle2P(hollowRoom.X0, hollowRoom.Y0, hollowRoom.X0, hollowRoom.Y1, "dummyString");
-            Rectangle2P area2 = new Rectangle2P(hollowRoom.X1, hollowRoom.Y0, hollowRoom.X1, hollowRoom.Y1, "dummyString");
+            Rectangle2P area1 = new(hollowRoom.X0, hollowRoom.Y0, hollowRoom.X0, hollowRoom.Y1, "dummyString");
+            Rectangle2P area2 = new(hollowRoom.X1, hollowRoom.Y0, hollowRoom.X1, hollowRoom.Y1, "dummyString");
 
             // left or right wall
             if (startLeft)
@@ -752,8 +752,8 @@ namespace WorldGenMod
         /// <param name="randomize">Whether CobWeb shall be placed by chance (the further away from the ellipse center point, the less likely)</param>
         public static void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, bool includeBorder = false, bool randomize = true)
         {
-            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
-            Rectangle2P overall = new Rectangle2P(x0 - xRadius, y0 - yRadius, x0 + xRadius, y0 + yRadius, "dummy"); // the rectangle exactly covering the ellipse
+            Ellipse CobWebs = new(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
+            Rectangle2P overall = new(x0 - xRadius, y0 - yRadius, x0 + xRadius, y0 + yRadius, "dummy"); // the rectangle exactly covering the ellipse
 
             for (int x = overall.X0; x <= overall.X1; x++)
             {
@@ -787,7 +787,7 @@ namespace WorldGenMod
         /// <param name="randomize">Whether CobWeb shall be placed by chance (the further away from the ellipse center point, the less likely)</param>
         public static void PlaceCobWeb(int x0, int y0, int xRadius, int yRadius, Rectangle2P room, bool includeBorder = false, bool randomize = true)
         {
-            Ellipse CobWebs = new Ellipse(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
+            Ellipse CobWebs = new(xCenter: x0, yCenter: y0, xRadius: xRadius, yRadius: yRadius);
 
             for (int x = room.X0; x <= room.X1; x++)
             {
@@ -843,29 +843,23 @@ namespace WorldGenMod
     /// </summary>
     internal class LineAutomat
     {
-        /// <summary> If the line will be along x-direction</summary>
-        private bool XDir;
         /// <summary> If the line moves along x-direction, specify if it's from right to left</summary>
         private bool LeftToRight;
         /// <summary> If the line moves along x-direction, specify if it's from left to right</summary>
         private bool RightToLeft;
 
-        /// <summary> If the line will be along y-direction</summary>
-        private bool YDir;
         /// <summary> If the line moves along y-direction, specify if it's from top to bottom</summary>
         private bool TopToBottom;
         /// <summary> If the line moves along y-direction, specify if it's from bottom to top</summary>
         private bool BottomToTop;
 
-        /// <summary> Starting x-coordinate</summary>
-        private int XStart;
-        /// <summary> Starting y-coordinate</summary>
-        private int YStart;
+        /// <summary> Starting coordinate (included in range)</summary>
+        private int StartCoord;
+        /// <summary> End coordinate (included in range)</summary>
+        private int EndCoord;
 
-        /// <summary> Actual x-coordinate of the automat</summary>
-        private int XAct;
-        /// <summary> Actual Y-coordinate of the automat</summary>
-        private int YAct;
+        /// <summary> Actual coordinate of the automat</summary>
+        private int ActCoord;
         /// <summary> Actual step of the automat</summary>
         private (int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) ActStep;
 
@@ -930,7 +924,7 @@ namespace WorldGenMod
 
         public LineAutomat((int x, int y) start, int dir)
         {
-            Steps = new List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> { };
+            Steps = [];
 
             this.XStart = start.x;
             this.YStart = start.y;
@@ -942,11 +936,9 @@ namespace WorldGenMod
             {
                 case (int)Dirs.xPlus:
                 case (int)Dirs.xNeg:
-                    this.XDir = true;
                     this.LeftToRight = (dir == (int)Dirs.xPlus);
                     this.RightToLeft = (dir == (int)Dirs.xNeg);
 
-                    this.YDir = false;
                     this.TopToBottom = false;
                     this.BottomToTop = false;
 
@@ -954,11 +946,9 @@ namespace WorldGenMod
 
                 case (int)Dirs.yPlus:
                 case (int)Dirs.yNeg:
-                    this.YDir = false;
                     this.LeftToRight = false;
                     this.RightToLeft = false;
 
-                    this.YDir = true;
                     this.TopToBottom = (dir == (int)Dirs.yPlus);
                     this.BottomToTop = (dir == (int)Dirs.yNeg);
 
@@ -989,11 +979,11 @@ namespace WorldGenMod
             {
                 ActStep = Steps[0]; //get actual step data, to not call "Steps[0]" all the time
 
-                if (ActStep.add.ContainsKey((short)Adds.Wall)) wall = ActStep.add[(short)Adds.Wall][0]; // wallID is the first item in the "data" list of the "Wall" key
+                if (ActStep.add.ContainsKey((int)Adds.Wall)) wall = ActStep.add[(int)Adds.Wall][0]; // wallID is the first item in the "data" list of the "Wall" key
                 else wall = 0;
 
-                if (ActStep.add.ContainsKey((short)Adds.Paint)) paint = ActStep.add[(short)Adds.Paint][0]; // paintID is the first item in the "data" list of the "Paint" key
-                else paint = 0;
+                if (ActStep.add.ContainsKey((int)Adds.Paint)) paint = ActStep.add[(int)Adds.Paint][0]; // paintID is the first item in the "data" list of the "Paint" key
+                else paint = -1;
 
                 switch (ActStep.cmd)
                 {

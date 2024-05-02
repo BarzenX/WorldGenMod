@@ -18,12 +18,12 @@ namespace WorldGenMod.Structures.Ice
 {
     class FrostFortress : ModSystem
     {
-        List<Vector2> fortresses = new();
-        List<Point16> traps = new();
+        List<Vector2> fortresses = [];
+        List<Point16> traps = [];
         readonly int gap = -1; // the horizontal gap between two side room columns
         readonly int wThick = 2; // the tickness of the outer walls and ceilings in code
 
-        IDictionary<string, int> Deco = new Dictionary<string, int>(); // the dictionary where the styles of tiles are stored
+        Dictionary<string, int> Deco = []; // the dictionary where the styles of tiles are stored
 
         public override void PreWorldGen()
         {
@@ -57,10 +57,10 @@ namespace WorldGenMod.Structures.Ice
                 int y = WorldGen.genRand.Next((int)GenVars.rockLayer, Main.maxTilesY - 200);
                 Vector2 position = new(x, y); //init for later position search iteration
 
-                List<int> allowedTiles = new()
-                {
+                List<int> allowedTiles =
+                [
                     TileID.SnowBlock, TileID.IceBlock, TileID.CorruptIce, TileID.FleshIce
-                };
+                ];
 
                 bool tooClose = true;
                 while (Main.tile[(int)position.X, (int)position.Y] == null || !allowedTiles.Contains(Main.tile[(int)position.X, (int)position.Y].TileType) || tooClose)
@@ -466,13 +466,13 @@ namespace WorldGenMod.Structures.Ice
             }
 
 
-            int[] allowedTraps = new int[]
-                {
+            int[] allowedTraps =
+                [
                     0, //darts
                     //1, //darts and a boulder? -> I don't want boulders!
                     //2, //dynamite -> I don't want it!
                     3  //geysirs
-                };
+                ];
             foreach (Point16 trap in traps)
             {
                 WorldGen.placeTrap(trap.X, trap.Y, allowedTraps[WorldGen.genRand.Next(allowedTraps.Length)]);
@@ -493,7 +493,7 @@ namespace WorldGenMod.Structures.Ice
         public Rectangle2P GenerateRoom(Rectangle2P room, int roomType, bool leftDoor = false, bool rightDoor = false, bool upDoor = false, bool downDoor = false)
         {
             // the "free" room.... e.g. the rooms free inside (not the wall bricks)
-            Rectangle2P freeR = new Rectangle2P(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
+            Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
 
             int x; //temp variable for later calculations;
             int y; //temp variable for later calculations;
@@ -505,7 +505,7 @@ namespace WorldGenMod.Structures.Ice
 
             // create door rectangles
             #region door rectangles
-            IDictionary<int, (bool doorExist ,Rectangle2P doorRect)> doors = new Dictionary<int, (bool, Rectangle2P)>(); // a dictionary for working and sending the doors in a compact way
+            Dictionary<int, (bool doorExist, Rectangle2P doorRect)> doors = []; // a dictionary for working and sending the doors in a compact way
 
             int leftRightDoorsYTiles = 3; // how many tiles the left and right doors are high
             y = freeR.Y1 - (leftRightDoorsYTiles - 1);
@@ -980,8 +980,8 @@ namespace WorldGenMod.Structures.Ice
             bool stinkbugPlaced = false; //stinkbug for preventing NPCs to move into rooms
             (bool success, int x, int y) placeResult, placeResult2;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
-            List<(int x, int y)> rememberPos = new List<(int, int)>(); // for remembering positions
-            List<(ushort TileID, int style, byte chance)> randomItems = new List<(ushort, int, byte)>(); // for random item placement
+            List<(int x, int y)> rememberPos = []; // for remembering positions
+            List<(ushort TileID, int style, byte chance)> randomItems = []; // for random item placement
             int chestID;
 
             //choose room decoration at random
@@ -1513,8 +1513,8 @@ namespace WorldGenMod.Structures.Ice
 
                 case 3: // armory showroom
 
-                    List<(int, int, int)> armorPool = new List<(int, int, int)>() // the possible styles of armor
-                    {
+                    List<(int, int, int)> armorPool =    // the possible styles of armor
+                    [
                         (ArmorIDs.Head.CopperHelmet, ArmorIDs.Body.CopperChainmail, ArmorIDs.Legs.CopperGreaves),
                         (ArmorIDs.Head.TinHelmet, ArmorIDs.Body.TinChainmail, ArmorIDs.Legs.TinGreaves),
                         (ArmorIDs.Head.IronHelmet, ArmorIDs.Body.IronChainmail, ArmorIDs.Legs.IronGreaves),
@@ -1526,7 +1526,7 @@ namespace WorldGenMod.Structures.Ice
                         (ArmorIDs.Head.BorealWoodHelmet, ArmorIDs.Body.BorealWoodBreastplate, ArmorIDs.Legs.BorealWoodGreaves),
                         (ArmorIDs.Head.ShadewoodHelmet, ArmorIDs.Body.ShadewoodBreastplate, ArmorIDs.Legs.ShadewoodGreaves),
                         (ArmorIDs.Head.AshWoodHelmet, ArmorIDs.Body.AshWoodBreastplate, ArmorIDs.Legs.AshWoodGreaves),
-                    };
+                    ];
 
                     // left Mannequin #1
                     if (Chance.Perc(75))
@@ -2267,9 +2267,9 @@ namespace WorldGenMod.Structures.Ice
                     //__________________________________________________________________________________________________________________________________
                     // init vars
 
-                    Dictionary<int, List<int>> noAdd = new() { };
-                    int unusedXTiles, leftX;
-                    List<int> itemStyle;
+                    Dictionary<int, List<int>> noAdd = [];
+                    int unusedXTiles, actX;
+                    List<int> weaponStyle, itemStyle;
 
                     int startX = freeR.XCenter - 1;
                     if (freeR.XTiles % 2 == 0)   startX = freeR.XCenter; // could also be "-2" to make the room symmetrical around the middle. But as the rooms have always even XTiles safe that problem for the future.
@@ -2277,32 +2277,182 @@ namespace WorldGenMod.Structures.Ice
                     //__________________________________________________________________________________________________________________________________
                     // topmost row: WeaponFrames with some Banners or ItemFrames to fill gaps
 
-                    LineAutomat automat = new LineAutomat((freeR.X0, freeR.Y0 + 1), (int)LineAutomat.Dirs.xPlus);
+                    LineAutomat automat = new((freeR.X0, freeR.Y0 + 1), (int)LineAutomat.Dirs.xPlus);
                     unusedXTiles = freeR.XTiles % 3; // WeaponRacks are 3 tiles wide
-                    leftX = freeR.XTiles; // init
-                    itemStyle = weaponRack_Styles[WorldGen.genRand.Next(weaponRack_Styles.Count)]; // get a random style to later take items from it
+                    actX = freeR.X0; // init
+                    weaponStyle = weaponRack_Styles[WorldGen.genRand.Next(weaponRack_Styles.Count)]; // get a random style to later take items from it
+                    itemStyle = itemFrame_Styles[WorldGen.genRand.Next(itemFrame_Styles.Count)]; // get a random style to later take items from it
                     int facingDir = -1;
 
                     if (unusedXTiles == 0) // all WeaponRacks, no free spaces
                     {
                         for (int i = 1; i <= (freeR.XTiles / 3); i++)
                         {
-                            if (i * 3 > freeR.XCenter) facingDir = 1;
+                            if (actX + 1 > freeR.XCenter) facingDir = 1; // anchor point over the room middle
 
                             automat.Steps.Add(
-                                (cmd: (int)LineAutomat.Cmds.WeaponRack,
-                                 item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)),
-                                 style: facingDir,
-                                 size: (3, 3),
-                                 toAnchor: (1, 0),
-                                 chance: 75,
+                                (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                 size: (3, 3), toAnchor: (1, 0), chance: 75,
                                  add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
                                              {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
                             );
+                            actX += 3;
+                        }
+                    }
+                    else if (unusedXTiles == 1)
+                    {
+                        if (Chance.Simple())  // Style 1: banner, WeaponRack, banner, only WeaponRacks, banner, WeaponRack, banner
+                        {
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                 size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                                                     {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
+                            actX += 3;
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+
+                            for (int i = 1; i <= (int)((freeR.XTiles - (5+5)) / 3); i++)
+                            {
+                                if (actX + 1 > freeR.XCenter) facingDir = 1; // anchor point over the room middle
+
+                                automat.Steps.Add(
+                                    (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                     size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                     add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                                );
+                                actX += 3;
+                            }
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+
+                            facingDir = 1; // just in case the for loop never looped
+
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                 size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                                                     {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
+                            actX += 3;
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+                        }
+                        else  // Style 2: WeaponRacks, 2x ItemFrame, WeaponRack2
+                        {
+                            for (int i = 1; i <= (int)(((freeR.XTiles - (2+2)) / 3) / 2 ); i++)
+                            {
+                                automat.Steps.Add(
+                                    (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                     size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                     add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                                );
+                                actX += 3;
+                            }
+
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                 size: (2, 2), toAnchor: (0, -1), chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
+                            actX += 2;
+
+                            facingDir = 1;
+
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                 size: (2, 2), toAnchor: (0, -1), chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                                                         {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
+                            actX += 2;
+
+                            for (int i = 1; i <= (int)(((freeR.XTiles - (2 + 2)) / 3) / 2); i++)
+                            {
+                                automat.Steps.Add(
+                                    (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                     size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                     add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                                );
+                                actX += 3;
+                            }
+                        }
+                    }
+                    else if (unusedXTiles == 2)
+                    {
+                        if (Chance.Simple()) // Style 1: banner, WeaponRacks, banner
+                        {
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+
+                            for (int i = 1; i <= (int)((freeR.XTiles - 2) / 3); i++)
+                            {
+                                if (actX + 1 > freeR.XCenter) facingDir = 1; // anchor point over the room middle
+
+                                automat.Steps.Add(
+                                    (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                     size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                     add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                                );
+                                actX += 3;
+                            }
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+                        }
+                        else  // Style 2: WeaponRack, banner, only WeaponRacks, banner, WeaponRack
+                        {
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                 size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                                                         {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
+                            actX += 3;
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+
+                            for (int i = 1; i <= (int)((freeR.XTiles - 8) / 3); i++)
+                            {
+                                if (actX + 1 > freeR.XCenter) facingDir = 1; // anchor point over the room middle
+
+                                automat.Steps.Add(
+                                    (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                     size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                     add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                                );
+                                actX += 3;
+                            }
+
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, -1), chance: 75, add: noAdd));
+                            actX++;
+
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.WeaponRack, item: weaponStyle.PopAt(WorldGen.genRand.Next(weaponStyle.Count)), style: facingDir,
+                                 size: (3, 3), toAnchor: (1, 0), chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                                                         {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
+                            actX += 3;
                         }
                     }
                     automat.Start();
 
+                    
 
                     //automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
                     //automat.Start();
@@ -2354,7 +2504,7 @@ namespace WorldGenMod.Structures.Ice
 
         public void FillChest(Chest chest, int style)
         {
-            List<int> mainItem = new List<int>();
+            List<int> mainItem = [];
             if (style == 1)
             {
                 mainItem.Add(ItemID.Frostbrand);
@@ -2376,7 +2526,7 @@ namespace WorldGenMod.Structures.Ice
             mainItem.Add(ItemID.BlizzardinaBottle);
 
 
-            List<int> potionItem = new List<int>();
+            List<int> potionItem = [];
             if (style == 1)
             {
                 potionItem.Add(ItemID.RagePotion);
@@ -2393,22 +2543,22 @@ namespace WorldGenMod.Structures.Ice
             }
 
 
-            List<int> lightItem = new List<int>()
-            {
+            List<int> lightItem =
+            [
                 ItemID.IceTorch,
                 ItemID.Glowstick,
                 ItemID.FairyGlowstick,
                 ItemID.SpelunkerGlowstick
-            };
+            ];
 
 
-            List<int> ammoItem = new List<int>()
-            {
+            List<int> ammoItem =
+            [
                 ItemID.FrostburnArrow,
                 ItemID.FrostDaggerfish,
                 ItemID.Snowball,
                 ItemID.SpelunkerGlowstick
-            };
+            ];
 
             int nextItem = 0;
 
@@ -2531,7 +2681,7 @@ namespace WorldGenMod.Structures.Ice
                 }
             }
 
-            List<int> paintings = new List<int>();
+            List<int> paintings = [];
             if (style == S.StyleSnow)
             {
                 paintings.Add(5); // Dryadisque
@@ -2585,7 +2735,7 @@ namespace WorldGenMod.Structures.Ice
                 }
             }
 
-            List<int> paintings = new List<int>();
+            List<int> paintings = [];
             if (style == S.StyleSnow)
             {
                 paintings.Add(22); // Guide Picasso
@@ -2648,7 +2798,7 @@ namespace WorldGenMod.Structures.Ice
                 }
             }
 
-            List<int> paintings = new List<int>();
+            List<int> paintings = [];
             if (style == S.StyleSnow)
             {
                 paintings.Add(0); // Waldo
@@ -2703,7 +2853,7 @@ namespace WorldGenMod.Structures.Ice
                 }
             }
 
-            List<int> paintings = new List<int>();
+            List<int> paintings = [];
             if (style == S.StyleSnow)
             {
                 paintings.Add(6); // Place Above the Clouds
