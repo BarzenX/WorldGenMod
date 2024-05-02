@@ -867,7 +867,7 @@ namespace WorldGenMod
         /// <summary> Actual Y-coordinate of the automat</summary>
         private int YAct;
         /// <summary> Actual step of the automat</summary>
-        private (int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<short, List<short>> add) ActStep;
+        private (int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) ActStep;
 
         /// <summary> Possible directional codes used for the constructor</summary>
         public enum Dirs
@@ -890,8 +890,8 @@ namespace WorldGenMod
         /// <summary> Possible additional keys for a step</summary>
         public enum Adds
         {
-            Wall = 1, // "data" structure: wallID, leftmost x-coordinate of sprite, given in relation to actual step position
-            Paint = 2 // "data" structure: paintID, topmost y-coordinate of sprite, given in relation to actual step position
+            Wall = 1, // "data" structure: wallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
+            Paint = 2 // "data" structure: paintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
         }
 
         /// <summary> The list of to-be-worked tasks
@@ -926,11 +926,11 @@ namespace WorldGenMod
         /// <br/> - Additional data for the command (e.g. the wallType and the paint for placing the WeaponRack or ItemFrame)
         /// <br/> --> arranged as dictionary of "code" keys and "data" value pairs
         /// </summary>
-        public List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<short, List<short>> add)> Steps;
+        public List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> Steps;
 
         public LineAutomat((int x, int y) start, int dir)
         {
-            Steps = new List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<short, List<short>> add)> { };
+            Steps = new List<(int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> { };
 
             this.XStart = start.x;
             this.YStart = start.y;
@@ -1002,8 +1002,8 @@ namespace WorldGenMod
                         {
                             if (wall > 0)
                             {
-                                x = this.XAct + ActStep.add[(short)Adds.Wall][1];
-                                y = this.YAct + ActStep.add[(short)Adds.Wall][2];
+                                x = this.XAct + ActStep.add[(int)Adds.Wall][1];
+                                y = this.YAct + ActStep.add[(int)Adds.Wall][2];
                                 Func.PlaceWallArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), wall);
                             }
 
@@ -1024,8 +1024,8 @@ namespace WorldGenMod
 
                             if (paint >= 0)
                             {
-                                x = this.XAct + ActStep.add[(short)Adds.Paint][1];
-                                y = this.YAct + ActStep.add[(short)Adds.Paint][2];
+                                x = this.XAct + ActStep.add[(int)Adds.Paint][1];
+                                y = this.YAct + ActStep.add[(int)Adds.Paint][2];
                                 Func.PaintArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), paint);
                             }
                         }
@@ -1531,5 +1531,21 @@ namespace WorldGenMod
         /// Converts the attributes of this Ellipse to a human readable string.
         /// </summary>
         public override readonly string ToString() => $"{{X0={x0}, Y0={y0}, xRadius={xRadius}, yRadius={yRadius}, xTiles={xTiles}, yTiles={yTiles}, xForm={xForm}}}";
+    }
+}
+
+public static class MyExtensions
+{
+    /// <summary>Returns the list item at the given index and deletes it from the list</summary>
+    public static dynamic PopAt<T>(this List<T> list, int idx)
+    {
+        if (list.Count > idx)
+        {
+            T item = list[idx];
+            list.RemoveAt(idx);
+
+            return item;
+        }
+        else return null;
     }
 }

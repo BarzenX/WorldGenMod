@@ -2198,8 +2198,8 @@ namespace WorldGenMod.Structures.Ice
                         }
                     }
 
-                    List<(ushort TileID, int style)> floorItems = new List<(ushort, int)>()
-                    {
+                    List<(ushort TileID, int style)> floorItems =
+                    [
                         (TileID.FishingCrate, 0),  // wooden crate
                         (TileID.FishingCrate, 1),  // iron crate
                         (TileID.Containers, 5),  // wooden barrel
@@ -2208,7 +2208,7 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.Statues, 21),  // spear statue
                         (TileID.TargetDummy, 0)  // Target Dummy
                         // Mannequin with armor
-                    };
+                    ];
 
                     for (int i = 1; i <= 6; i++)
                     {
@@ -2219,8 +2219,8 @@ namespace WorldGenMod.Structures.Ice
                     //__________________________________________________________________________________________________________________________________
                     // hanging items styles
 
-                    List<(ushort TileID, int style)> hangItems = new List<(ushort, int)>()
-                    {
+                    List<(int TileID, int style)> hangItems =
+                    [
                         (TileID.ItemFrame, 0),  // item frame
                         (TileID.WeaponsRack2, 0),  // weapon rack
                         (TileID.Painting3X3, 41),  // blacksmith rack
@@ -2228,48 +2228,48 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.Painting3X3, 43),  // helmet rack
                         (TileID.Painting3X3, 44),  // spear rack
                         (TileID.Painting3X3, 45),  // sword rack
-                    };
+                    ];
 
-                    List<List<short>> itemFrame_Styles = new List<List<short>>
-                    {
-                        new List<short>{ // potions
+                    List<List<int>> itemFrame_Styles =
+                    [
+                        [ // potions
                             ItemID.ArcheryPotion, ItemID.AmmoReservationPotion, ItemID.BattlePotion ,ItemID.EndurancePotion, ItemID.HealingPotion, ItemID.HunterPotion,
                             ItemID.IronskinPotion, ItemID.MagicPowerPotion, ItemID.ManaRegenerationPotion, ItemID.NightOwlPotion, ItemID.ObsidianSkinPotion,
                             ItemID.RagePotion, ItemID.RegenerationPotion, ItemID.SwiftnessPotion, ItemID.ThornsPotion, ItemID.TitanPotion, ItemID.WrathPotion
-                        },
-                        new List<short>{ // bombs
+                        ],
+                        [ // bombs
                             ItemID.Bomb, ItemID.Dynamite, ItemID.Grenade, ItemID.SmokeBomb, ItemID.Beenade, ItemID.ScarabBomb, ItemID.ExplosiveBunny
-                        },
-                        new List<short>{ // metals
+                        ],
+                        [ // metals
                             ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.Geode
-                        },
-                        new List<short>{ // ammo
+                        ],
+                        [ // ammo
                             ItemID.Bone, ItemID.BoneDagger, ItemID.Shuriken, ItemID.Snowball, ItemID.SpikyBall, ItemID.StarAnise, ItemID.RottenEgg
-                        }
-                    };
+                        ]
+                    ];
 
-                    List<List<short>> weaponRack_Styles = new List<List<short>>
-                    {
-                        new List<short>{ // swords
+                    List<List<int>> weaponRack_Styles =
+                    [
+                        [ // swords
                             ItemID.CopperBroadsword, ItemID.TinBroadsword, ItemID.IronBroadsword, ItemID.LeadBroadsword, ItemID.SilverBroadsword, ItemID.TungstenBroadsword, ItemID.GoldBroadsword, ItemID.PlatinumBroadsword, ItemID.BoneSword, ItemID.IceBlade
-                        },
-                        new List<short>{ // bows
+                        ],
+                        [ // bows
                             ItemID.CopperBow, ItemID.TinBow, ItemID.IronBow, ItemID.LeadBow, ItemID.SilverBow, ItemID.TungstenBow, ItemID.GoldBow, ItemID.BorealWoodBow, ItemID.PalmWoodBow, ItemID.ShadewoodBow, ItemID.EbonwoodBow, ItemID.RichMahoganyBow
-                        },
-                        new List<short>{ // magic
+                        ],
+                        [ // magic
                             ItemID.WandofSparking, ItemID.WandofFrosting, ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff
-                        },
-                        new List<short>{ // randoms
+                        ],
+                        [ // randoms
                             ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip
-                        },
-                    };
+                        ],
+                    ];
 
                     //__________________________________________________________________________________________________________________________________
                     // init vars
 
-                    Dictionary<short, List<short>> noAdd = new Dictionary<short, List<short>> { };
+                    Dictionary<int, List<int>> noAdd = new() { };
                     int unusedXTiles, leftX;
-                    List<short> itemStyle;
+                    List<int> itemStyle;
 
                     int startX = freeR.XCenter - 1;
                     if (freeR.XTiles % 2 == 0)   startX = freeR.XCenter; // could also be "-2" to make the room symmetrical around the middle. But as the rooms have always even XTiles safe that problem for the future.
@@ -2281,26 +2281,28 @@ namespace WorldGenMod.Structures.Ice
                     unusedXTiles = freeR.XTiles % 3; // WeaponRacks are 3 tiles wide
                     leftX = freeR.XTiles; // init
                     itemStyle = weaponRack_Styles[WorldGen.genRand.Next(weaponRack_Styles.Count)]; // get a random style to later take items from it
-                    int num, facingDir = -1;
+                    int facingDir = -1;
 
                     if (unusedXTiles == 0) // all WeaponRacks, no free spaces
                     {
-                        for (int i = 1; i < (freeR.XTiles / 3); i++)
+                        for (int i = 1; i <= (freeR.XTiles / 3); i++)
                         {
-                            num = WorldGen.genRand.Next(itemStyle.Count);
-                            if (i * 3 > freeR.XCenter)    facingDir = 1;
+                            if (i * 3 > freeR.XCenter) facingDir = 1;
 
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.WeaponRack,
-                                               item: itemStyle[num],
-                                               style: facingDir,
-                                               size: (3, 3),
-                                               toAnchor: (1, 0),
-                                               chance: 90,
-                                               add: ));
-
-                            itemStyle.RemoveAt(num); // don't repeat the item
+                            automat.Steps.Add(
+                                (cmd: (int)LineAutomat.Cmds.WeaponRack,
+                                 item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)),
+                                 style: facingDir,
+                                 size: (3, 3),
+                                 toAnchor: (1, 0),
+                                 chance: 75,
+                                 add: new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall], 0, -1 }},
+                                             {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  })
+                            );
                         }
                     }
+                    automat.Start();
+
 
                     //automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
                     //automat.Start();
