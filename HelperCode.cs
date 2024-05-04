@@ -543,7 +543,7 @@ namespace WorldGenMod
 
         /// <summary>
         /// Places a Ghostly Stinkbug in a room.
-        /// <br/> Order of tries: left or right wall (random), ceiling, floor
+        /// <br/> Order of tries: on the left or right wall (random), ceiling, floor, background wall
         /// </summary>
         /// <param name="hollowRoom">The room where the stinkbug shall be placed.
         ///    <br/> It must be the "hollow" room, meaning not the outside dimension where the walls are placed, but the inside of the room, where stuff is placed </param>
@@ -596,7 +596,16 @@ namespace WorldGenMod
             stinkbugPlaced = placeResult.success;
             if (stinkbugPlaced) return placeResult;
 
-            return (false, 0, 0); //if you reach this point something went terribly wrong....most probably the room is not the hollow room
+            // background wall
+            for (int i = 1; i <= hollowRoom.XDiff - 1; i++)
+            {
+                area1 = new Rectangle2P(hollowRoom.X0 + i, hollowRoom.Y0 + 1, hollowRoom.X0 + i, hollowRoom.Y1 - 1, "dummyString");
+                placeResult = TryPlaceTile(area1, Rectangle2P.Empty, TileID.StinkbugHousingBlockerEcho, maxTry: 10);
+                stinkbugPlaced = placeResult.success;
+                if (stinkbugPlaced) return placeResult;
+            }
+
+            return (false, 0, 0); //if you reach this point something went terribly wrong....most probably the room is too small
         }
 
         /// <summary>
@@ -853,18 +862,21 @@ namespace WorldGenMod
         /// <summary> If the line moves along y-direction, specify if it's from bottom to top</summary>
         private bool BottomToTop;
 
-        /// <summary> Starting coordinate (included in range)</summary>
-        private int StartCoord;
-        /// <summary> End coordinate (included in range)</summary>
-        private int EndCoord;
+        /// <summary> Starting x-coordinate</summary>
+        private int XStart;
+        /// <summary> Starting y-coordinate</summary>
+        private int YStart;
 
-        /// <summary> Actual coordinate of the automat</summary>
-        private int ActCoord;
+        /// <summary> Actual x-coordinate of the automat</summary>
+        private int XAct;
+        /// <summary> Actual Y-coordinate of the automat</summary>
+        private int YAct;
+
         /// <summary> Actual step of the automat</summary>
         private (int cmd, int item, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) ActStep;
 
         /// <summary> Possible directional codes used for the constructor</summary>
-        public enum Dirs
+        public enum Dirs : int
         {
             xPlus = 1,
             xNeg = 2,
@@ -903,7 +915,7 @@ namespace WorldGenMod
         /// 
         /// <br/> <b>Style</b>:
         /// <br/> - Cmd=Tile: Style of Tile (e.g. "boreal wood chair" in "chairs")
-        /// <br/> - Cmd=WeaponRack: faced left or right
+        /// <br/> - Cmd=WeaponRack: faced left-to-right (-1) or right-to-left (+1) (placing a sword from handle to tip)
         /// <br/> - Cmd=ItemFrame: *not used*
         /// <br/> - Cmd=Space: *not used*
         /// 

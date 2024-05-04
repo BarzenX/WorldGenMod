@@ -52,6 +52,8 @@ namespace WorldGenMod.Structures.Underworld
 
         public void GenerateRoom(Rectangle room, int towerHeight = 10, bool leftDoor = false, bool rightDoor = false, int extraCount = 0)
         {
+            //TODO: look for another type of brick. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
+
             Rectangle hollowRect = room;
             hollowRect.Width -= 4;
             hollowRect.Height -= 4;
