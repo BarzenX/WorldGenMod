@@ -11,6 +11,7 @@ using System;
 using Terraria.ObjectData;
 using System.Diagnostics;
 using Terraria.UI;
+using rail;
 
 //TODO: sometimes the FrostFortress creates extremely slow - supposedly because of the frequent PlaceTile calls...what to do?
 
@@ -2220,8 +2221,6 @@ namespace WorldGenMod.Structures.Ice
 
                     List<(int TileID, int style)> hangItems =
                     [
-                        (TileID.ItemFrame, 0),  // item frame
-                        (TileID.WeaponsRack2, 0),  // weapon rack
                         (TileID.Painting3X3, 41),  // blacksmith rack
                         (TileID.Painting3X3, 42),  // carpentry rack
                         (TileID.Painting3X3, 43),  // helmet rack
@@ -2237,13 +2236,13 @@ namespace WorldGenMod.Structures.Ice
                             ItemID.RagePotion, ItemID.RegenerationPotion, ItemID.SwiftnessPotion, ItemID.ThornsPotion, ItemID.TitanPotion, ItemID.WrathPotion
                         ],
                         [ // bombs
-                            ItemID.Bomb, ItemID.Dynamite, ItemID.Grenade, ItemID.SmokeBomb, ItemID.Beenade, ItemID.ScarabBomb, ItemID.ExplosiveBunny
+                            ItemID.Bomb, ItemID.Dynamite, ItemID.Grenade, ItemID.SmokeBomb, ItemID.StickyBomb, ItemID.StickyDynamite, ItemID.StickyGrenade, ItemID.Beenade, ItemID.ScarabBomb, ItemID.ExplosiveBunny, ItemID.Explosives, ItemID.MolotovCocktail
                         ],
                         [ // metals
-                            ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.Geode
+                            ItemID.CopperBar, ItemID.TinBar, ItemID.IronBar, ItemID.LeadBar, ItemID.SilverBar, ItemID.TungstenBar, ItemID.GoldBar, ItemID.PlatinumBar, ItemID.DemoniteBar, ItemID.CrimtaneBar, ItemID.Geode
                         ],
                         [ // ammo
-                            ItemID.Bone, ItemID.BoneDagger, ItemID.Shuriken, ItemID.Snowball, ItemID.SpikyBall, ItemID.StarAnise, ItemID.RottenEgg
+                            ItemID.Bone, ItemID.Shuriken, ItemID.Snowball, ItemID.SpikyBall, ItemID.StarAnise, ItemID.RottenEgg, ItemID.ThrowingKnife, ItemID.PoisonedKnife, ItemID.BoneDagger, ItemID.BoneDagger, ItemID.FrostDaggerfish
                         ]
                     ];
 
@@ -2427,20 +2426,197 @@ namespace WorldGenMod.Structures.Ice
                     //__________________________________________________________________________________________________________________________________
                     // second row from the top: ItemFrames with some Banners to fill gaps
 
-                    automat = new((freeR.X0, freeR.Y0 + 1), (int)LineAutomat.Dirs.xPlus);
+                    automat = new((freeR.X0, freeR.Y0 + 3), (int)LineAutomat.Dirs.xPlus);
                     unusedXTiles = freeR.XTiles % 2; // ItemFrames are 2 tiles wide
                     actX = freeR.X0; // init
                     itemStyle = itemFrame_Styles[WorldGen.genRand.Next(itemFrame_Styles.Count)]; // get a random style to later take items from it
+                    WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall],   0, 0 }},
+                                          {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, 0 }}  };
 
-                    if (unusedXTiles == 0) // all ItemFrames, no free spaces
+                    if (freeR.YTiles >= 8) //WeaponRack + Floor + ItemFrame = 3+3+2
                     {
-                        for (int i = 1; i <= (freeR.XTiles / 2); i++)
+                        if (unusedXTiles == 0)
                         {
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
-                                               size: (2, 2), toAnchor: (0, -1), chance: 75, add: WallAndPaint));
-                            actX += 2;
+                            if (Chance.Perc(35))  // all ItemFrames, no free spaces
+                            {
+                                for (int i = 1; i <= (freeR.XTiles / 2); i++)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                       size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                    actX += 2;
+                                }
+                            }
+                            else if (Chance.Perc(50)) // ItemFrame and a banner on each side
+                            {
+                                if (Chance.Perc(75))
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                }
+                                else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+
+                                actX++;
+
+                                for (int i = 1; i <= (int)((freeR.XTiles - (1 + 1)) / 2); i++)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                       size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                    actX += 2;
+                                }
+
+                                if (Chance.Perc(75))
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                }
+                                else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                actX++;
+                            }
+                            else if (Chance.Perc(50)) // banners on the sides and a space between each ItemFrame
+                            {
+                                if (Chance.Perc(75))
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                }
+                                else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                actX += 2;
+
+                                int num = ((freeR.XTiles - (2 + 1)) / 3);
+                                unusedXTiles = ((freeR.XTiles - (2 + 1)) % 3);
+                                if (unusedXTiles == 0) // left "1 banner + 1 space" and right "1 banner" and the "ItemFrame + 1 space" can leave a 1 or 2 Tile gap!
+                                { // no gap
+                                    for (int i = 1; i <= num; i++)
+                                    {
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                            size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        actX += 3;
+                                    }
+                                }
+                                else if (unusedXTiles == 1)
+                                {  // do a double space in the middle OR put another ItemFrame to maintain symmetry
+                                    for (int i = 1; i <= num / 2; i++)
+                                    {
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                            size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        actX += 3;
+                                    }
+                                    if (Chance.Simple()) // double space
+                                    {
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        actX++;
+                                    }
+                                    else // another ItemFrame without spaces
+                                    {
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                            size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                    }
+                                    
+                                    for (int i = 1; i <= num / 2; i++)
+                                    {
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                            size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        actX += 3;
+                                    }
+                                }
+                                else //(unusedXTiles == 2)
+                                {
+                                    if (num % 2 == 0) // an even number of ItemFrames to distribute
+                                    { // do a triple space in the middle to maintain symmetry
+                                        for (int i = 1; i <= num / 2; i++)
+                                        {
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                                size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                            actX += 3;
+                                        }
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        actX++;
+                                        for (int i = 1; i <= num / 2; i++)
+                                        {
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                                size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                            actX += 3;
+                                        }
+                                    }
+                                    else
+                                    { // put two item Frames in the middle without space
+                                        for (int i = 1; i <= num / 2; i++)
+                                        {
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                                size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                            actX += 3;
+                                        }
+
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                                size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                                size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                        actX += 5;
+
+                                        for (int i = 1; i <= num / 2; i++)
+                                        {
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: itemStyle.PopAt(WorldGen.genRand.Next(itemStyle.Count)), style: 0,
+                                                                size: (2, 2), toAnchor: (0, 0), chance: 75, add: WallAndPaint));
+                                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                            actX += 3;
+                                        }
+                                    }
+                                }
+
+                                if (Chance.Perc(75))
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                }
+                                else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
+                                actX += 1;
+                            }
                         }
+                        else { } // right now all rooms are always even XTiles wide...leave this one for later, maybe never
+                        automat.Start();
                     }
+
+
+                    //__________________________________________________________________________________________________________________________________
+                    // check and place banners for the next rows
+
+                    int startBanners = freeR.Y0 + 3; //where the platform of the ItemFrame row is at
+                    if (Main.tile[freeR.X0, startBanners].TileType == TileID.Platforms || Main.tile[freeR.X1, startBanners].TileType == TileID.Platforms)   startBanners += 5;
+                    else startBanners += 3;
+
+                    while (freeR.YDiff >= (startBanners + 3) - freeR.Y0) // 3 for the floor items
+                    {
+                        if (Chance.Perc(75)) Func.PlaceTileAndBanner(freeR.X0, startBanners, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                        if (Chance.Perc(75)) Func.PlaceTileAndBanner(freeR.X1, startBanners, Deco[S.Banner], TileID.Platforms, Deco[S.DecoPlat], Deco[S.StylePaint]);
+                        startBanners += 4;
+                    }
+
+                    
+
+
+                    //__________________________________________________________________________________________________________________________________
+                    // next rows: hangItems
+
+                    // place next banner pair of banners randomly and decide if 1 or 2 rows of "in between the banners" LineAutomats
+                    bool inBetweenBanners = false;
+                    bool PlaceTileAndBannerInCommandos;
+                    
+
 
                     //automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
                     //automat.Start();

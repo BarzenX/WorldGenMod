@@ -683,7 +683,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Checks for free space, places a tile (option to paint it) and attaches a banner to it
+        /// Checks for free space, places a tile at (x,y-1) (option to paint it) and attaches a banner to it
         /// </summary>
         /// <param name="x">The x coordinate of where the banner shall be placed at</param>
         /// <param name="y">The y coordinate of where the banner shall be placed at</param>
