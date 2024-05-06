@@ -890,14 +890,20 @@ namespace WorldGenMod
             Tile = 1,
             WeaponRack = 2,
             ItemFrame = 3,
-            Space = 4
+            BannerAndTile = 4,
+            Space = 5
         }
 
-        /// <summary> Possible additional keys for a step</summary>
+        /// <summary> Possible additional keys for a step
+        /// <br/> <b>Wall</b> "data" structure: wallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
+        /// <br/> <b>Paint</b> "data" structure: paintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
+        /// <br/> <b>Banner</b> "data" structure: banner style for the command "BannerAndTile"
+        /// </summary>
         public enum Adds
         {
-            Wall = 1, // "data" structure: wallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
-            Paint = 2 // "data" structure: paintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
+            Wall = 1,
+            Paint = 2,
+            Banner = 3
         }
 
         /// <summary> The list of to-be-worked tasks
@@ -905,18 +911,21 @@ namespace WorldGenMod
         /// <br/> - Tile, 
         /// <br/> - WeaponRack,
         /// <br/> - ItemFrame,
+        /// <br/> - BannerAndTile
         /// <br/> - Space
         /// 
         /// <br/> <b>Item</b>:
         /// <br/> - Cmd=Tile: TileID
         /// <br/> - Cmd=WeaponRack: Item for WeaponRack
         /// <br/> - Cmd=ItemFrame: Item for ItemFrame
+        /// <br/> - Cmd=BannerAndTile: ID of the Tile the banner gets attached to
         /// <br/> - Cmd=Space: *not used*
         /// 
         /// <br/> <b>Style</b>:
         /// <br/> - Cmd=Tile: Style of Tile (e.g. "boreal wood chair" in "chairs")
         /// <br/> - Cmd=WeaponRack: faced left-to-right (-1) or right-to-left (+1) (placing a sword from handle to tip)
         /// <br/> - Cmd=ItemFrame: *not used*
+        /// <br/> - Cmd=BannerAndTile: Style of the Tile the banner gets attached to
         /// <br/> - Cmd=Space: *not used*
         /// 
         /// <br/> <b>Size</b>
@@ -1055,6 +1064,18 @@ namespace WorldGenMod
                                                 item: ActStep.item);
                         }
                             break;
+
+                    case (int)Cmds.BannerAndTile:
+                        if (Chance.Perc(ActStep.chance) && ActStep.add.ContainsKey((int)Adds.Banner))
+                        {
+                            Func.PlaceTileAndBanner(x: this.XAct + ActStep.toAnchor.x,
+                                                    y: this.YAct + ActStep.toAnchor.y,
+                                                    bannerStyle: ActStep.add[(int)Adds.Banner][0],
+                                                    tileType: ActStep.item,
+                                                    tileStyle: ActStep.style,
+                                                    paintType: paint);
+                        }
+                        break;
 
                     case (int)Cmds.Space:
                         // do nothing, just advance

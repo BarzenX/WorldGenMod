@@ -2267,9 +2267,9 @@ namespace WorldGenMod.Structures.Ice
 
                     LineAutomat automat;
                     Dictionary<int, List<int>> noAdd = [];
-                    Dictionary<int, List<int>> WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall],   0, -1 }},
-                                                                     {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, -1 }}  };
-                    int unusedXTiles, actX;
+                    Dictionary<int, List<int>> WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  [ Deco[S.BackWall],   0, -1 ] },
+                                                                     {(int)LineAutomat.Adds.Paint, [ Deco[S.StylePaint], 0, -1 ] }  };
+                    int unusedXTiles, actX, actY;
                     List<int> weaponStyle, itemStyle;
 
                     //__________________________________________________________________________________________________________________________________
@@ -2430,8 +2430,11 @@ namespace WorldGenMod.Structures.Ice
                     unusedXTiles = freeR.XTiles % 2; // ItemFrames are 2 tiles wide
                     actX = freeR.X0; // init
                     itemStyle = itemFrame_Styles[WorldGen.genRand.Next(itemFrame_Styles.Count)]; // get a random style to later take items from it
-                    WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  new List<int>() { Deco[S.BackWall],   0, 0 }},
-                                          {(int)LineAutomat.Adds.Paint, new List<int>() { Deco[S.StylePaint], 0, 0 }}  };
+                    WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  [ Deco[S.BackWall],   0, 0 ] },
+                                          {(int)LineAutomat.Adds.Paint, [ Deco[S.StylePaint], 0, 0 ] }  };
+
+                    Dictionary<int, List<int>> WallPaintBanner = WallAndPaint;
+                    WallPaintBanner.Add( (int)LineAutomat.Adds.Banner, [ Deco[S.Banner] ] );
 
                     if (freeR.YTiles >= 8) //WeaponRack + Floor + ItemFrame = 3+3+2
                     {
@@ -2450,9 +2453,7 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 if (Chance.Perc(75))
                                 {
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.BannerAndTile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 4), toAnchor: (0, 1), chance: 100, add: WallPaintBanner));
                                 }
                                 else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
 
@@ -2467,9 +2468,7 @@ namespace WorldGenMod.Structures.Ice
 
                                 if (Chance.Perc(75))
                                 {
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.BannerAndTile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 4), toAnchor: (0, 1), chance: 100, add: WallPaintBanner));
                                 }
                                 else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
                                 actX++;
@@ -2478,9 +2477,7 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 if (Chance.Perc(75))
                                 {
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.BannerAndTile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 4), toAnchor: (0, 1), chance: 100, add: WallPaintBanner));
                                 }
                                 else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
 
@@ -2579,9 +2576,7 @@ namespace WorldGenMod.Structures.Ice
 
                                 if (Chance.Perc(75))
                                 {
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 1), toAnchor: (0, 0), chance: 100, add: WallAndPaint));
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (-1, 0), (0, 0), 0, noAdd)); // go back 1 tile
-                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 1), chance: 100, add: noAdd));
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.BannerAndTile, item: TileID.Platforms, style: Deco[S.DecoPlat], size: (1, 4), toAnchor: (0, 1), chance: 100, add: WallPaintBanner));
                                 }
                                 else automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, item: 0, style: 0, size: (1, 0), toAnchor: (0, 0), chance: 100, add: noAdd));
                                 actX += 1;
@@ -2612,10 +2607,31 @@ namespace WorldGenMod.Structures.Ice
                     //__________________________________________________________________________________________________________________________________
                     // next rows: hangItems
 
-                    // place next banner pair of banners randomly and decide if 1 or 2 rows of "in between the banners" LineAutomats
-                    bool inBetweenBanners = false;
-                    bool PlaceTileAndBannerInCommandos;
                     
+                    bool inBetweenBanners;
+                    actY = freeR.Y0 + 6;
+                    (int TileID, int style) hangItem;
+
+                    while (freeR.YTiles >= actY + 3 + 1) // floor and 1 from middle of racks to lowest end of tile
+                    {
+                        automat = new((freeR.X0, actY), (int)LineAutomat.Dirs.xPlus);
+                        
+                        actX = freeR.X0; // init
+                        hangItem = hangItems[WorldGen.genRand.Next(hangItems.Count)]; // get a random style to later place it
+                        WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  [ Deco[S.BackWall],   0, -1 ] },
+                                              {(int)LineAutomat.Adds.Paint, [ Deco[S.StylePaint], 0, -1 ] }  };
+
+                        // check for "in between banners" placement
+                        inBetweenBanners = false;
+                        unusedXTiles = freeR.XTiles % 3; // all hangItems are 3 tiles wide
+                        if (Func.CheckFree(new Rectangle2P(freeR.X0, actY - 1, 1, 3)))
+                        {
+                            inBetweenBanners = true;
+                            unusedXTiles = (freeR.XTiles - 2) % 3; // available space reduced by banners
+                        }
+
+                    }
+
 
 
                     //automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
@@ -2625,11 +2641,6 @@ namespace WorldGenMod.Structures.Ice
                     //automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, (1,0),(0,0), 0, new List<short> {}));
                     //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
                     //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
-
-
-
-
-
 
 
 
