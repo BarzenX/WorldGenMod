@@ -987,8 +987,8 @@ namespace WorldGenMod.Structures.Ice
             int chestID;
 
             //choose room decoration at random
-            //int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
-            int roomDeco = 5;
+            int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
+            //int roomDeco = 5;
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, high rooms get another beam line and a painting
@@ -2181,9 +2181,9 @@ namespace WorldGenMod.Structures.Ice
 
                     //__________________________________________________________________________________________________________________________________
                     // floor
-                    area1 = new Rectangle2P(freeR.X0, freeR.Y1, freeR.X1, freeR.Y1, "dummyString");
+                    area1 = new Rectangle2P(freeR.X0, freeR.Y1, freeR.X1 - 1, freeR.Y1, "dummyString");
 
-                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70); // Chest
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 75); // Chest
                     if (placeResult.success)
                     {
                         chestID = Chest.FindChest(placeResult.x, placeResult.y - 1);
@@ -2207,15 +2207,66 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.Containers, 5),  // wooden barrel
                         (TileID.Statues, 3),  // sword statue
                         (TileID.Statues, 6),  // shield statue
+                        (TileID.Statues, 17),  // bomb statue
                         (TileID.Statues, 21),  // spear statue
-                        (TileID.TargetDummy, 0)  // Target Dummy
-                        // Mannequin with armor
+                        (TileID.Statues, 24),  // bow statue
+                        (TileID.Statues, 25),  // boomerang statue
+                        (TileID.TargetDummy, 0),  // Target Dummy
+                        (TileID.WorkBenches, 0),  // Placeholder for: Mannequin with armor
+                        (TileID.WorkBenches, 0)  // Placeholder for: Mannequin with armor
                     ];
 
-                    for (int i = 1; i <= 6; i++)
+                    List<(int, int, int)> armorPool2 =    // the possible styles of armor for the Mannequin
+                    [
+                        (ArmorIDs.Head.CopperHelmet, ArmorIDs.Body.CopperChainmail, ArmorIDs.Legs.CopperGreaves),
+                        (ArmorIDs.Head.TinHelmet, ArmorIDs.Body.TinChainmail, ArmorIDs.Legs.TinGreaves),
+                        (ArmorIDs.Head.IronHelmet, ArmorIDs.Body.IronChainmail, ArmorIDs.Legs.IronGreaves),
+                        (ArmorIDs.Head.LeadHelmet, ArmorIDs.Body.LeadChainmail, ArmorIDs.Legs.LeadGreaves),
+                        (ArmorIDs.Head.NinjaHood, ArmorIDs.Body.NinjaShirt, ArmorIDs.Legs.NinjaPants),
+                        (ArmorIDs.Head.FossilHelmet, ArmorIDs.Body.FossilPlate, ArmorIDs.Legs.FossilGreaves),
+
+                        (ArmorIDs.Head.WoodHelmet, ArmorIDs.Body.WoodBreastplate, ArmorIDs.Legs.WoodGreaves),
+                        (ArmorIDs.Head.BorealWoodHelmet, ArmorIDs.Body.BorealWoodBreastplate, ArmorIDs.Legs.BorealWoodGreaves),
+                        (ArmorIDs.Head.ShadewoodHelmet, ArmorIDs.Body.ShadewoodBreastplate, ArmorIDs.Legs.ShadewoodGreaves),
+                        (ArmorIDs.Head.AshWoodHelmet, ArmorIDs.Body.AshWoodBreastplate, ArmorIDs.Legs.AshWoodGreaves),
+                    ];
+                    
+
+                    for (int i = 1; i <= freeR.XTiles / 2; i++) // every item is 2 xTiles wide --> fill the room
                     {
                         int num = WorldGen.genRand.Next(floorItems.Count);
-                        Func.TryPlaceTile(area1, Rectangle2P.Empty, floorItems[num].TileID, style: floorItems[num].style, chance: 50); // one random item of the list
+                        placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, floorItems[num].TileID, style: floorItems[num].style, chance: 50); // one random item of the list
+
+
+                        if (placeResult.success)
+                        {
+                            if (floorItems[num].TileID == TileID.TargetDummy && placeResult.x <= freeR.XCenter)
+                            {
+                                Func.TargetDummyTurnRight(placeResult.x, placeResult.y);
+                            }
+                            if (floorItems[num].TileID == TileID.Statues)
+                            {
+                                if (floorItems[num].style == 3 && placeResult.x > freeR.XCenter) // Sword statue
+                                {
+                                    Func.StatueTurn(placeResult.x, placeResult.y);
+                                }
+                                if (floorItems[num].style == 21 && placeResult.x > freeR.XCenter) // Spear statue
+                                {
+                                    Func.StatueTurn(placeResult.x, placeResult.y);
+                                }
+                            }
+                            if (floorItems[num].TileID == TileID.WorkBenches && placeResult.x <= freeR.XCenter)
+                            {
+                                WorldGen.KillTile(placeResult.x,   placeResult.y); // delete placeholder workbench
+                                WorldGen.KillTile(placeResult.x+1, placeResult.y);
+
+                                int num2 = WorldGen.genRand.Next(armorPool2.Count);
+                                Func.PlaceMannequin(placeResult.x, placeResult.y, armorPool2[num2], female: Chance.Simple(), direction: (WorldGen.genRand.Next(2)*2)-1);
+                                armorPool2.RemoveAt(num2); // don't repeat that armor
+                            }
+                        }
+
+                        floorItems.RemoveAt(num); // don't repeat that style
                     }
 
                     //__________________________________________________________________________________________________________________________________
@@ -2723,39 +2774,7 @@ namespace WorldGenMod.Structures.Ice
                         automat.Start();
                         actY += 3;
                     }
-
-
-
-                    //automat.Steps.Add( ((int)LineAutomat.Cmds.Tile, TileID.Painting3X3, 41, (3, 3), (1, 0), 100, noAdd) );
-                    //automat.Start();
-
-                    //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
-                    //automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, (1,0),(0,0), 0, new List<short> {}));
-                    //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
-                    //automat.Steps.Add(((int)LineAutomat.Cmds.Tile, TileID.Banners, Deco[S.Banner], (1,3),(0,-1), 100, new List<short> {}));
-
-
-
-
-
-                    //if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
-                    //if (Chance.Perc(75)) WorldGen.PlaceTile(doors[Door.Down].doorRect.X1, freeR.Y1 - 4, TileID.Painting3X3, style: 45); // sword rack
-
-                    //if (freeR.YTiles >= 9)
-                    //{
-                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
-                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 7, TileID.Painting3X3, style: 42); // carpentry rack
-                    //}
-
-                    //if (freeR.YTiles >= 12)
-                    //{
-                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X0 + 2, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
-                    //    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.X1 - 3, freeR.Y1 - 10, TileID.Painting3X3, style: 43); // helmet rack
-                    //}
-
                     break;
-                // TODO: ideas:
-                // Banners left and right if there's space
 
                 case 6: //empty room because I don't have enough room templates and the other rooms repeat too much!
 

@@ -126,7 +126,7 @@ namespace WorldGenMod
                     Main.tile[x, y].TileFrameX += 18; // make the candle unlit
                 }
             }
-            else if (tile.TileType == TileID.Torches) // torch tiles are actually 22 x 22 pixels wide big! 
+            else if (tile.TileType == TileID.Torches) // torch tiles are actually 22 x 22 pixels big! 
             {
                 if (tile.TileFrameX < 66) // torch is lit
                 {
@@ -175,7 +175,7 @@ namespace WorldGenMod
         /// <param name="y">The y-coordinate used for placing the bed</param>
         public static void BedTurnLeft(int x, int y)
         {
-            if (Main.tile[x, y].TileFrameX >= 72) //bed is facing "to the right"
+            if (Main.tile[x, y].TileFrameX >= 72) // bed is facing "to the right"
             {
                 for (int i = x - 1; i <= x + 2; i++)
                 {
@@ -184,7 +184,44 @@ namespace WorldGenMod
                         Main.tile[i, j].TileFrameX -= 72; // make the bed face "to the left"
                     }
                 }
+            }
+        }
 
+        /// <summary>
+        /// Changes a TargetDummy's facing direction from "to the left" (standard appearance after placing) to "to the right"
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the TargetDummy</param>
+        /// <param name="y">The y-coordinate used for placing the TargetDummy</param>
+        public static void TargetDummyTurnRight(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameX < 36) // TargetDummy is facing "to the left"
+            {
+                for (int i = x; i <= x + 1; i++)
+                {
+                    for (int j = y - 2; j <= y; j++)
+                    {
+                        Main.tile[i, j].TileFrameX += 36; // make the TargetDummy face "to the right"
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Changes a Statue's facing direction from the standard appearance after placing to other one
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the Statue</param>
+        /// <param name="y">The y-coordinate used for placing the Statue</param>
+        public static void StatueTurn(int x, int y)
+        {
+            if (Main.tile[x, y].TileFrameY < 162) // Statue is in "standard appearance"
+            {
+                for (int i = x; i <= x + 1; i++)
+                {
+                    for (int j = y - 2; j <= y; j++)
+                    {
+                        Main.tile[i, j].TileFrameY += 162; // make the Statue turn around
+                    }
+                }
             }
         }
 
