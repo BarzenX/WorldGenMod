@@ -2254,6 +2254,14 @@ namespace WorldGenMod.Structures.Ice
                                 {
                                     Func.StatueTurn(placeResult.x, placeResult.y);
                                 }
+                                if (floorItems[num].style == 24 && placeResult.x > freeR.XCenter) // Bow statue
+                                {
+                                    Func.StatueTurn(placeResult.x, placeResult.y);
+                                }
+                                if (floorItems[num].style == 25 && placeResult.x <= freeR.XCenter) // Boomerang statue
+                                {
+                                    Func.StatueTurn(placeResult.x, placeResult.y);
+                                }
                             }
                             if (floorItems[num].TileID == TileID.WorkBenches && placeResult.x <= freeR.XCenter)
                             {
