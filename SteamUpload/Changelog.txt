@@ -1,3 +1,11 @@
+1.0.6.1
+- removed the FossilArmor from room#3 ArmoryShowroom and room#5 Armory as it's too rewarding for the point at the game when the player finds the FrostFortress
+
+1.0.6
+- Made room#4 "Dormitory" leave its "quick and dirty" state: [url=https://i.imgur.com/4LCXXni.jpg] Preview [/url]
+- Made room#5 "Armory" leave its "quick and dirty" state: [url=https://i.imgur.com/L1n7MAs.jpg] Preview [/url]
+- created an option to alter the cobweb density in the Frost Fortress and added the same option for the Chastised Church (still without function, will make use of it when I finally rework the Chastised Church)
+
 1.0.5
 - made the Golden Lake smaller (reduces gold ore from around 2000 to around 800) and...
 - added a config option to make the Golden Lake even smaller (around 400 gold ore)

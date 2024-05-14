@@ -979,7 +979,7 @@ namespace WorldGenMod.Structures.Ice
             }
 
             // init variables
-            bool placed;
+            bool placed, placed2;
             (bool success, int x, int y) placeResult, placeResult2;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = []; // for remembering positions
@@ -987,8 +987,8 @@ namespace WorldGenMod.Structures.Ice
             int chestID;
 
             //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
-            //int roomDeco = 5;
+            //int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
+            int roomDeco = 0;
             switch (roomDeco)
             {
                 case 0: // two tables, two lamps, a beam line, high rooms get another beam line and a painting
@@ -1005,12 +1005,44 @@ namespace WorldGenMod.Structures.Ice
                     {
                         if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
                         if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
+                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
+                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
                     }
 
+                    // statue left
+                    if (Chance.Simple()) WorldGen.PlaceTile(freeR.X0 + WorldGen.genRand.Next(3), freeR.Y1, TileID.Statues, style: 0); // Armor Statue
+
+                    // Stool left and right of the table
+                    if (placed)
+                    {
+                        placed2 = false;
+                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x - 2, y, TileID.Chairs, style: 21); // left bar stool
+                        if (placed2)
+                        {
+                            WorldGen.paintTile(x - 2, y,     (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x - 2, y - 1, (byte)Deco[S.StylePaint]);
+                        }
+
+                        placed2 = false;
+                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x + 2, y, TileID.Chairs, style: 21); // left bar stool
+                        if (placed2)
+                        {
+                            WorldGen.paintTile(x + 2, y,     (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x + 2, y - 1, (byte)Deco[S.StylePaint]);
+                        }
+                    }
+
+                    // clock in the middle
+                    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
+
+
+                    //__________________________________________________________________________________________________________________________________
+                    // right side
 
                     // table right
                     x = freeR.XCenter + WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
                     y = freeR.Y1;
+                    placed = false;
                     if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
                     else if (Chance.Simple()) Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); //Broken Table covered in CobWeb
 
@@ -1019,17 +1051,48 @@ namespace WorldGenMod.Structures.Ice
                     {
                         if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
                         if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
+                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
+                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
                     }
+
+                    // statue right
+                    if (Chance.Simple()) WorldGen.PlaceTile(freeR.X1 - WorldGen.genRand.Next(1, 4), freeR.Y1, TileID.Statues, style: 0); // Armor Statue
+
+                    // Stool left and right of the table
+                    if (placed)
+                    {
+                        placed2 = false;
+                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x - 2, y, TileID.Chairs, style: 21); // left bar stool
+                        if (placed2)
+                        {
+                            WorldGen.paintTile(x - 2, y,     (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x - 2, y - 1, (byte)Deco[S.StylePaint]);
+                        }
+
+                        placed2 = false;
+                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x + 2, y, TileID.Chairs, style: 21); // left bar stool
+                        if (placed2)
+                        {
+                            WorldGen.paintTile(x + 2, y,     (byte)Deco[S.StylePaint]);
+                            WorldGen.paintTile(x + 2, y - 1, (byte)Deco[S.StylePaint]);
+                        }
+                    }
+
+
+
+
 
 
                     // wooden beam
                     if (freeR.YTiles >= 8) // if less than 8 tiles, there won't be enough space for the lanterns to look good
                     {
                         y = freeR.Y1 - 4;
+                        Tile tile;
 
                         for (x = freeR.X0; x <= freeR.X1; x++)
                         {
-                            if (!(Main.tile[x, y].WallType == 0))
+                            tile = Main.tile[x, y];
+                            if (!tile.HasTile && !(tile.WallType == 0))
                             {
                                 WorldGen.PlaceTile(x, y, TileID.BorealBeam);
                                 WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
@@ -1062,14 +1125,18 @@ namespace WorldGenMod.Structures.Ice
                     // lantern left
                     x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Lantern
                     if (placed) Func.UnlightLantern(x, y);
 
                     // lantern right
                     x = freeR.XCenter + 1 + WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
-                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Table
+                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Lantern
                     if (placed) Func.UnlightLantern(x, y);
+
+
+
+                    Func.PlaceStinkbug(freeR);
 
                     break;
 
@@ -2308,7 +2375,7 @@ namespace WorldGenMod.Structures.Ice
                     List<List<int>> weaponRack_Styles =
                     [
                         [ // swords
-                            ItemID.CopperBroadsword, ItemID.TinBroadsword, ItemID.IronBroadsword, ItemID.LeadBroadsword, ItemID.SilverBroadsword, ItemID.TungstenBroadsword, ItemID.GoldBroadsword, ItemID.PlatinumBroadsword, ItemID.BoneSword, ItemID.IceBlade
+                            ItemID.CopperBroadsword, ItemID.TinBroadsword, ItemID.IronBroadsword, ItemID.LeadBroadsword, ItemID.SilverBroadsword, ItemID.TungstenBroadsword, ItemID.GoldBroadsword, ItemID.PlatinumBroadsword, ItemID.BoneSword, ItemID.IceBlade, ItemID.BorealWoodSword, ItemID.EbonwoodSword, ItemID.ShadewoodSword, ItemID.AshWoodSword
                         ],
                         [ // bows
                             ItemID.CopperBow, ItemID.TinBow, ItemID.IronBow, ItemID.LeadBow, ItemID.SilverBow, ItemID.TungstenBow, ItemID.GoldBow, ItemID.BorealWoodBow, ItemID.PalmWoodBow, ItemID.ShadewoodBow, ItemID.EbonwoodBow, ItemID.RichMahoganyBow
@@ -2797,24 +2864,14 @@ namespace WorldGenMod.Structures.Ice
         public void FillChest(Chest chest, int style)
         {
             List<int> mainItem = [];
-            if (style == 1)
-            {
-                mainItem.Add(ItemID.Frostbrand);
-                mainItem.Add(ItemID.IceBow);
-                mainItem.Add(ItemID.IceBoomerang);
-                mainItem.Add(ItemID.FlowerofFrost);
-                mainItem.Add(ItemID.IceRod);
-                mainItem.Add(ItemID.IceSkates);
-            }
-            else
-            {
-                mainItem.Add(ItemID.IceBlade);
-                mainItem.Add(ItemID.SnowballCannon);
-                mainItem.Add(ItemID.IceBoomerang);
-                mainItem.Add(ItemID.SapphireStaff);
-                mainItem.Add(ItemID.FlinxStaff);
-                mainItem.Add(ItemID.FlurryBoots);
-            }
+            mainItem.Add(ItemID.IceBoomerang);
+            mainItem.Add(ItemID.IceSkates);
+            mainItem.Add(ItemID.IceBlade);
+            mainItem.Add(ItemID.SnowballCannon);
+            mainItem.Add(ItemID.IceBoomerang);
+            mainItem.Add(ItemID.SapphireStaff);
+            mainItem.Add(ItemID.FlinxStaff);
+            mainItem.Add(ItemID.FlurryBoots);
             mainItem.Add(ItemID.BlizzardinaBottle);
 
 
@@ -2849,17 +2906,34 @@ namespace WorldGenMod.Structures.Ice
                 ItemID.FrostburnArrow,
                 ItemID.FrostDaggerfish,
                 ItemID.Snowball,
-                ItemID.SpelunkerGlowstick
+                ItemID.ThrowingKnife,
+                ItemID.JestersArrow,
+                ItemID.Shuriken
             ];
 
-            int nextItem = 0;
+
+            int nextItem = 0; //init
 
             chest.item[nextItem].SetDefaults(mainItem[WorldGen.genRand.Next(mainItem.Count)]);
             chest.item[nextItem].stack = 1;
             nextItem++;
 
+            if (Chance.Perc(14.29f))
+            {
+                chest.item[nextItem].SetDefaults(ItemID.IceMachine);
+                chest.item[nextItem].stack = 1;
+                nextItem++;
+            }
+
+            if (Chance.Perc(20))
+            {
+                chest.item[nextItem].SetDefaults(ItemID.IceMirror);
+                chest.item[nextItem].stack = 1;
+                nextItem++;
+            }
+
             chest.item[nextItem].SetDefaults(potionItem[WorldGen.genRand.Next(potionItem.Count)]);
-            chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
+            chest.item[nextItem].stack = WorldGen.genRand.Next(1, 4);
             nextItem++;
 
             chest.item[nextItem].SetDefaults(lightItem[WorldGen.genRand.Next(lightItem.Count)]);
