@@ -677,7 +677,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Places background walls in the given area
+        /// Places background walls in the given area, killing existing walls
         /// </summary>
         /// <param name="area">The to be filled area</param>
         /// <param name="wallType">The ID of the to be placed wall</param>
@@ -692,6 +692,31 @@ namespace WorldGenMod
                 {
                     WorldGen.KillWall(i, j);
                     WorldGen.PlaceWall(i, j, wallType);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Replaces existing background walls in the given area. If there is none, no wall will be placed
+        /// </summary>
+        /// <param name="area">The to be filled area</param>
+        /// <param name="wallType">The ID of the to be placed wall</param>
+        public static bool ReplaceWallArea(Rectangle2P area, int wallType)
+        {
+            // pre-checks
+            if (wallType <= 0) return false;
+
+            for (int i = area.X0; i <= area.X1; i++)
+            {
+                for (int j = area.Y0; j <= area.Y1; j++)
+                {
+                    if (Main.tile[i, j].WallType > 0)
+                    {
+                        WorldGen.KillWall(i, j);
+                        WorldGen.PlaceWall(i, j, wallType);
+                    }
                 }
             }
 

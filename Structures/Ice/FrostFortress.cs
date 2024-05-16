@@ -119,6 +119,7 @@ namespace WorldGenMod.Structures.Ice
             Deco.Add(S.Clock, 0);
             Deco.Add(S.Bed, 0);
             Deco.Add(S.BedWallpaper, 0);
+            Deco.Add(S.PaintingWallpaper, 0);
             Deco.Add(S.Dresser, 0);
 
             //choose a random style and define it's types
@@ -155,6 +156,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Clock] = 11;    // Tile ID 104 (GrandfatherClocks) -> Type 11=Frozen
                     Deco[S.Bed] = 15;      // Tile ID 79 (Beds) -> Type 15=Frozen
                     Deco[S.BedWallpaper] = WallID.StarsWallpaper;
+                    Deco[S.PaintingWallpaper] = WallID.SparkleStoneWallpaper;
                     Deco[S.Dresser] = 30;  // Tile ID 88 (Dressers) -> Type 30=Frozen
                     break;
 
@@ -188,6 +190,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Clock] = 6;     // Tile ID 104 (GrandfatherClocks) -> Type 6=Boreal
                     Deco[S.Bed] = 24;      // Tile ID 79 (Beds) -> Type 24=Boreal
                     Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
+                    Deco[S.PaintingWallpaper] = WallID.LivingWood;
                     Deco[S.Dresser] = 18;  // Tile ID 88 (Dressers) -> Type 18=Boreal
                     break;
 
@@ -221,6 +224,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.Clock] = 10;    // Tile ID 104 (GrandfatherClocks) -> Type 10=Ebonwood
                     Deco[S.Bed] = 1;      // Tile ID 79 (Beds) -> Type 1=Ebonwood
                     Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
+                    Deco[S.PaintingWallpaper] = WallID.BluegreenWallpaper;
                     Deco[S.Dresser] = 1;  // Tile ID 88 (Dressers) -> Type 1=Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
                     break;
@@ -991,7 +995,7 @@ namespace WorldGenMod.Structures.Ice
             int roomDeco = 0;
             switch (roomDeco)
             {
-                case 0: // two tables, two lamps, a beam line, high rooms get another beam line and a painting
+                case 0: // corridor: two tables, two lamps, a beam line, high rooms get another beam line and a painting
 
                     // table left
                     x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
@@ -1033,7 +1037,7 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     // clock in the middle
-                    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
+                    if (Chance.Perc(75))   WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
 
 
                     //__________________________________________________________________________________________________________________________________
@@ -1081,8 +1085,6 @@ namespace WorldGenMod.Structures.Ice
 
 
 
-
-
                     // wooden beam
                     if (freeR.YTiles >= 8) // if less than 8 tiles, there won't be enough space for the lanterns to look good
                     {
@@ -1097,8 +1099,13 @@ namespace WorldGenMod.Structures.Ice
                                 WorldGen.PlaceTile(x, y, TileID.BorealBeam);
                                 WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                             }
+                            if (tile.TileType == TileID.GrandfatherClocks && !(tile.WallType == 0))
+                            {
+                                WorldGen.KillWall(x, y);
+                                WorldGen.PlaceWall(x, y, WallID.BorealWood);
+                                WorldGen.paintWall(x, y, (byte)Deco[S.StylePaint]);
+                            }
                         }
-
                     }
 
                     // if room is too high, there will be a lot of unused space...fill it
@@ -1116,6 +1123,8 @@ namespace WorldGenMod.Structures.Ice
                                 WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                             }
                         }
+
+                        Func.ReplaceWallArea(new Rectangle2P(freeR.X0, y + 1, freeR.X1, lastBeam - 1, "dummyString"), Deco[S.PaintingWallpaper]);
 
                         //painting
                         PlacePainting(new Rectangle2P(freeR.X0, y + 1, freeR.X1, lastBeam - 1, "dummyString"), Deco[S.StyleSave]);
@@ -2956,96 +2965,133 @@ namespace WorldGenMod.Structures.Ice
         /// </summary>
         /// <param name="area">The area where the painting can be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
-        /// <param name="placeMode">The placement method: 0 = centered in x and y, 1 = random x and centered y</param>
-        /// <param name="limitType">Allow types of paintings: (binary selection) 0= no painting, 1=3x2, 2=2x3, 4=3x3, 8=6x4, 15=all types</param>
-        public void PlacePainting(Rectangle2P area, int style, int placeMode = 0, byte limitType = 15)
+        /// <param name="placeMode">The placement method: 0 = centered in x and y, 1 = random x and centered y, 2 = centered x and random y, 3 = random x and y</param>
+        /// <param name="allowType">Allow types of paintings: (binary selection) 0= no painting, 1=3x2, 2=2x3, 4=3x3, 8=6x4, 15=all types</param>
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        /// <param name="centerErrorX">If x-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force left position, 0 = random, 1 = force right position</param>
+        /// <param name="centerErrorX">If y-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force upper position, 0 = random, 1 = force lower position</param>
+        public (bool success, Rectangle2P paintingArea) PlacePainting(Rectangle2P area, int style, int placeMode = 0, byte allowType = 15, bool placeWall = false, int centerErrorX = 0, int centerErrorY = -1)
         {
-            bool allow3x2 = (limitType & 1) != 0;
-            bool allow2x3 = (limitType & 2) != 0;
-            bool allow3x3 = (limitType & 4) != 0;
-            bool allow6x4 = (limitType & 8) != 0;
+            bool allow3x2 = ((allowType & 1) != 0) && (area.XTiles >= 3) && (area.YTiles >= 2);
+            bool allow2x3 = ((allowType & 2) != 0) && (area.XTiles >= 2) && (area.YTiles >= 3);
+            bool allow3x3 = ((allowType & 4) != 0) && (area.XTiles >= 3) && (area.YTiles >= 3);
+            bool allow6x4 = ((allowType & 8) != 0) && (area.XTiles >= 6) && (area.YTiles >= 4);
+
+            bool centX = (placeMode == 0) || (placeMode == 2); // painting centered in x direction
+            bool centY = (placeMode == 0) || (placeMode == 1); // painting centered in y direction
+
+            bool roomEvenX = (area.XTiles % 2) == 0;
+            bool roomEvenY = (area.YTiles % 2) == 0;
+
+            int randAddX, randAddY;// 3 XTiles cannot be put centered symmetrically in an even XTiles room, and 2 XTiles cannot in an uneven XTiles room,
+                                   // so these values are for alternating betweend the two "out-center" positions
+
+            if (centerErrorX == -1) randAddX = 0; // force left position
+            else if (centerErrorX == 1) randAddX = 1; // force right position
+            else randAddX = WorldGen.genRand.Next(2);
+
+            if (centerErrorY == -1) randAddY = 0; // force upper position
+            else if (centerErrorY == 1) randAddY = 1; // force lower position
+            else randAddY = WorldGen.genRand.Next(2);
+
+            bool success = false;
+            Rectangle2P paintingArea = Rectangle2P.Empty;
 
             //painting
-            int x, y;
-            if (area.YTiles >= 4 && allow6x4 && Chance.Simple())
+            int x = area.X0, y = area.Y0; // init
+
+            if (allow6x4 && Chance.Simple())
             {
-                if (placeMode == 0)
+                if (centX)
                 {
-                    x = area.XCenter - 2;
-                    y = area.Y0 + ((area.YTiles - 4) / 2);
-                    Place6x4PaintingByStyle(new Rectangle2P(x, y, 6, 4), style);
-                } 
-                else if (placeMode == 1)
-                {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (6 - 1));
-                    y = area.Y0 + ((area.YTiles - 4) / 2);
-                    Place6x4PaintingByStyle(new Rectangle2P(x, y, 6, 4), style);
+                    x = area.XCenter - 2; // even room
+                    if (!roomEvenX)   x -= (1 - randAddX);
                 }
+                else   x = area.X0 + WorldGen.genRand.Next((area.XTiles - 6) + 1);
+
+                if (centY)
+                {
+                    y = area.YCenter - 1; // even room
+                    if (!roomEvenY) y -= (1 - randAddY);
+                }
+                else   y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 4) + 1);
+
+                paintingArea = new(x, y, 6, 4);
+                success = Place6x4PaintingByStyle(paintingArea, style, placeWall);
             }
 
-            else if (area.YTiles >= 3 && allow3x3 && Chance.Simple())
+            else if (allow3x3 && Chance.Simple())
             {
-                if (placeMode == 0)
+                if (centX)
                 {
-                    x = area.XCenter - 1 + WorldGen.genRand.Next(2); //3 XTiles cannot be centered in an even room, so alternate betweend the two "out-center" positions..that's why the Next(2)
-                    y = area.Y0 + ((area.YTiles - 3) / 2);
-                    Place3x3PaintingByStyle(new Rectangle2P(x, y, 3, 3), style);
+                    x = area.XCenter - 1; // uneven room
+                    if (roomEvenX) x += randAddX;
                 }
-                else if (placeMode == 1)
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 3) + 1);
+
+                if (centY)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (3 - 1));
-                    y = area.Y0 + ((area.YTiles - 3) / 2);
-                    Place3x3PaintingByStyle(new Rectangle2P(x, y, 3, 3), style);
+                    y = area.YCenter - 1; // uneven room
+                    if (roomEvenY) y += randAddY;
                 }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 3) + 1);
+
+                paintingArea = new(x, y, 3, 3);
+                success = Place3x3PaintingByStyle(paintingArea, style, placeWall);
             }
 
-            else if (area.YTiles >= 3 && allow2x3 && Chance.Simple())
+            else if (allow2x3 && Chance.Simple())
             {
-                if (placeMode == 0)
+                if (centX)
                 {
-                    x = area.XCenter;
-                    y = area.Y0 + ((area.YTiles - 3) / 2);
-                    Place2x3PaintingByStyle(new Rectangle2P(x, y, 2,  3),  style);
+                    x = area.XCenter; // even room
+                    if (!roomEvenX) x -= (1 - randAddX);
                 }
-                else if (placeMode == 1)
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 2) + 1);
+
+                if (centY)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (2 - 1));
-                    y = area.Y0 + ((area.YTiles - 3) / 2);
-                    Place2x3PaintingByStyle(new Rectangle2P(x, y, 2, 3), style);
+                    y = area.YCenter - 1; // uneven room
+                    if (roomEvenY) y += randAddY;
                 }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 3) + 1);
+
+                paintingArea = new(x, y, 2, 3);
+                success = Place2x3PaintingByStyle(paintingArea, style, placeWall);
             }
 
-            else if (area.YTiles >= 2 && allow3x2 && Chance.Simple())
+            else if (allow3x2 && Chance.Simple())
             {
-                if (placeMode == 0)
+                if (centX)
                 {
-                    x = area.XCenter - 1 + WorldGen.genRand.Next(2);
-                    y = area.Y0 + ((area.YTiles - 2) / 2);
-                    Place3x2PaintingByStyle(new Rectangle2P(x, y, 3, 2), style);
+                    x = area.XCenter - 1; // uneven room
+                    if (roomEvenX) x += randAddX;
                 }
-                else if (placeMode == 1)
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 3) + 1);
+
+                if (centY)
                 {
-                    x = area.X0 + WorldGen.genRand.Next(area.XTiles - (3 - 1));
-                    y = area.Y0 + ((area.YTiles - 2) / 2);
-                    Place3x2PaintingByStyle(new Rectangle2P(x, y, 3, 2), style);
+                    y = area.YCenter; // even room
+                    if (!roomEvenY) y -= (1 - randAddY);
                 }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 2) + 1);
+
+                paintingArea = new(x, y, 3, 2);
+                success = Place3x2PaintingByStyle(paintingArea, style, placeWall);
             }
+
+            return (success, paintingArea);
         }
 
         /// <summary>
-        /// Places a random 4x6 painting of a pre-selected variety for the given decoration style 
+        /// Places a random 6x4 painting of a pre-selected variety for the given decoration style 
         /// </summary>
-        /// <param name="area">The 4x6 area where the painting shall be placed</param>
+        /// <param name="area">The 6x4 area where the painting shall be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
-        public void Place6x4PaintingByStyle(Rectangle2P area, int style)
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place6x4PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
-            for (int x = area.X0; x <= area.X1; x++) 
-            {
-                for (int y = area.Y0; x <= area.Y1; y++)
-                {
-                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
-                }
-            }
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall]);
 
             List<int> paintings = [];
             if (style == S.StyleSnow)
@@ -3083,7 +3129,9 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(23); // Leopard Skin...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceTile(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[WorldGen.genRand.Next(paintings.Count)] );
+            bool success = WorldGen.PlaceTile(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[WorldGen.genRand.Next(paintings.Count)] );
+
+            return success;
         }
 
         /// <summary>
@@ -3091,15 +3139,10 @@ namespace WorldGenMod.Structures.Ice
         /// </summary>
         /// <param name="area">The 3x3 area where the painting shall be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
-        public void Place3x3PaintingByStyle(Rectangle2P area, int style)
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place3x3PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
-            for (int x = area.X0; x <= area.X1; x++)
-            {
-                for (int y = area.Y0; x <= area.Y1; y++)
-                {
-                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
-                }
-            }
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall]);
 
             List<int> paintings = [];
             if (style == S.StyleSnow)
@@ -3146,7 +3189,9 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(48); // Compass Rose...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceTile(area.X0 + 1, area.Y0 + 1, TileID.Painting3X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+            bool success = WorldGen.PlaceTile(area.X0 + 1, area.Y0 + 1, TileID.Painting3X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
         }
 
         /// <summary>
@@ -3154,15 +3199,10 @@ namespace WorldGenMod.Structures.Ice
         /// </summary>
         /// <param name="area">The 2x3 area where the painting shall be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
-        public void Place2x3PaintingByStyle(Rectangle2P area, int style)
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place2x3PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
-            for (int x = area.X0; x <= area.X1; x++)
-            {
-                for (int y = area.Y0; x <= area.Y1; y++)
-                {
-                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
-                }
-            }
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall]);
 
             List<int> paintings = [];
             if (style == S.StyleSnow)
@@ -3201,7 +3241,9 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(18); // Strange Growth #4...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceTile(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+            bool success = WorldGen.PlaceTile(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
         }
 
         /// <summary>
@@ -3209,15 +3251,10 @@ namespace WorldGenMod.Structures.Ice
         /// </summary>
         /// <param name="area">The 3x2 area where the painting shall be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
-        public void Place3x2PaintingByStyle(Rectangle2P area, int style)
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place3x2PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
-            for (int x = area.X0; x <= area.X1; x++)
-            {
-                for (int y = area.Y0; x <= area.Y1; y++)
-                {
-                    WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // place background just in case it got deleted by the "cracked" background design
-                }
-            }
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall]);
 
             List<int> paintings = [];
             if (style == S.StyleSnow)
@@ -3250,7 +3287,9 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(4); // Underground Reward...should never occur or I called the method wrong...so just to be sure
             }
 
-            WorldGen.PlaceTile(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+            bool success = WorldGen.PlaceTile(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
         }
 
 
@@ -3286,6 +3325,7 @@ namespace WorldGenMod.Structures.Ice
         public const String Clock = "Clock";
         public const String Bed = "Bed";
         public const String BedWallpaper = "BedWallpaper";
+        public const String PaintingWallpaper = "PaintingWallpaper";
         public const String Dresser = "Dresser";
 
         public const int StyleSnow = 0;
