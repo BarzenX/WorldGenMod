@@ -1111,23 +1111,77 @@ namespace WorldGenMod.Structures.Ice
                     // if room is too high, there will be a lot of unused space...fill it
                     if (freeR.YTiles >= 12)
                     {
-                        int lastBeam = y;
-                        y = freeR.Y0 + 3;
+                        int lowerBeam = y;
+                        int upperBeam = freeR.Y0 + 3;
 
                         // wooden beam
                         for (x = freeR.X0; x <= freeR.X1; x++)
                         {
-                            if (!(Main.tile[x, y].WallType == 0))
+                            if (!(Main.tile[x, upperBeam].WallType == 0))
                             {
-                                WorldGen.PlaceTile(x, y, TileID.BorealBeam);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                WorldGen.PlaceTile(x, upperBeam, TileID.BorealBeam);
+                                WorldGen.paintTile(x, upperBeam, (byte)Deco[S.StylePaint]);
                             }
                         }
 
-                        Func.ReplaceWallArea(new Rectangle2P(freeR.X0, y + 1, freeR.X1, lastBeam - 1, "dummyString"), Deco[S.PaintingWallpaper]);
+                        // fill in-between the walls with a fancy wallpaper
+                        Func.ReplaceWallArea(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.PaintingWallpaper]);
 
                         //painting
-                        PlacePainting(new Rectangle2P(freeR.X0, y + 1, freeR.X1, lastBeam - 1, "dummyString"), Deco[S.StyleSave]);
+                        (bool success, Rectangle2P paintingArea, int paintingType, int failReason) paintingResult =  PlacePainting(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.StyleSave]);
+                    
+                        if (paintingResult.success)
+                        {
+                            if ((lowerBeam - upperBeam >= 5) && (paintingResult.paintingArea.X0 - freeR.X0) >= 4) // check for a reasonable size of the window space
+                            {
+                                Rectangle2P windowLeft  = new(freeR.X0 + 1, upperBeam + 2, paintingResult.paintingArea.X0 - 2, lowerBeam - 2, "dummyString");
+                                Rectangle2P windowRight = new(paintingResult.paintingArea.X1 + 2, upperBeam + 2, freeR.X1 - 1, lowerBeam - 2, "dummyString");
+                                Func.PlaceWallArea(windowLeft, WallID.Glass);
+                                Func.PlaceWallArea(windowRight, WallID.Glass);
+
+                                for (int i = 0; i < windowLeft.XTiles; i++)
+                                {
+                                    x = windowLeft.X0 + i;
+                                    y = windowLeft.Y1;
+
+                                    if (!(Main.tile[x, y].WallType == 0))
+                                    {
+                                        WorldGen.PlaceTile(x, y, TileID.Platforms, style:Deco[S.DecoPlat]);
+
+                                        // make the platform be a "half brick"... e.g. make it appear at the bottom of the tile, to make it look like a window board
+                                        // by pounding it 3 times with a hammer. ("Main.tile[x, y].IsHalfBlock = true" leaves some pixel gaps and I don't know why)
+                                        WorldGen.PoundPlatform(x, y);
+                                        WorldGen.PoundPlatform(x, y);
+                                        WorldGen.PoundPlatform(x, y);
+
+                                        WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                    }
+                                }
+                                for (int i = 0; i < windowRight.XTiles; i++)
+                                {
+                                    x = windowRight.X0 + i;
+                                    y = windowRight.Y1;
+
+                                    if (!(Main.tile[x, y].WallType == 0))
+                                    {
+                                        WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+
+                                        // make the platform be a "half brick"... e.g. make it appear at the bottom of the tile, to make it look like a window board
+                                        // by pounding it 3 times with a hammer. ("Main.tile[x, y].IsHalfBlock = true" leaves some pixel gaps and I don't know why)
+                                        WorldGen.PoundPlatform(x, y);
+                                        WorldGen.PoundPlatform(x, y);
+                                        WorldGen.PoundPlatform(x, y);
+
+                                        WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (paintingResult.failReason == 1 || paintingResult.failReason == 4)
+                            { }
+                        }
                     }
 
 
@@ -2968,9 +3022,16 @@ namespace WorldGenMod.Structures.Ice
         /// <param name="placeMode">The placement method: 0 = centered in x and y, 1 = random x and centered y, 2 = centered x and random y, 3 = random x and y</param>
         /// <param name="allowType">Allow types of paintings: (binary selection) 0= no painting, 1=3x2, 2=2x3, 4=3x3, 8=6x4, 15=all types</param>
         /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
-        /// <param name="centerErrorX">If x-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force left position, 0 = random, 1 = force right position</param>
-        /// <param name="centerErrorX">If y-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force upper position, 0 = random, 1 = force lower position</param>
-        public (bool success, Rectangle2P paintingArea) PlacePainting(Rectangle2P area, int style, int placeMode = 0, byte allowType = 15, bool placeWall = false, int centerErrorX = 0, int centerErrorY = -1)
+        /// <param name="centerErrorX">If x-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force left position, 0 = random, 1 = force right position, -88 = abort function</param>
+        /// <param name="centerErrorX">If y-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force upper position, 0 = random, 1 = force lower position, -88 = abort function</param>
+
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>paintingArea</b>: if success = true, the covered area of the painting, else Rectangle2P.Empty
+        ///          <br/>Tupel item3 <b>paintingType</b>: contains the placed / attempted to place painting type (1 = 6x4, 2 = 3x3, 3 = 2x3, 4 = 3x2), else 0
+        ///          <br/>Tupel item4 <b>failReason</b>: if success = false, contains the reason for failing 
+        ///          <br/> --> (1 = WorldGen.PlaceTile failed(), 2 = aborted because of centerErrorX, 3 = aborted because of centerErrorY, 4 = every single painting Chance roll failed), else 0</returns>
+        ///          
+        public (bool success, Rectangle2P paintingArea, int paintingType, int failReason) PlacePainting(Rectangle2P area, int style, int placeMode = 0, byte allowType = 15, bool placeWall = false, int centerErrorX = 0, int centerErrorY = -1)
         {
             bool allow3x2 = ((allowType & 1) != 0) && (area.XTiles >= 3) && (area.YTiles >= 2);
             bool allow2x3 = ((allowType & 2) != 0) && (area.XTiles >= 2) && (area.YTiles >= 3);
@@ -2986,22 +3047,33 @@ namespace WorldGenMod.Structures.Ice
             int randAddX, randAddY;// 3 XTiles cannot be put centered symmetrically in an even XTiles room, and 2 XTiles cannot in an uneven XTiles room,
                                    // so these values are for alternating betweend the two "out-center" positions
 
+            // prepare random positioning values
             if (centerErrorX == -1) randAddX = 0; // force left position
             else if (centerErrorX == 1) randAddX = 1; // force right position
             else randAddX = WorldGen.genRand.Next(2);
+            bool abortCenterX = centerErrorX == -88;
 
             if (centerErrorY == -1) randAddY = 0; // force upper position
             else if (centerErrorY == 1) randAddY = 1; // force lower position
             else randAddY = WorldGen.genRand.Next(2);
+            bool abortCenterY = centerErrorY == -88;
 
+            // prepare local output variables
             bool success = false;
             Rectangle2P paintingArea = Rectangle2P.Empty;
+            int paintingType = 0;
+            int failReason = 0;
 
             //painting
             int x = area.X0, y = area.Y0; // init
 
             if (allow6x4 && Chance.Simple())
             {
+                paintingType = 1;
+
+                if (!roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
                 if (centX)
                 {
                     x = area.XCenter - 2; // even room
@@ -3018,10 +3090,17 @@ namespace WorldGenMod.Structures.Ice
 
                 paintingArea = new(x, y, 6, 4);
                 success = Place6x4PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
             }
 
             else if (allow3x3 && Chance.Simple())
             {
+                paintingType = 2;
+
+                if (roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
                 if (centX)
                 {
                     x = area.XCenter - 1; // uneven room
@@ -3038,10 +3117,17 @@ namespace WorldGenMod.Structures.Ice
 
                 paintingArea = new(x, y, 3, 3);
                 success = Place3x3PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
             }
 
             else if (allow2x3 && Chance.Simple())
             {
+                paintingType = 3;
+
+                if (!roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if ( roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
                 if (centX)
                 {
                     x = area.XCenter; // even room
@@ -3058,10 +3144,17 @@ namespace WorldGenMod.Structures.Ice
 
                 paintingArea = new(x, y, 2, 3);
                 success = Place2x3PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
             }
 
             else if (allow3x2 && Chance.Simple())
             {
+                paintingType = 4;
+
+                if ( roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
                 if (centX)
                 {
                     x = area.XCenter - 1; // uneven room
@@ -3078,9 +3171,13 @@ namespace WorldGenMod.Structures.Ice
 
                 paintingArea = new(x, y, 3, 2);
                 success = Place3x2PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
             }
 
-            return (success, paintingArea);
+            if (!success && paintingType == 0) failReason = 4;
+
+            return (success, paintingArea, paintingType, failReason);
         }
 
         /// <summary>
