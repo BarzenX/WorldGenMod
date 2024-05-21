@@ -1189,8 +1189,8 @@ namespace WorldGenMod
         private int ydiff; //The mathematical y-difference of the rectangular region defined by this Rectangle2Point
         private int xTiles; //The amount of tiles on the x side of the rectangular region defined by this Rectangle2Point
         private int yTiles; //The amount of tiles on the y side of the rectangular region defined by this Rectangle2Point
-        private int xCenter; //The x-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if xTiles is even, there is no real middle, and the lower x-coordinate of the "double tile center" will be returned)
-        private int yCenter; //The y-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if yTiles is even, there is no real middle, and the lower y-coordinate of the "double tile center" will be returned)
+        private int xCenter; //The x-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if xTiles is even, there is no real middle, and the smaller x-coordinate of the "double tile center" will be returned)
+        private int yCenter; //The y-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if yTiles is even, there is no real middle, and the smaller y-coordinate of the "double tile center" will be returned)
 
         /// <summary>
         /// Initializes a new instance of the Rectangle2Point structure with the specified values. 

@@ -14,6 +14,8 @@ using Terraria.UI;
 using rail;
 using Terraria.GameContent;
 using System.Collections;
+using log4net.Core;
+using System.IO.Pipelines;
 
 //TODO: sometimes the FrostFortress creates extremely slow - supposedly because of the frequent PlaceTile calls...what to do?
 
@@ -1129,58 +1131,89 @@ namespace WorldGenMod.Structures.Ice
 
                         //painting
                         (bool success, Rectangle2P paintingArea, int paintingType, int failReason) paintingResult =  PlacePainting(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.StyleSave]);
-                    
+                        Rectangle2P windowLeft = Rectangle2P.Empty;
+                        Rectangle2P windowRight = Rectangle2P.Empty;
+
                         if (paintingResult.success)
                         {
                             if ((lowerBeam - upperBeam >= 5) && (paintingResult.paintingArea.X0 - freeR.X0) >= 4) // check for a reasonable size of the window space
                             {
-                                Rectangle2P windowLeft  = new(freeR.X0 + 1, upperBeam + 2, paintingResult.paintingArea.X0 - 2, lowerBeam - 2, "dummyString");
-                                Rectangle2P windowRight = new(paintingResult.paintingArea.X1 + 2, upperBeam + 2, freeR.X1 - 1, lowerBeam - 2, "dummyString");
-                                Func.PlaceWallArea(windowLeft, WallID.Glass);
-                                Func.PlaceWallArea(windowRight, WallID.Glass);
-
-                                for (int i = 0; i < windowLeft.XTiles; i++)
-                                {
-                                    x = windowLeft.X0 + i;
-                                    y = windowLeft.Y1;
-
-                                    if (!(Main.tile[x, y].WallType == 0))
-                                    {
-                                        WorldGen.PlaceTile(x, y, TileID.Platforms, style:Deco[S.DecoPlat]);
-
-                                        // make the platform be a "half brick"... e.g. make it appear at the bottom of the tile, to make it look like a window board
-                                        // by pounding it 3 times with a hammer. ("Main.tile[x, y].IsHalfBlock = true" leaves some pixel gaps and I don't know why)
-                                        WorldGen.PoundPlatform(x, y);
-                                        WorldGen.PoundPlatform(x, y);
-                                        WorldGen.PoundPlatform(x, y);
-
-                                        WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                    }
-                                }
-                                for (int i = 0; i < windowRight.XTiles; i++)
-                                {
-                                    x = windowRight.X0 + i;
-                                    y = windowRight.Y1;
-
-                                    if (!(Main.tile[x, y].WallType == 0))
-                                    {
-                                        WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
-
-                                        // make the platform be a "half brick"... e.g. make it appear at the bottom of the tile, to make it look like a window board
-                                        // by pounding it 3 times with a hammer. ("Main.tile[x, y].IsHalfBlock = true" leaves some pixel gaps and I don't know why)
-                                        WorldGen.PoundPlatform(x, y);
-                                        WorldGen.PoundPlatform(x, y);
-                                        WorldGen.PoundPlatform(x, y);
-
-                                        WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
-                                    }
-                                }
+                                windowLeft  = new(freeR.X0 + 1, upperBeam + 2, paintingResult.paintingArea.X0 - 2, lowerBeam - 2, "dummyString");
+                                windowRight = new(paintingResult.paintingArea.X1 + 2, upperBeam + 2, freeR.X1 - 1, lowerBeam - 2, "dummyString");
                             }
                         }
                         else
                         {
-                            if (paintingResult.failReason == 1 || paintingResult.failReason == 4)
-                            { }
+                            if ((paintingResult.failReason == 1 || paintingResult.failReason == 4) && (lowerBeam - upperBeam >= 5) && Chance.Perc(75)) // put windows without a painting
+                            {
+                                if (Chance.Simple())
+                                {
+                                    windowLeft = new(freeR.X0 + 1, upperBeam + 2, doors[Door.Up].doorRect.X0 - 1, lowerBeam - 2, "dummyString");
+                                    windowRight = new(doors[Door.Up].doorRect.X1 + 1, upperBeam + 2, freeR.X1 - 1, lowerBeam - 2, "dummyString");
+                                }
+                                else
+                                {
+                                    windowLeft = new(freeR.X0 + 1, upperBeam + 2, doors[Door.Up].doorRect.X0, lowerBeam - 2, "dummyString");
+                                    windowRight = new(doors[Door.Up].doorRect.X1 + 1, upperBeam + 2, freeR.X1, lowerBeam - 2, "dummyString");
+                                }
+                            }
+                            else if (paintingResult.failReason == 2)
+                            {
+
+                            }
+                        }
+
+                        // put windows
+                        if (!windowLeft.IsEmpty())
+                        {
+                            Func.ReplaceWallArea(windowLeft, WallID.Glass);
+                            Func.ReplaceWallArea(windowRight, WallID.Glass);
+                            Tile tile;
+
+                            rememberPos.Clear();
+                            y = windowLeft.Y1;
+                            for (int i = 0; i < windowLeft.XTiles; i++)
+                            {
+                                x = windowLeft.X0 + i;
+
+                                if (!(Main.tile[x, y].WallType == 0))
+                                {
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                    rememberPos.Add((x, y));
+                                }
+                            }
+                            foreach (var item in rememberPos)
+                            {
+                                // make the platform be a "half brick"... e.g. make it appear at the bottom of the tile, to make it look like a window board
+                                // has to be done in a separate loop or there are some pixel gaps in between the platform tiles...don't know why
+                                tile = Main.tile[item.x, item.y];
+                                tile.IsHalfBlock = true;
+
+                                // sa effect can be realized by pounding the tile 3 times with a hammer:
+                                //WorldGen.PoundPlatform(item.x, item.y);
+                                //WorldGen.PoundPlatform(item.x, item.y);
+                                //WorldGen.PoundPlatform(item.x, item.y);
+                            }
+
+                            rememberPos.Clear();
+                            y = windowRight.Y1;
+                            for (int i = 0; i < windowRight.XTiles; i++)
+                            {
+                                x = windowRight.X0 + i;
+
+                                if (!(Main.tile[x, y].WallType == 0))
+                                {
+                                    WorldGen.PlaceTile(x, y, TileID.Platforms, style: Deco[S.DecoPlat]);
+                                    WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
+                                    rememberPos.Add((x, y));
+                                }
+                            }
+                            foreach (var item in rememberPos)
+                            {
+                                tile = Main.tile[item.x, item.y];
+                                tile.IsHalfBlock = true;
+                            }
                         }
                     }
 
