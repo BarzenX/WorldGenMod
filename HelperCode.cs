@@ -76,7 +76,7 @@ namespace WorldGenMod
         public static void UnlightLantern(int x, int y)
         {
             Tile tile = Main.tile[x, y];
-            if (tile.TileType != TileID.Candelabras) return; // check if it's really a lantern
+            if (tile.TileType != TileID.HangingLanterns) return; // check if it's really a lantern
 
             if (tile.TileFrameX < 18) // lantern is lit
             {

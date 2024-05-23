@@ -974,16 +974,6 @@ namespace WorldGenMod.Structures.Ice
                 }
             }
 
-            if (roomType == RoomID.AboveSide)
-            {
-                //TODO?
-            }
-
-            if (roomType == RoomID.BelowSide)
-            {
-                //TODO?
-            }
-
             // init variables
             bool placed, placed2;
             (bool success, int x, int y) placeResult, placeResult2;
@@ -993,8 +983,17 @@ namespace WorldGenMod.Structures.Ice
             int chestID;
 
             //choose room decoration at random
-            //int roomDeco = WorldGen.genRand.Next(7); //TODO: don't forget to put the correct values in the end
-            int roomDeco = 0;
+            bool valid;
+            int roomDeco;
+            do
+            {
+                valid = true;
+                roomDeco = WorldGen.genRand.Next(6); //TODO: don't forget to put the correct values in the end
+                if (roomDeco == 6 && (roomType != RoomID.BelowSide))   valid = false; // room 6 may only appear as a "below" room
+
+            } while (!valid);
+            
+            //roomDeco = 0;
             switch (roomDeco)
             {
                 case 0: // corridor: two tables, two lamps, a beam line, high rooms get another beam line and a painting
@@ -1130,7 +1129,7 @@ namespace WorldGenMod.Structures.Ice
                         Func.ReplaceWallArea(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.PaintingWallpaper]);
 
                         //painting
-                        (bool success, Rectangle2P paintingArea, int paintingType, int failReason) paintingResult =  PlacePainting(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.StyleSave]);
+                        (bool success, Rectangle2P paintingArea, int paintingType, int failReason) paintingResult =  PlacePainting(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.StyleSave], centerErrorX: -88);
                         Rectangle2P windowLeft = Rectangle2P.Empty;
                         Rectangle2P windowRight = Rectangle2P.Empty;
 
@@ -1159,7 +1158,16 @@ namespace WorldGenMod.Structures.Ice
                             }
                             else if (paintingResult.failReason == 2)
                             {
-
+                                ((bool, bool) success, (Rectangle2P, Rectangle2P) paintingArea, (int, int) paintingType, (int, int) failReason) paintingsResult = Place2Paintings(area: new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"),
+                                                                                                                                                                                  style: Deco[S.StyleSave],
+                                                                                                                                                                                  placeMode: WorldGen.genRand.Next(11,13),
+                                                                                                                                                                                  allowType: (byte)paintingResult.paintingType);
+                                
+                                if ((lowerBeam - upperBeam >= 5) && (paintingsResult.paintingArea.Item2.X0 - paintingsResult.paintingArea.Item1.X1) >= 4) // check for a reasonable size of the window space
+                                {
+                                    windowLeft = new(paintingsResult.paintingArea.Item1.X1 + 2, upperBeam + 2, paintingsResult.paintingArea.Item2.X0 - 2, lowerBeam - 2, "dummyString");
+                                    windowRight = Rectangle2P.Empty;
+                                }
                             }
                         }
 
@@ -1219,12 +1227,14 @@ namespace WorldGenMod.Structures.Ice
 
 
                     // lantern left
+                    placed = false;
                     x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
                     if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Lantern
                     if (placed) Func.UnlightLantern(x, y);
 
                     // lantern right
+                    placed = false;
                     x = freeR.XCenter + 1 + WorldGen.genRand.Next(3, freeR.XDiff / 2);
                     y = freeR.Y0;
                     if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: Deco[S.Lantern]); // Lantern
@@ -2945,7 +2955,11 @@ namespace WorldGenMod.Structures.Ice
                     }
                     break;
 
-                case 6: //empty room because I don't have enough room templates and the other rooms repeat too much!
+                case 6: // prison / torture room with hanging skeletons
+
+                    WorldGen.PlaceTile(freeR.XCenter, freeR.YCenter, TileID.Painting3X3, style: 16);
+                    WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y0 + 1, TileID.Painting3X3, style: 16);
+                    WorldGen.PlaceTile(freeR.X1 - 1, freeR.Y0 + 1, TileID.Painting3X3, style: 17);
 
                     break;
 
@@ -3048,7 +3062,7 @@ namespace WorldGenMod.Structures.Ice
         /// <summary>
         /// Tries to place a painting in the given area. It tries to place paintings from tall to flat (6x4 -> 3x3 -> 2x3 -> 3x2)
         /// <br/>
-        /// <br/> ATTENTION: does not check if the final placement position is empty. Best make sure that the whole area is free.
+        /// <br/> ATTENTION: does not pre-check if the final placement position is empty. Best make sure that the whole area is free.
         /// </summary>
         /// <param name="area">The area where the painting can be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
@@ -3060,7 +3074,7 @@ namespace WorldGenMod.Structures.Ice
 
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>paintingArea</b>: if success = true, the covered area of the painting, else Rectangle2P.Empty
-        ///          <br/>Tupel item3 <b>paintingType</b>: contains the placed / attempted to place painting type (1 = 6x4, 2 = 3x3, 3 = 2x3, 4 = 3x2), else 0
+        ///          <br/>Tupel item3 <b>paintingType</b>: contains the placed / attempted to place painting type (1 = 3x2, 2 = 2x3, 4 = 3x3, 8 = 6x4), else 0
         ///          <br/>Tupel item4 <b>failReason</b>: if success = false, contains the reason for failing 
         ///          <br/> --> (1 = WorldGen.PlaceTile failed(), 2 = aborted because of centerErrorX, 3 = aborted because of centerErrorY, 4 = every single painting Chance roll failed), else 0</returns>
         ///          
@@ -3102,7 +3116,7 @@ namespace WorldGenMod.Structures.Ice
 
             if (allow6x4 && Chance.Simple())
             {
-                paintingType = 1;
+                paintingType = 8;
 
                 if (!roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
                 if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
@@ -3129,7 +3143,7 @@ namespace WorldGenMod.Structures.Ice
 
             else if (allow3x3 && Chance.Simple())
             {
-                paintingType = 2;
+                paintingType = 4;
 
                 if (roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
                 if (roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
@@ -3156,7 +3170,7 @@ namespace WorldGenMod.Structures.Ice
 
             else if (allow2x3 && Chance.Simple())
             {
-                paintingType = 3;
+                paintingType = 2;
 
                 if (!roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
                 if ( roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
@@ -3183,7 +3197,7 @@ namespace WorldGenMod.Structures.Ice
 
             else if (allow3x2 && Chance.Simple())
             {
-                paintingType = 4;
+                paintingType = 1;
 
                 if ( roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
                 if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
@@ -3214,12 +3228,160 @@ namespace WorldGenMod.Structures.Ice
         }
 
         /// <summary>
-        /// Places a random 6x4 painting of a pre-selected variety for the given decoration style 
+        /// Tries to symmetrically place two paintings of the same type in the given area. It tries to place paintings from tall to flat (6x4 -> 3x3 -> 2x3 -> 3x2)
+        /// <br/>
+        /// <br/> ATTENTION: does not pre-check if the final placement position is empty. Best make sure that the whole area is free.
         /// </summary>
-        /// <param name="area">The 6x4 area where the painting shall be placed</param>
+        /// <param name="area">The area where the painting can be placed</param>
         /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeMode">The placement method in the two halves of the room:
+        /// <br/>                   --> 0 = centered in x and y, 1 = random x and centered y, 2 = centered x and random y, 3 = random x and y, 10..19 = force 0..9 x-tiles distance away from the edge of the given area and y centered</param>
+        /// <param name="sameType">If the placed painting shall be of the same type or can be different</param>
+        /// <param name="allowType">Allow types of paintings: (binary selection) 0= no painting, 1=3x2, 2=2x3, 4=3x3, 8=6x4, 15=all types</param>
         /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
-        public bool Place6x4PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
+        /// <param name="centerErrorX">If x-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force left position, 0 = random, 1 = force right position, -88 = abort function</param>
+        /// <param name="centerErrorX">If y-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force upper position, 0 = random, 1 = force lower position, -88 = abort function</param>
+
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>paintingArea</b>: if success = true, the covered area of the painting, else Rectangle2P.Empty
+        ///          <br/>Tupel item3 <b>paintingType</b>: contains the placed / attempted to place painting type (1 = 6x4, 2 = 3x3, 3 = 2x3, 4 = 3x2), else 0
+        ///          <br/>Tupel item4 <b>failReason</b>: if success = false, contains the reason for failing 
+        ///          <br/> --> (1 = WorldGen.PlaceTile failed(), 2 = aborted because of centerErrorX, 3 = aborted because of centerErrorY, 4 = every single painting Chance roll failed), else 0</returns>
+        ///          
+        public ((bool, bool) success, (Rectangle2P, Rectangle2P) paintingArea, (int, int) paintingType, (int, int) failReason) Place2Paintings(
+            Rectangle2P area, int style, int placeMode = 0, bool sameType = true, byte allowType = 15, bool placeWall = false, int centerErrorX = 0, int centerErrorY = -1)
+        {
+            bool allow3x2 = ((allowType & 1) != 0) && (area.XTiles >= 3) && (area.YTiles >= 2);
+            bool allow2x3 = ((allowType & 2) != 0) && (area.XTiles >= 2) && (area.YTiles >= 3);
+            bool allow3x3 = ((allowType & 4) != 0) && (area.XTiles >= 3) && (area.YTiles >= 3);
+            bool allow6x4 = ((allowType & 8) != 0) && (area.XTiles >= 6) && (area.YTiles >= 4);
+
+            bool centX = ((placeMode == 0) || (placeMode == 2)) && (placeMode < 10); // painting centered in x direction
+            bool centY = ((placeMode == 0) || (placeMode == 1)) || ((placeMode >= 10) && (placeMode <= 19)); // painting centered in y direction
+
+            bool roomEvenX = (area.XTiles % 2) == 0;
+            bool roomEvenY = (area.YTiles % 2) == 0;
+
+            int randAddX, randAddY;// 3 XTiles cannot be put centered symmetrically in an even XTiles room, and 2 XTiles cannot in an uneven XTiles room,
+                                   // so these values are for alternating betweend the two "out-center" positions
+
+            // prepare random positioning values
+            if (centerErrorX == -1) randAddX = 0; // force left position
+            else if (centerErrorX == 1) randAddX = 1; // force right position
+            else randAddX = WorldGen.genRand.Next(2);
+            bool abortCenterX = centerErrorX == -88;
+
+            if (centerErrorY == -1) randAddY = 0; // force upper position
+            else if (centerErrorY == 1) randAddY = 1; // force lower position
+            else randAddY = WorldGen.genRand.Next(2);
+            bool abortCenterY = centerErrorY == -88;
+
+            // prepare local output variables
+            bool success1 = false;
+            bool success2 = false;
+            Rectangle2P paintingArea1 = Rectangle2P.Empty;
+            Rectangle2P paintingArea2 = Rectangle2P.Empty;
+            int paintingType1 = 0;
+            int paintingType2 = 0;
+            int failReason1 = 0;
+            int failReason2 = 0;
+
+            //painting
+            int x = area.X0, y = area.Y0; // init
+
+            ////////////////////
+            //// Disclaimer ////
+            ////////////////////
+            // --> This function is a WIP, I just implemented what I acutally needed for the use case!
+
+            if (allow3x3 && sameType && centY && ((placeMode >= 10) && (placeMode <= 19)))
+            {
+                paintingType1 = paintingType2 = 2;
+
+                //if (roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                //if (roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
+                x = area.X0 + (placeMode - 10);
+
+                if (centY)
+                {
+                    y = area.YCenter - 1; // uneven room
+                    if (roomEvenY) y += randAddY;
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 3) + 1);
+
+                paintingArea1 = new(x, y, 3, 3);
+                success1 = Place3x3PaintingByStyle(paintingArea1, style, placeWall);
+
+                if (!success1) failReason1 = 1;
+
+                ///////////////////////////////////////////////////////////
+
+                x = area.X1 - 2 - (placeMode - 10);
+
+                if (centY)
+                {
+                    y = area.YCenter - 1; // uneven room
+                    if (roomEvenY) y += randAddY;
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 3) + 1);
+
+                paintingArea2 = new(x, y, 3, 3);
+                success2 = Place3x3PaintingByStyle(paintingArea2, style, placeWall);
+
+                if (!success2) failReason2 = 1;
+            }
+            else if (allow3x2 && sameType && centY && ((placeMode >= 10) && (placeMode <= 19)))
+            {
+                paintingType1 = paintingType2 = 4;
+
+                //if (roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                //if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
+                x = area.X0 + (placeMode - 10);
+
+                if (centY)
+                {
+                    y = area.YCenter; // even room
+                    if (!roomEvenY) y -= (1 - randAddY);
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 2) + 1);
+
+                paintingArea1 = new(x, y, 3, 2);
+                success1 = Place3x2PaintingByStyle(paintingArea1, style, placeWall);
+
+                if (!success1) failReason1 = 1;
+
+                ///////////////////////////////////////////////////////////
+
+                x = area.X1 - 2 - (placeMode - 10);
+
+                if (centY)
+                {
+                    y = area.YCenter; // even room
+                    if (!roomEvenY) y -= (1 - randAddY);
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 2) + 1);
+
+                paintingArea2 = new(x, y, 3, 2);
+                success2 = Place3x2PaintingByStyle(paintingArea2, style, placeWall);
+
+                if (!success2) failReason2 = 1;
+            }
+
+            if (!success1 && paintingType1 == 0) failReason1 = 4;
+            if (!success2 && paintingType2 == 0) failReason2 = 4;
+
+            return ((success1, success2), (paintingArea1, paintingArea2), (paintingType1, paintingType2), (failReason1, failReason2));
+        }
+
+            /// <summary>
+            /// Places a random 6x4 painting of a pre-selected variety for the given decoration style 
+            /// </summary>
+            /// <param name="area">The 6x4 area where the painting shall be placed</param>
+            /// <param name="style">The decoration style of the frost fortress</param>
+            /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+            public bool Place6x4PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
             if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall]);
 
