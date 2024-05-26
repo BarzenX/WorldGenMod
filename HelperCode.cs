@@ -12,6 +12,7 @@ using Terraria.DataStructures;
 using Terraria.GameContent.Tile_Entities;
 using Microsoft.VisualBasic;
 using Terraria.Achievements;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace WorldGenMod
 {
@@ -239,17 +240,21 @@ namespace WorldGenMod
         {
             if (type < 186 || type > 187) return;
 
-            WorldGen.PlaceTile(xPlace, yPlace, type);
+            WorldGen.PlaceTile(xPlace, yPlace, 186);
+
             Tile tile;
             for (int x = xPlace - 1; x <= xPlace + 1; x++)
             {
                 for (int y = yPlace - 1; y <= yPlace; y++)
                 {
                     tile = Main.tile[x, y];
+
+                    if (type == 187)   tile.TileType = 187;
+
                     tile.TileFrameX += (short)(XSprite * 18 * 3);
                     tile.TileFrameY += (short)(YSprite * 18 * 2);
 
-                    if (paint > 0)   WorldGen.paintTile(x, y, paint);
+                    if (paint > 0) WorldGen.paintTile(x, y, paint);
                 }
             }
             //TODO: check if free and check if PlaceTile was successful
@@ -647,6 +652,41 @@ namespace WorldGenMod
         }
 
         /// <summary>
+        /// Slopes a tile
+        /// </summary>
+        /// <param name="pos">The x and y position of the to-be-sloped tile </param>
+        /// <param name="slopeForm">The to-be-applied slope form (use ENUM "SlopeVal") </param>
+        public static bool SlopeTile(int posX, int posY, int slopeForm)
+        {
+            // pre-checks
+            if (slopeForm < 0) return false;
+
+            WorldGen.SlopeTile(posX, posY, slopeForm);
+
+            // refresh the texture so that the slope gets displayed correctly....basically a bug workaround
+            Tile tile = Main.tile[posX, posY];
+            ushort type = tile.TileType;
+            byte color = tile.TileColor;
+            short tileX = tile.TileFrameX;
+            short tileY = tile.TileFrameY;
+            
+            int style = 0; //init
+            if (type == TileID.Platforms)  style = tileY / 18;
+
+            WorldGen.ReplaceTile(posX, posY, type, style); // is there a way to simply read out the style of the tile?
+
+            if (!(type == TileID.Platforms))
+            {
+                tile.TileFrameX = tileX;
+                tile.TileFrameY = tileY;
+            }
+
+            WorldGen.paintTile(posX, posY, color);
+
+            return true;
+        }
+
+        /// <summary>
         /// Checks if the rectangular area is free of any other tiles
         /// <br/>Has an option for checking if background walls are present and another option to place some at once if missing
         /// </summary>
@@ -682,17 +722,21 @@ namespace WorldGenMod
         /// </summary>
         /// <param name="area">The to be filled area</param>
         /// <param name="wallType">The ID of the to be placed wall</param>
-        public static bool PlaceWallArea(Rectangle2P area, int wallType)
+        /// <param name="paint">The ID of the paint that shall be applied to the wall (optional)</param>
+        public static bool PlaceWallArea(Rectangle2P area, int wallType, byte paint = 0)
         {
             // pre-checks
             if (wallType <= 0) return false;
 
+            bool paintwall = paint > 0;
             for (int i = area.X0; i <= area.X1; i++)
             {
                 for (int j = area.Y0; j <= area.Y1; j++)
                 {
                     WorldGen.KillWall(i, j);
                     WorldGen.PlaceWall(i, j, wallType);
+
+                    if (paintwall)   WorldGen.paintWall(i, j, paint);
                 }
             }
 
@@ -704,11 +748,13 @@ namespace WorldGenMod
         /// </summary>
         /// <param name="area">The to be filled area</param>
         /// <param name="wallType">The ID of the to be placed wall</param>
-        public static bool ReplaceWallArea(Rectangle2P area, int wallType)
+        /// <param name="paint">The ID of the paint that shall be applied to the wall (optional)</param>
+        public static bool ReplaceWallArea(Rectangle2P area, int wallType, byte paint = 0)
         {
             // pre-checks
             if (wallType <= 0) return false;
 
+            bool paintwall = paint > 0;
             for (int i = area.X0; i <= area.X1; i++)
             {
                 for (int j = area.Y0; j <= area.Y1; j++)
@@ -717,6 +763,8 @@ namespace WorldGenMod
                     {
                         WorldGen.KillWall(i, j);
                         WorldGen.PlaceWall(i, j, wallType);
+
+                        if (paintwall)   WorldGen.paintWall(i, j, paint);
                     }
                 }
             }
@@ -728,11 +776,11 @@ namespace WorldGenMod
         /// Paints tiles in the given area
         /// </summary>
         /// <param name="area">The to be painted area</param>
-        /// <param name="paintType">The ID of the to be painted color</param>
+        /// <param name="paintType">The ID of the to be painted color (0 to erase color) </param>
         public static bool PaintArea(Rectangle2P area, int paintType)
         {
             // pre-checks
-            if (paintType <= 0) return false;
+            if (paintType < 0) return false;
 
             for (int i = area.X0; i <= area.X1; i++)
             {
@@ -880,6 +928,16 @@ namespace WorldGenMod
             }
         }
 
+        /// <summary> Possible Slope-Form codes used by SlopeTile() 
+        /// <br/>Seen as if one would form a rhombus: 0 = no slope, 1 = up-right corner, 2 = up-left corner, 3 = down-right corner, 4 = down-left corner </summary>
+        public enum SlopeVal : int
+        {
+            Nope = 0,
+            UpRight = 1,
+            UpLeft = 2,
+            BotRight = 3,
+            BotLeft = 4
+        }
     }
 
     internal class Chance
@@ -958,8 +1016,8 @@ namespace WorldGenMod
         }
 
         /// <summary> Possible additional keys for a step
-        /// <br/> <b>Wall</b> "data" structure: wallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position)
-        /// <br/> <b>Paint</b> "data" structure: paintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position)
+        /// <br/> <b>Wall</b> "data" structure: WallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position), PaintID if backwall painting shall be applied
+        /// <br/> <b>Paint</b> "data" structure: PaintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position)
         /// <br/> <b>Banner</b> "data" structure: banner style for the command "BannerAndTile"
         /// <br/> <b>Piles</b> "data" structure: pile row index, pile column (count) index of the specific Tile texture file (185, 186 or 187)
         /// </summary>
@@ -1080,7 +1138,7 @@ namespace WorldGenMod
                             {
                                 x = this.XAct + ActStep.add[(int)Adds.Wall][1];
                                 y = this.YAct + ActStep.add[(int)Adds.Wall][2];
-                                Func.PlaceWallArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), wall);
+                                Func.PlaceWallArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), wall, (byte)ActStep.add[(int)Adds.Wall][3]);
                             }
 
                             if (ActStep.item == TileID.Banners)
