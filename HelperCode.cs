@@ -240,13 +240,14 @@ namespace WorldGenMod
             if (type < 186 || type > 187) return;
 
             WorldGen.PlaceTile(xPlace, yPlace, type);
-
+            Tile tile;
             for (int x = xPlace - 1; x <= xPlace + 1; x++)
             {
                 for (int y = yPlace - 1; y <= yPlace; y++)
                 {
-                    Main.tile[x, y].TileFrameX += (short)(XSprite * 18 * 3);
-                    Main.tile[x, y].TileFrameY += (short)(YSprite * 18 * 2);
+                    tile = Main.tile[x, y];
+                    tile.TileFrameX += (short)(XSprite * 18 * 3);
+                    tile.TileFrameY += (short)(YSprite * 18 * 2);
 
                     if (paint > 0)   WorldGen.paintTile(x, y, paint);
                 }
@@ -957,15 +958,17 @@ namespace WorldGenMod
         }
 
         /// <summary> Possible additional keys for a step
-        /// <br/> <b>Wall</b> "data" structure: wallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
-        /// <br/> <b>Paint</b> "data" structure: paintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite, given in relation to actual step position
+        /// <br/> <b>Wall</b> "data" structure: wallID,  leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position)
+        /// <br/> <b>Paint</b> "data" structure: paintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position)
         /// <br/> <b>Banner</b> "data" structure: banner style for the command "BannerAndTile"
+        /// <br/> <b>Piles</b> "data" structure: pile row index, pile column (count) index of the specific Tile texture file (185, 186 or 187)
         /// </summary>
         public enum Adds
         {
             Wall = 1,
             Paint = 2,
-            Banner = 3
+            Banner = 3,
+            Piles = 4
         }
 
         /// <summary> The list of to-be-worked tasks
@@ -1086,6 +1089,25 @@ namespace WorldGenMod
                                                      this.YAct + ActStep.toAnchor.y,
                                                      TileID.Banners,
                                                      style: ActStep.style); // Banner
+                            }
+                            if (ActStep.item == TileID.LargePiles || ActStep.item == TileID.LargePiles2)
+                            {
+                                if (!ActStep.add.ContainsKey((int)Adds.Piles)) break;
+
+                                Func.PlaceLargePile(this.XAct + ActStep.toAnchor.x,
+                                                    this.YAct + ActStep.toAnchor.y,
+                                                    ActStep.add[(int)Adds.Piles][1], //count
+                                                    ActStep.add[(int)Adds.Piles][0], //row
+                                                    type: (ushort)ActStep.item);
+                            }
+                            if (ActStep.item == TileID.SmallPiles)
+                            {
+                                if (!ActStep.add.ContainsKey((int)Adds.Piles)) break;
+
+                                WorldGen.PlaceSmallPile(this.XAct + ActStep.toAnchor.x,
+                                                        this.YAct + ActStep.toAnchor.y,
+                                                        ActStep.add[(int)Adds.Piles][1], //count
+                                                        ActStep.add[(int)Adds.Piles][0]); //row
                             }
                             else
                             {
