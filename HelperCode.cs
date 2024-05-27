@@ -236,11 +236,11 @@ namespace WorldGenMod
         /// <param name="YSprite">Vertical count of chosen sprite, counting starts at 0 (type 186 only has Y=0) </param>
         /// <param name="type">TileID</param>
         /// <param name="paint">State a PaintID bigger than 0 to automatically paint the pile</param>
-        public static void PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187, byte paint = 0)
+        public static bool PlaceLargePile(int xPlace, int yPlace, int XSprite, int YSprite, ushort type = (ushort)186.187, byte paint = 0)
         {
-            if (type < 186 || type > 187) return;
+            if (type < 186 || type > 187) return false;
 
-            WorldGen.PlaceTile(xPlace, yPlace, 186);
+            bool success = WorldGen.PlaceTile(xPlace, yPlace, 186);
 
             Tile tile;
             for (int x = xPlace - 1; x <= xPlace + 1; x++)
@@ -257,7 +257,8 @@ namespace WorldGenMod
                     if (paint > 0) WorldGen.paintTile(x, y, paint);
                 }
             }
-            //TODO: check if free and check if PlaceTile was successful
+            //TODO: check if free before placing?
+            return success;
         }
 
         /// <summary>
@@ -671,9 +672,9 @@ namespace WorldGenMod
             short tileY = tile.TileFrameY;
             
             int style = 0; //init
-            if (type == TileID.Platforms)  style = tileY / 18;
+            if (type == TileID.Platforms)  style = tileY / 18; // is there a way to simply read out the style of the tile?
 
-            WorldGen.ReplaceTile(posX, posY, type, style); // is there a way to simply read out the style of the tile?
+            WorldGen.ReplaceTile(posX, posY, type, style);
 
             if (!(type == TileID.Platforms))
             {
@@ -688,10 +689,10 @@ namespace WorldGenMod
 
         /// <summary>
         /// Checks if the rectangular area is free of any other tiles
-        /// <br/>Has an option for checking if background walls are present and another option to place some at once if missing
+        /// <br/>Has an option for checking for present background walls and another option to place some at once if missing
         /// </summary>
         /// <param name="area">The to be checked area</param>
-        /// <param name="checkWall">If the area shall be checked if background walls are present</param>
+        /// <param name="checkWall">If the area shall be checked for present background walls </param>
         /// <param name="wallType">If <i>checkWall = true</i> a value > 0 will place background walls where they are missing</param>
         public static bool CheckFree(Rectangle2P area, bool checkWall = false, int wallType = 0)
         {
@@ -1119,6 +1120,7 @@ namespace WorldGenMod
             int wall = 0; // init
             int paint = -1; // init
             int x, y;
+            bool success;
             do
             {
                 ActStep = Steps[0]; //get actual step data, to not call "Steps[0]" all the time
@@ -1138,48 +1140,48 @@ namespace WorldGenMod
                             {
                                 x = this.XAct + ActStep.add[(int)Adds.Wall][1];
                                 y = this.YAct + ActStep.add[(int)Adds.Wall][2];
-                                Func.PlaceWallArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), wall, (byte)ActStep.add[(int)Adds.Wall][3]);
+                                success = Func.PlaceWallArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), wall, (byte)ActStep.add[(int)Adds.Wall][3]);
                             }
 
                             if (ActStep.item == TileID.Banners)
                             {
-                                WorldGen.PlaceObject(this.XAct + ActStep.toAnchor.x,
-                                                     this.YAct + ActStep.toAnchor.y,
-                                                     TileID.Banners,
-                                                     style: ActStep.style); // Banner
+                                success = WorldGen.PlaceObject(this.XAct + ActStep.toAnchor.x,
+                                                               this.YAct + ActStep.toAnchor.y,
+                                                               TileID.Banners,
+                                                               style: ActStep.style); // Banner
                             }
-                            if (ActStep.item == TileID.LargePiles || ActStep.item == TileID.LargePiles2)
+                            else if (ActStep.item == TileID.LargePiles || ActStep.item == TileID.LargePiles2)
                             {
                                 if (!ActStep.add.ContainsKey((int)Adds.Piles)) break;
 
-                                Func.PlaceLargePile(this.XAct + ActStep.toAnchor.x,
-                                                    this.YAct + ActStep.toAnchor.y,
-                                                    ActStep.add[(int)Adds.Piles][1], //count
-                                                    ActStep.add[(int)Adds.Piles][0], //row
-                                                    type: (ushort)ActStep.item);
+                                success = Func.PlaceLargePile(this.XAct + ActStep.toAnchor.x,
+                                                              this.YAct + ActStep.toAnchor.y,
+                                                              ActStep.add[(int)Adds.Piles][1], //count
+                                                              ActStep.add[(int)Adds.Piles][0], //row
+                                                              type: (ushort)ActStep.item);
                             }
-                            if (ActStep.item == TileID.SmallPiles)
+                            else if (ActStep.item == TileID.SmallPiles)
                             {
                                 if (!ActStep.add.ContainsKey((int)Adds.Piles)) break;
 
-                                WorldGen.PlaceSmallPile(this.XAct + ActStep.toAnchor.x,
-                                                        this.YAct + ActStep.toAnchor.y,
-                                                        ActStep.add[(int)Adds.Piles][1], //count
-                                                        ActStep.add[(int)Adds.Piles][0]); //row
+                                success = WorldGen.PlaceSmallPile(this.XAct + ActStep.toAnchor.x,
+                                                                  this.YAct + ActStep.toAnchor.y,
+                                                                  ActStep.add[(int)Adds.Piles][1], //count
+                                                                  ActStep.add[(int)Adds.Piles][0]); //row
                             }
                             else
                             {
-                                WorldGen.PlaceTile(this.XAct + ActStep.toAnchor.x,
-                                                   this.YAct + ActStep.toAnchor.y,
-                                                   ActStep.item,
-                                                   style: ActStep.style);
+                                success = WorldGen.PlaceTile(this.XAct + ActStep.toAnchor.x,
+                                                             this.YAct + ActStep.toAnchor.y,
+                                                             ActStep.item,
+                                                             style: ActStep.style);
                             }
 
                             if (paint >= 0)
                             {
                                 x = this.XAct + ActStep.add[(int)Adds.Paint][1];
                                 y = this.YAct + ActStep.add[(int)Adds.Paint][2];
-                                Func.PaintArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), paint);
+                                success = Func.PaintArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), paint);
                             }
                         }
                         break;
@@ -1187,35 +1189,35 @@ namespace WorldGenMod
                     case (int)Cmds.WeaponRack:
                         if (Chance.Perc(ActStep.chance))
                         {
-                            Func.PlaceWeaponRack(this.XAct + ActStep.toAnchor.x,
-                                                 this.YAct + ActStep.toAnchor.y,
-                                                 wallType: wall,
-                                                 paint: paint,
-                                                 item: ActStep.item,
-                                                 direction: ActStep.style);
+                            success = Func.PlaceWeaponRack(this.XAct + ActStep.toAnchor.x,
+                                                           this.YAct + ActStep.toAnchor.y,
+                                                           wallType: wall,
+                                                           paint: paint,
+                                                           item: ActStep.item,
+                                                           direction: ActStep.style);
                         }
                         break;
 
                     case (int)Cmds.ItemFrame:
                         if (Chance.Perc(ActStep.chance))
                         {
-                            Func.PlaceItemFrame(this.XAct + ActStep.toAnchor.x,
-                                                this.YAct + ActStep.toAnchor.y,
-                                                wallType: wall,
-                                                paint: paint,
-                                                item: ActStep.item);
+                            success = Func.PlaceItemFrame(this.XAct + ActStep.toAnchor.x,
+                                                          this.YAct + ActStep.toAnchor.y,
+                                                          wallType: wall,
+                                                          paint: paint,
+                                                          item: ActStep.item);
                         }
                             break;
 
                     case (int)Cmds.BannerAndTile:
                         if (Chance.Perc(ActStep.chance) && ActStep.add.ContainsKey((int)Adds.Banner))
                         {
-                            Func.PlaceTileAndBanner(x: this.XAct + ActStep.toAnchor.x,
-                                                    y: this.YAct + ActStep.toAnchor.y,
-                                                    bannerStyle: ActStep.add[(int)Adds.Banner][0],
-                                                    tileType: ActStep.item,
-                                                    tileStyle: ActStep.style,
-                                                    paintType: paint);
+                            success = Func.PlaceTileAndBanner(x: this.XAct + ActStep.toAnchor.x,
+                                                              y: this.YAct + ActStep.toAnchor.y,
+                                                              bannerStyle: ActStep.add[(int)Adds.Banner][0],
+                                                              tileType: ActStep.item,
+                                                              tileStyle: ActStep.style,
+                                                              paintType: paint);
                         }
                         break;
 

@@ -2961,6 +2961,44 @@ namespace WorldGenMod.Structures.Ice
 
                 case 6: // prison / torture room with hanging skeletons
 
+                    // preparing skelton lists
+                    List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_WallSkeletons =
+                    [
+                        (TileID.Painting3X3, 16, (3,3), (1,-1), 75, []), // wall skeleton
+                        (TileID.Painting3X3, 17, (3,3), (1,-1), 75, [])  // hanging skeleton
+                    ];
+                    List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_LargePiles =
+                    [
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 0] } }),  // BonePile1
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 1] } }),  // BonePile2
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 2] } }),  // BonePile3
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 3] } }),  // BonePile4
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 4] } }),  // BonePile5
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 5] } }),  // BonePile6
+                        (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 6] } }),  // Skeleton Pierced by a Sword
+                        (TileID.LargePiles2, 0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 13] } })  // a Dead Body covered in Web
+                    ];
+                    List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_SmallPiles =
+                    [
+                        (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 6] } }),  // BonePile1
+                        (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 7] } }),  // BonePile2
+                        (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 8] } }),  // BonePile3
+                        (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 9] } }),  // BonePile4
+                        (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 10] } })  // BonePile5
+                    ];
+                    List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_SinglePiles =
+                    [
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 12] } }),  // BonePile1
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 13] } }),  // BonePile2
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 14] } }),  // BonePile3
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 15] } }),  // BonePile4
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 16] } }),  // BonePile5
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 17] } }),  // BonePile6
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 18] } }),  // BonePile7
+                        (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 19] } })   // BonePile8
+                    ];
+
+
                     // ground floor
                     if (!doors[Door.Down].doorExist)
                     {
@@ -2989,42 +3027,6 @@ namespace WorldGenMod.Structures.Ice
 
                             // fill the prison with skeletons!
                             automat = new((freeR.X0, freeR.Y1), (int)LineAutomat.Dirs.xPlus);
-                            
-                            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_WallSkeletons =
-                            [
-                                (TileID.Painting3X3, 16, (3,3), (1,-1), 75, []), // wall skeleton
-                                (TileID.Painting3X3, 17, (3,3), (1,-1), 75, [])  // hanging skeleton
-                            ];
-                            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_LargePiles =
-                            [
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 0] } }),  // BonePile1
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 1] } }),  // BonePile2
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 2] } }),  // BonePile3
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 3] } }),  // BonePile4
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 4] } }),  // BonePile5
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 5] } }),  // BonePile6
-                                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 6] } }),  // Skeleton Pierced by a Sword
-                                (TileID.LargePiles2, 0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 13] } })  // a Dead Body covered in Web
-                            ];
-                            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_SmallPiles =
-                            [
-                                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 6] } }),  // BonePile1
-                                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 7] } }),  // BonePile2
-                                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 8] } }),  // BonePile3
-                                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 9] } }),  // BonePile4
-                                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 10] } })  // BonePile5
-                            ];
-                            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_SinglePiles =
-                            [
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 12] } }),  // BonePile1
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 13] } }),  // BonePile2
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 14] } }),  // BonePile3
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 15] } }),  // BonePile4
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 16] } }),  // BonePile5
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 17] } }),  // BonePile6
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 18] } }),  // BonePile7
-                                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 19] } })   // BonePile8
-                            ];
 
                             actX = freeR.X0;
                             int randNum;
@@ -3069,8 +3071,7 @@ namespace WorldGenMod.Structures.Ice
                             if (freeR.YTiles >= 6)
                             {
                                 y = freeR.Y1 - 5;
-                                if (freeR.XTiles >= 14)   area1 = new Rectangle2P(bricksLeftEnd - 1, y, bricksRightStart + 1, y, "dummyString");
-                                else   area1 = new Rectangle2P(bricksLeftEnd, y, bricksRightStart, y, "dummyString");
+                                area1 = new Rectangle2P(bricksLeftEnd, y, bricksRightStart, y, "dummyString");
 
                                 for (int i = area1.X0; i <= area1.X1; i++)
                                 {
@@ -3086,15 +3087,9 @@ namespace WorldGenMod.Structures.Ice
                         // make prison cells on the left and the right
                         if (freeR.YTiles >= 5)
                         {
-                            int bricksLeftEnd    = doors[Door.Up].doorRect.X0 - 1;
-                            int bricksRightStart = doors[Door.Up].doorRect.X1 + 1;
+                            int bricksLeftEnd    = doors[Door.Up].doorRect.X0; // lamps will hang in the door area
+                            int bricksRightStart = doors[Door.Up].doorRect.X1; // lamps will hang in the door area
                             int brickHeight = freeR.Y1 - 4;
-
-                            if (freeR.XTiles <= 12)
-                            {
-                                bricksLeftEnd++;
-                                bricksRightStart--; // lamps will hang in the door area
-                            }
 
                             y = brickHeight;
                             for (int i = freeR.X0; i <= bricksLeftEnd; i++)
@@ -3116,20 +3111,109 @@ namespace WorldGenMod.Structures.Ice
                             }
 
                             placed = false; //init
-                            if (Chance.Perc(75))   placed = WorldGen.PlaceTile(bricksLeftEnd, brickHeight + 1, TileID.HangingLanterns, style: 2); // Caged Lantern
-                            if (placed)   Func.UnlightLantern(bricksLeftEnd, brickHeight + 1);
+                            x = bricksLeftEnd;
+                            y = brickHeight + 1;
+                            if (Chance.Perc(75))
+                            {
+                                placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                                if (placed) Func.UnlightLantern(x, y);
+                            }
+                            else if (Chance.Perc(75))
+                            {
+                                if (Chance.Simple()) WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                                else                 WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+                            }
 
                             placed = false; //init
-                            if (Chance.Perc(75))   placed = WorldGen.PlaceTile(bricksRightStart, brickHeight + 1, TileID.HangingLanterns, style: 2); // Caged Lantern
-                            if (placed)   Func.UnlightLantern(bricksRightStart, brickHeight + 1);
+                            x = bricksRightStart;
+                            y = brickHeight + 1;
+                            if (Chance.Perc(75))
+                            {
+                                placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                                if (placed) Func.UnlightLantern(x, y);
+                            }
+                            else if (Chance.Perc(75))
+                            {
+                                if (Chance.Simple()) WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                                else                 WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+                            }
 
                             Func.SlopeTile(bricksLeftEnd, brickHeight, (int)Func.SlopeVal.UpRight);
                             Func.SlopeTile(bricksRightStart, brickHeight, (int)Func.SlopeVal.UpLeft);
 
                             Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, bricksLeftEnd - 2, freeR.Y1, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
                             Func.PlaceWallArea(new Rectangle2P(bricksRightStart + 2, brickHeight + 1, freeR.X1, freeR.Y1, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
-                        
-                            //TODO: fill cell with bones
+
+                            //fill cell with bones
+                            int randNum, limX;
+                            (int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) prisonItem;
+                            for (int i = 1; i <= 2; i++)
+                            {
+                                if (i == 1)
+                                {
+                                    actX = freeR.X0;
+                                    limX = bricksLeftEnd - 2;
+                                    automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
+                                }
+                                else
+                                {
+                                    actX = bricksRightStart + 2;
+                                    limX = freeR.X1;
+                                    automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
+                                }
+                                
+
+                                while (actX <= limX)
+                                {
+                                    switch (limX - actX) //available space
+                                    {
+                                        case 0: // 1 Tile
+                                            randNum = 3; // only SinglePiles (nothing else fits anyway)
+                                            break;
+                                        case 1: // 2 Tiles
+                                            randNum = 2;
+                                            break;
+                                        case 2: // 3 Tiles
+                                            randNum = WorldGen.genRand.Next(2); // prefer bigger Piles
+                                            break;
+                                        default: // more than 3
+                                            randNum = WorldGen.genRand.Next(4); // all prisonItem categories
+                                            break;
+                                    }
+                                    randNum = WorldGen.genRand.Next(4); // all prisonItem categories
+                                    switch (randNum)
+                                    {
+                                        case 0:
+                                            prisonItem = prisonItems_WallSkeletons[WorldGen.genRand.Next(prisonItems_WallSkeletons.Count)];
+                                            break;
+                                        case 1:
+                                            prisonItem = prisonItems_LargePiles[WorldGen.genRand.Next(prisonItems_LargePiles.Count)];
+                                            break;
+                                        case 2:
+                                            prisonItem = prisonItems_SmallPiles[WorldGen.genRand.Next(prisonItems_SmallPiles.Count)];
+                                            break;
+                                        default:
+                                            prisonItem = prisonItems_SinglePiles[WorldGen.genRand.Next(prisonItems_SinglePiles.Count)];
+                                            break;
+                                    }
+                                    if (prisonItem.TileID == TileID.Painting3X3 && (prisonItem.style == 16 || prisonItem.style == 17))
+                                    {
+                                        prisonItem.toAnchor.y -= WorldGen.genRand.Next(2); // randomly hang wall skeletons 1 tile higher
+                                    }
+
+                                    if ((actX - 1) + prisonItem.size.x <= limX)
+                                    {
+                                        automat.Steps.Add(((int)LineAutomat.Cmds.Tile, prisonItem.TileID, prisonItem.style, prisonItem.size, prisonItem.toAnchor, prisonItem.chance, prisonItem.add));
+                                        actX += prisonItem.size.x;
+                                    }
+                                    else
+                                    {
+                                        automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
+                                        actX += 1;
+                                    }
+                                }
+                                automat.Start();
+                            }
                         }
                     }
 
