@@ -2998,17 +2998,20 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 19] } })   // BonePile8
                     ];
 
+                    int brickHeight; // the height of the topmost row of iron bricks of a prison cell
 
                     // ground floor
                     if (!doors[Door.Down].doorExist)
                     {
+                        brickHeight = freeR.Y1 - 4;
+
                         // make a big prison, covering the whole bottom part of the room
                         if (freeR.YTiles >= 5)
                         {
                             int bricksLeftEnd = freeR.XCenter - 1;
                             int bricksRightStart = freeR.XCenter + 2;
 
-                            y = freeR.Y1 - 4;
+                            y = brickHeight;
                             for (int i = freeR.X0; i <= bricksLeftEnd; i++)
                             {
                                 WorldGen.PlaceTile(i, y, TileID.IronBrick);
@@ -3023,7 +3026,7 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.paintTile(bricksLeftEnd + 1, y, (byte)Deco[S.StylePaint]);
                             WorldGen.paintTile(bricksLeftEnd + 2, y, (byte)Deco[S.StylePaint]);
 
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, freeR.Y1 - 3, freeR.X1, freeR.Y1, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, freeR.X1, freeR.Y1, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
 
                             // fill the prison with skeletons!
                             automat = new((freeR.X0, freeR.Y1), (int)LineAutomat.Dirs.xPlus);
@@ -3070,7 +3073,7 @@ namespace WorldGenMod.Structures.Ice
                             // put platform above the trap door
                             if (freeR.YTiles >= 6)
                             {
-                                y = freeR.Y1 - 5;
+                                y = brickHeight - 1;
                                 area1 = new Rectangle2P(bricksLeftEnd, y, bricksRightStart, y, "dummyString");
 
                                 for (int i = area1.X0; i <= area1.X1; i++)
@@ -3080,16 +3083,22 @@ namespace WorldGenMod.Structures.Ice
                                 Func.SlopeTile(area1.X0, y, (int)Func.SlopeVal.UpLeft);
                                 Func.SlopeTile(area1.X1, y, (int)Func.SlopeVal.UpRight);
                             }
+
+                            brickHeight -= 5; // brick height of where the next "prison cells left and right" can start
                         }
                     }
                     else
                     {
+                        brickHeight = freeR.Y1 - 4;
+                    }
+
+                    while (freeR.Y0 <= brickHeight)
+                    {
                         // make prison cells on the left and the right
                         if (freeR.YTiles >= 5)
                         {
-                            int bricksLeftEnd    = doors[Door.Up].doorRect.X0; // lamps will hang in the door area
+                            int bricksLeftEnd = doors[Door.Up].doorRect.X0; // lamps will hang in the door area
                             int bricksRightStart = doors[Door.Up].doorRect.X1; // lamps will hang in the door area
-                            int brickHeight = freeR.Y1 - 4;
 
                             y = brickHeight;
                             for (int i = freeR.X0; i <= bricksLeftEnd; i++)
@@ -3104,45 +3113,80 @@ namespace WorldGenMod.Structures.Ice
                             }
 
                             // spikes "doors"
-                            for (int j = freeR.Y1; j >= brickHeight + 1; j--)
+                            for (int j = brickHeight + 1; j <= brickHeight + 4; j++)
                             {
-                                WorldGen.PlaceTile(bricksLeftEnd    - 1, j, TileID.Spikes);
+                                WorldGen.PlaceTile(bricksLeftEnd - 1, j, TileID.Spikes);
                                 WorldGen.PlaceTile(bricksRightStart + 1, j, TileID.Spikes);
                             }
 
-                            placed = false; //init
+                            // create ledges
+                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, bricksLeftEnd - 2, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
+                            Func.PlaceWallArea(new Rectangle2P(bricksRightStart + 2, brickHeight + 1, freeR.X1, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
+
+                            // put lanterns or banners on the ledge
+                            bool placedLeft = false; //init
                             x = bricksLeftEnd;
                             y = brickHeight + 1;
-                            if (Chance.Perc(75))
+                            if (Chance.Perc(50))
                             {
-                                placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
-                                if (placed) Func.UnlightLantern(x, y);
+                                placedLeft = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                                if (placedLeft) Func.UnlightLantern(x, y);
                             }
-                            else if (Chance.Perc(75))
+                            else if (Chance.Perc(50))
                             {
-                                if (Chance.Simple()) WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
-                                else                 WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+                                if (Chance.Simple()) placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                                else placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
                             }
 
-                            placed = false; //init
+                            bool placedRight = false; //init
                             x = bricksRightStart;
                             y = brickHeight + 1;
-                            if (Chance.Perc(75))
+                            if (Chance.Perc(50))
                             {
-                                placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
-                                if (placed) Func.UnlightLantern(x, y);
+                                placedRight = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                                if (placedRight) Func.UnlightLantern(x, y);
                             }
-                            else if (Chance.Perc(75))
+                            else if (Chance.Perc(50))
                             {
-                                if (Chance.Simple()) WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
-                                else                 WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+                                if (Chance.Simple()) placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                                else placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
                             }
 
                             Func.SlopeTile(bricksLeftEnd, brickHeight, (int)Func.SlopeVal.UpRight);
                             Func.SlopeTile(bricksRightStart, brickHeight, (int)Func.SlopeVal.UpLeft);
 
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, bricksLeftEnd - 2, freeR.Y1, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
-                            Func.PlaceWallArea(new Rectangle2P(bricksRightStart + 2, brickHeight + 1, freeR.X1, freeR.Y1, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
+                            // put deco in between the cells
+                            // first check if there would be enough space to hang a skeleton
+                            x = 0;
+                            if (!placedLeft && placedRight) x = bricksLeftEnd + 1;
+                            else if (placedLeft && !placedRight) x = bricksLeftEnd + 2;
+                            else if (!placedLeft && !placedRight) x = bricksLeftEnd + WorldGen.genRand.Next(1, 3);
+
+                            
+                            if (x > 0 && Chance.Perc(70))
+                            {
+                                y = brickHeight + WorldGen.genRand.Next(2, 4);
+                                int skeletonStyle = WorldGen.genRand.Next(16, 18); // 16 = wall skeleton, 17 = hanging skeleton
+                                placed = WorldGen.PlaceTile(x, y, TileID.Painting3X3, style: skeletonStyle);
+                                if (placed)
+                                { 
+                                    if (skeletonStyle == 17) WorldGen.PlaceTile(x, y - 2, TileID.Chain);
+                                    if (skeletonStyle == 16)
+                                    { 
+                                        if (!Main.tile[x - 1, y - 2].HasTile) WorldGen.PlaceTile(x - 1, y - 2, TileID.Chain);
+                                        if (!Main.tile[x + 1, y - 2].HasTile) WorldGen.PlaceTile(x + 1, y - 2, TileID.Chain);
+                                    }
+                                }
+                            }
+                            else if (Chance.Perc(50))
+                            {
+                                x = bricksLeftEnd + 1;
+                                y = brickHeight + 2;
+                                placed = WorldGen.PlaceObject(x, y, TileID.TatteredWoodSign);
+                                if (placed) Func.PaintArea(new Rectangle2P(x, y, 2, 2), Deco[S.StylePaint]);
+                            }
+
+
 
                             //fill cell with bones
                             int randNum, limX;
@@ -3161,7 +3205,7 @@ namespace WorldGenMod.Structures.Ice
                                     limX = freeR.X1;
                                     automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
                                 }
-                                
+
 
                                 while (actX <= limX)
                                 {
@@ -3215,7 +3259,11 @@ namespace WorldGenMod.Structures.Ice
                                 automat.Start();
                             }
                         }
+
+                        brickHeight -= 5;
                     }
+                
+                    
 
                     //WorldGen.PlaceTile(freeR.XCenter, freeR.YCenter, TileID.Painting3X3, style: 16);
                     //WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y0 + 1, TileID.Painting3X3, style: 16); // wall skeleton
