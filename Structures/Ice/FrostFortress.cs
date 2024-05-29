@@ -3095,175 +3095,189 @@ namespace WorldGenMod.Structures.Ice
                     while (freeR.Y0 <= brickHeight)
                     {
                         // make prison cells on the left and the right
-                        if (freeR.YTiles >= 5)
+                        int bricksLeftEnd = doors[Door.Up].doorRect.X0; // lamps will hang in the door area
+                        int bricksRightStart = doors[Door.Up].doorRect.X1; // lamps will hang in the door area
+
+                        y = brickHeight;
+                        for (int i = freeR.X0; i <= bricksLeftEnd; i++)
                         {
-                            int bricksLeftEnd = doors[Door.Up].doorRect.X0; // lamps will hang in the door area
-                            int bricksRightStart = doors[Door.Up].doorRect.X1; // lamps will hang in the door area
+                            WorldGen.PlaceTile(i, y, TileID.IronBrick);
+                            WorldGen.paintTile(i, y, (byte)Deco[S.StylePaint]);
+                        }
+                        for (int i = bricksRightStart; i <= freeR.X1; i++)
+                        {
+                            WorldGen.PlaceTile(i, y, TileID.IronBrick);
+                            WorldGen.paintTile(i, y, (byte)Deco[S.StylePaint]);
+                        }
 
-                            y = brickHeight;
-                            for (int i = freeR.X0; i <= bricksLeftEnd; i++)
-                            {
-                                WorldGen.PlaceTile(i, y, TileID.IronBrick);
-                                WorldGen.paintTile(i, y, (byte)Deco[S.StylePaint]);
-                            }
-                            for (int i = bricksRightStart; i <= freeR.X1; i++)
-                            {
-                                WorldGen.PlaceTile(i, y, TileID.IronBrick);
-                                WorldGen.paintTile(i, y, (byte)Deco[S.StylePaint]);
-                            }
+                        // spikes "doors"
+                        for (int j = brickHeight + 1; j <= brickHeight + 4; j++)
+                        {
+                            WorldGen.PlaceTile(bricksLeftEnd - 1, j, TileID.Spikes);
+                            WorldGen.PlaceTile(bricksRightStart + 1, j, TileID.Spikes);
+                        }
 
-                            // spikes "doors"
-                            for (int j = brickHeight + 1; j <= brickHeight + 4; j++)
-                            {
-                                WorldGen.PlaceTile(bricksLeftEnd - 1, j, TileID.Spikes);
-                                WorldGen.PlaceTile(bricksRightStart + 1, j, TileID.Spikes);
-                            }
+                        // create ledges
+                        Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, bricksLeftEnd - 2, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
+                        Func.PlaceWallArea(new Rectangle2P(bricksRightStart + 2, brickHeight + 1, freeR.X1, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
 
-                            // create ledges
-                            Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, bricksLeftEnd - 2, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
-                            Func.PlaceWallArea(new Rectangle2P(bricksRightStart + 2, brickHeight + 1, freeR.X1, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
+                        // put lanterns or banners on the ledge
+                        bool placedLeft = false; //init
+                        x = bricksLeftEnd;
+                        y = brickHeight + 1;
+                        if (Chance.Perc(50))
+                        {
+                            placedLeft = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                            if (placedLeft) Func.UnlightLantern(x, y);
+                        }
+                        else if (Chance.Perc(50))
+                        {
+                            if (Chance.Simple()) placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                            else placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+                        }
 
-                            // put lanterns or banners on the ledge
-                            bool placedLeft = false; //init
-                            x = bricksLeftEnd;
-                            y = brickHeight + 1;
-                            if (Chance.Perc(50))
-                            {
-                                placedLeft = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
-                                if (placedLeft) Func.UnlightLantern(x, y);
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                if (Chance.Simple()) placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
-                                else placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
-                            }
+                        bool placedRight = false; //init
+                        x = bricksRightStart;
+                        y = brickHeight + 1;
+                        if (Chance.Perc(50))
+                        {
+                            placedRight = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                            if (placedRight) Func.UnlightLantern(x, y);
+                        }
+                        else if (Chance.Perc(50))
+                        {
+                            if (Chance.Simple()) placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                            else placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+                        }
 
-                            bool placedRight = false; //init
-                            x = bricksRightStart;
-                            y = brickHeight + 1;
-                            if (Chance.Perc(50))
-                            {
-                                placedRight = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
-                                if (placedRight) Func.UnlightLantern(x, y);
-                            }
-                            else if (Chance.Perc(50))
-                            {
-                                if (Chance.Simple()) placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
-                                else placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
-                            }
+                        Func.SlopeTile(bricksLeftEnd, brickHeight, (int)Func.SlopeVal.UpRight);
+                        Func.SlopeTile(bricksRightStart, brickHeight, (int)Func.SlopeVal.UpLeft);
 
-                            Func.SlopeTile(bricksLeftEnd, brickHeight, (int)Func.SlopeVal.UpRight);
-                            Func.SlopeTile(bricksRightStart, brickHeight, (int)Func.SlopeVal.UpLeft);
-
-                            // put deco in between the cells
-                            // first check if there would be enough space to hang a skeleton
-                            x = 0;
-                            if (!placedLeft && placedRight) x = bricksLeftEnd + 1;
-                            else if (placedLeft && !placedRight) x = bricksLeftEnd + 2;
-                            else if (!placedLeft && !placedRight) x = bricksLeftEnd + WorldGen.genRand.Next(1, 3);
+                        // put deco in between the cells
+                        // first check if there would be enough space to hang a skeleton
+                        x = 0;
+                        if (!placedLeft && placedRight) x = bricksLeftEnd + 1;
+                        else if (placedLeft && !placedRight) x = bricksLeftEnd + 2;
+                        else if (!placedLeft && !placedRight) x = bricksLeftEnd + WorldGen.genRand.Next(1, 3);
 
                             
-                            if (x > 0 && Chance.Perc(70))
-                            {
-                                y = brickHeight + WorldGen.genRand.Next(2, 4);
-                                int skeletonStyle = WorldGen.genRand.Next(16, 18); // 16 = wall skeleton, 17 = hanging skeleton
-                                placed = WorldGen.PlaceTile(x, y, TileID.Painting3X3, style: skeletonStyle);
-                                if (placed)
+                        if (x > 0 && Chance.Perc(70))
+                        {
+                            y = brickHeight + WorldGen.genRand.Next(2, 4);
+                            int skeletonStyle = WorldGen.genRand.Next(16, 18); // 16 = wall skeleton, 17 = hanging skeleton
+                            placed = WorldGen.PlaceTile(x, y, TileID.Painting3X3, style: skeletonStyle);
+                            if (placed)
+                            { 
+                                if (skeletonStyle == 17) WorldGen.PlaceTile(x, y - 2, TileID.Chain);
+                                if (skeletonStyle == 16)
                                 { 
-                                    if (skeletonStyle == 17) WorldGen.PlaceTile(x, y - 2, TileID.Chain);
-                                    if (skeletonStyle == 16)
-                                    { 
-                                        if (!Main.tile[x - 1, y - 2].HasTile) WorldGen.PlaceTile(x - 1, y - 2, TileID.Chain);
-                                        if (!Main.tile[x + 1, y - 2].HasTile) WorldGen.PlaceTile(x + 1, y - 2, TileID.Chain);
-                                    }
+                                    if (!Main.tile[x - 1, y - 2].HasTile) WorldGen.PlaceTile(x - 1, y - 2, TileID.Chain);
+                                    if (!Main.tile[x + 1, y - 2].HasTile) WorldGen.PlaceTile(x + 1, y - 2, TileID.Chain);
                                 }
                             }
-                            else if (Chance.Perc(50))
+                        }
+                        else if (Chance.Perc(50))
+                        {
+                            x = bricksLeftEnd + 1;
+                            y = brickHeight + 2;
+                            placed = WorldGen.PlaceObject(x, y, TileID.TatteredWoodSign);
+                            if (placed) Func.PaintArea(new Rectangle2P(x, y, 2, 2), Deco[S.StylePaint]);
+                        }
+
+
+
+                        //fill cell with bones
+                        int randNum, limX;
+                        (int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) prisonItem;
+                        for (int i = 1; i <= 2; i++)
+                        {
+                            if (i == 1)
                             {
-                                x = bricksLeftEnd + 1;
-                                y = brickHeight + 2;
-                                placed = WorldGen.PlaceObject(x, y, TileID.TatteredWoodSign);
-                                if (placed) Func.PaintArea(new Rectangle2P(x, y, 2, 2), Deco[S.StylePaint]);
+                                actX = freeR.X0;
+                                limX = bricksLeftEnd - 2;
+                                automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
+                            }
+                            else
+                            {
+                                actX = bricksRightStart + 2;
+                                limX = freeR.X1;
+                                automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
                             }
 
 
-
-                            //fill cell with bones
-                            int randNum, limX;
-                            (int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) prisonItem;
-                            for (int i = 1; i <= 2; i++)
+                            while (actX <= limX)
                             {
-                                if (i == 1)
+                                switch (limX - actX) //available space
                                 {
-                                    actX = freeR.X0;
-                                    limX = bricksLeftEnd - 2;
-                                    automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
+                                    case 0: // 1 Tile
+                                        randNum = 3; // only SinglePiles (nothing else fits anyway)
+                                        break;
+                                    case 1: // 2 Tiles
+                                        randNum = 2;
+                                        break;
+                                    case 2: // 3 Tiles
+                                        randNum = WorldGen.genRand.Next(2); // prefer bigger Piles
+                                        break;
+                                    default: // more than 3
+                                        randNum = WorldGen.genRand.Next(4); // all prisonItem categories
+                                        break;
+                                }
+                                randNum = WorldGen.genRand.Next(4); // all prisonItem categories
+                                switch (randNum)
+                                {
+                                    case 0:
+                                        prisonItem = prisonItems_WallSkeletons[WorldGen.genRand.Next(prisonItems_WallSkeletons.Count)];
+                                        break;
+                                    case 1:
+                                        prisonItem = prisonItems_LargePiles[WorldGen.genRand.Next(prisonItems_LargePiles.Count)];
+                                        break;
+                                    case 2:
+                                        prisonItem = prisonItems_SmallPiles[WorldGen.genRand.Next(prisonItems_SmallPiles.Count)];
+                                        break;
+                                    default:
+                                        prisonItem = prisonItems_SinglePiles[WorldGen.genRand.Next(prisonItems_SinglePiles.Count)];
+                                        break;
+                                }
+                                if (prisonItem.TileID == TileID.Painting3X3 && (prisonItem.style == 16 || prisonItem.style == 17))
+                                {
+                                    prisonItem.toAnchor.y -= WorldGen.genRand.Next(2); // randomly hang wall skeletons 1 tile higher
+                                }
+
+                                if ((actX - 1) + prisonItem.size.x <= limX)
+                                {
+                                    automat.Steps.Add(((int)LineAutomat.Cmds.Tile, prisonItem.TileID, prisonItem.style, prisonItem.size, prisonItem.toAnchor, prisonItem.chance, prisonItem.add));
+                                    actX += prisonItem.size.x;
                                 }
                                 else
                                 {
-                                    actX = bricksRightStart + 2;
-                                    limX = freeR.X1;
-                                    automat = new((actX, brickHeight + 4), (int)LineAutomat.Dirs.xPlus);
+                                    automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
+                                    actX += 1;
                                 }
-
-
-                                while (actX <= limX)
-                                {
-                                    switch (limX - actX) //available space
-                                    {
-                                        case 0: // 1 Tile
-                                            randNum = 3; // only SinglePiles (nothing else fits anyway)
-                                            break;
-                                        case 1: // 2 Tiles
-                                            randNum = 2;
-                                            break;
-                                        case 2: // 3 Tiles
-                                            randNum = WorldGen.genRand.Next(2); // prefer bigger Piles
-                                            break;
-                                        default: // more than 3
-                                            randNum = WorldGen.genRand.Next(4); // all prisonItem categories
-                                            break;
-                                    }
-                                    randNum = WorldGen.genRand.Next(4); // all prisonItem categories
-                                    switch (randNum)
-                                    {
-                                        case 0:
-                                            prisonItem = prisonItems_WallSkeletons[WorldGen.genRand.Next(prisonItems_WallSkeletons.Count)];
-                                            break;
-                                        case 1:
-                                            prisonItem = prisonItems_LargePiles[WorldGen.genRand.Next(prisonItems_LargePiles.Count)];
-                                            break;
-                                        case 2:
-                                            prisonItem = prisonItems_SmallPiles[WorldGen.genRand.Next(prisonItems_SmallPiles.Count)];
-                                            break;
-                                        default:
-                                            prisonItem = prisonItems_SinglePiles[WorldGen.genRand.Next(prisonItems_SinglePiles.Count)];
-                                            break;
-                                    }
-                                    if (prisonItem.TileID == TileID.Painting3X3 && (prisonItem.style == 16 || prisonItem.style == 17))
-                                    {
-                                        prisonItem.toAnchor.y -= WorldGen.genRand.Next(2); // randomly hang wall skeletons 1 tile higher
-                                    }
-
-                                    if ((actX - 1) + prisonItem.size.x <= limX)
-                                    {
-                                        automat.Steps.Add(((int)LineAutomat.Cmds.Tile, prisonItem.TileID, prisonItem.style, prisonItem.size, prisonItem.toAnchor, prisonItem.chance, prisonItem.add));
-                                        actX += prisonItem.size.x;
-                                    }
-                                    else
-                                    {
-                                        automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
-                                        actX += 1;
-                                    }
-                                }
-                                automat.Start();
                             }
+                            automat.Start();
                         }
 
                         brickHeight -= 5;
                     }
-                
-                    
+
+                    //ceiling stuff
+                    switch (freeR.YTiles % 5) //every cell is 5 Tiles high
+                    {
+                        case 1: // put spikes
+                            y = freeR.Y0;
+                            for (int i = freeR.X0; i <= doors[Door.Up].doorRect.X0 - 1; i++)
+                            {
+                                WorldGen.PlaceTile(i, y, TileID.Spikes);
+                            }
+                            for (int i = doors[Door.Up].doorRect.X1 + 1; i <= freeR.X1; i++)
+                            {
+                                WorldGen.PlaceTile(i, y, TileID.Spikes);
+                            }
+                            break;
+
+                        case 2: // put skeletons
+                            break;
+                    }
 
                     //WorldGen.PlaceTile(freeR.XCenter, freeR.YCenter, TileID.Painting3X3, style: 16);
                     //WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y0 + 1, TileID.Painting3X3, style: 16); // wall skeleton
