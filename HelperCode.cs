@@ -13,6 +13,8 @@ using Terraria.GameContent.Tile_Entities;
 using Microsoft.VisualBasic;
 using Terraria.Achievements;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Immutable;
+using static WorldGenMod.LineAutomat;
 
 namespace WorldGenMod
 {
@@ -521,28 +523,34 @@ namespace WorldGenMod
         /// <param name="type">TileID</param>
         /// <param name="style">Specification of the TileID (f.ex. TileID 215 (Campfire) -> style 3 = Frozen Campfire)</param>
         /// <param name="maxTry">Maximum count of tries to place the object</param>
-        /// <param name="chance">Chance of the part to be actually placed (1% .. chance .. 100%) </param>
+        /// <param name="chance">Chance of the part to be actually placed (0% .. chance .. 100%) </param>
+        /// <param name="add"><br/>Additional data arranged as dictionary of "code" keys and "data" value pairs. Uses so far: 
+        ///              <br/>Key "Piles" - Placing (large/small) piles: <br/> -> [0] = XSprite (count), [1] = YSprite (row)
+        ///              <br/>Key "CheckFree" - check if the object sprite actually stays inside "area": <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
         ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
-        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, Rectangle2P blockedArea, ushort type, int style = 0, byte maxTry = 5, byte chance = 100)
+        public static (bool success, int xPlace, int yPlace) TryPlaceTile(Rectangle2P area, Rectangle2P blockedArea, ushort type, int style = 0, byte maxTry = 5, byte chance = 100, Dictionary<String, List<int>> add = null)
         {
             if (chance < 100)
             {
                 if (!Chance.Perc(chance)) return (false, 0, 0);
             }
-                
+            if (add is not null) if ((type == TileID.LargePiles || type == TileID.LargePiles2 || type == TileID.SmallPiles) && !add.ContainsKey("Piles")) return (false, 0, 0);
 
             bool randomizeX = area.YTiles == 1;
             bool considerBlockedArea = !(blockedArea.IsEmpty());
+            bool checkFree = false;// = add.ContainsKey("CheckFree");
+            if (add is not null) checkFree = add.ContainsKey("CheckFree");
             bool placementPosBlocked;
 
-            int x, y, actTry = 0;
+            int x, y, actTry = 0, actRandPos;
             Tile actTile;
 
             do
             {
                 // randomize placement position
+                actRandPos = 0;
                 do
                 {
                     if (randomizeX)
@@ -558,6 +566,14 @@ namespace WorldGenMod
 
                     if (considerBlockedArea) placementPosBlocked = blockedArea.Contains(x, y);
                     else placementPosBlocked = false;
+
+                    if (checkFree && !placementPosBlocked) // first check if it (still) makes sense to check object sprite staying inside "area"
+                    {
+                        placementPosBlocked = !CheckFree(new Rectangle2P(x - add["CheckFree"][0], y - add["CheckFree"][2], x + add["CheckFree"][1], y + add["CheckFree"][3]));
+                    }
+
+                    actRandPos++;
+                    if( actRandPos > 25) return (false, 0, 0); //emergency break out to prevent an infinite loop
                 }
                 while ( placementPosBlocked);
 
@@ -567,7 +583,9 @@ namespace WorldGenMod
                 if (!Main.tile[x, y].HasTile)
                 {
                     if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
-                    if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
+                    else if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
+                    else if(type == TileID.LargePiles || type == TileID.LargePiles2) PlaceLargePile(x, y, add["Piles"][0], add["Piles"][1], type: type);
+                    else if(type == TileID.SmallPiles) WorldGen.PlaceSmallPile(x, y, add["Piles"][0], add["Piles"][1]);
                     else WorldGen.PlaceTile(x, y, type, style: style);
 
                     // check placement

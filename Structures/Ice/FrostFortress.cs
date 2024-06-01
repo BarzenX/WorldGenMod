@@ -17,6 +17,8 @@ using System.Collections;
 using log4net.Core;
 using System.IO.Pipelines;
 using static WorldGenMod.LineAutomat;
+using System.Drawing;
+using System.Threading.Channels;
 
 //TODO: sometimes the FrostFortress creates extremely slow - supposedly because of the frequent PlaceTile calls...what to do?
 
@@ -2997,6 +2999,13 @@ namespace WorldGenMod.Structures.Ice
                         (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 18] } }),  // BonePile7
                         (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 19] } })   // BonePile8
                     ];
+                    List<List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)>> prisonItems_all =
+                    [
+                        prisonItems_WallSkeletons,
+                        prisonItems_LargePiles,
+                        prisonItems_SmallPiles,
+                        prisonItems_SinglePiles
+                    ];
 
                     int brickHeight; // the height of the topmost row of iron bricks of a prison cell
 
@@ -3167,12 +3176,18 @@ namespace WorldGenMod.Structures.Ice
                             int skeletonStyle = WorldGen.genRand.Next(16, 18); // 16 = wall skeleton, 17 = hanging skeleton
                             placed = WorldGen.PlaceTile(x, y, TileID.Painting3X3, style: skeletonStyle);
                             if (placed)
-                            { 
-                                if (skeletonStyle == 17) WorldGen.PlaceTile(x, y - 2, TileID.Chain);
-                                if (skeletonStyle == 16)
-                                { 
-                                    if (!Main.tile[x - 1, y - 2].HasTile) WorldGen.PlaceTile(x - 1, y - 2, TileID.Chain);
-                                    if (!Main.tile[x + 1, y - 2].HasTile) WorldGen.PlaceTile(x + 1, y - 2, TileID.Chain);
+                            {
+                                for (int j = y - 2; j >= brickHeight; j--)
+                                {
+                                    if (skeletonStyle == 17)
+                                    {
+                                        if (!Main.tile[x, j].HasTile) WorldGen.PlaceTile(x, j, TileID.Chain);
+                                    }
+                                    if (skeletonStyle == 16)
+                                    {
+                                        if (!Main.tile[x - 1, j].HasTile) WorldGen.PlaceTile(x - 1, j, TileID.Chain);
+                                        if (!Main.tile[x + 1, j].HasTile) WorldGen.PlaceTile(x + 1, j, TileID.Chain);
+                                    }
                                 }
                             }
                         }
@@ -3207,21 +3222,6 @@ namespace WorldGenMod.Structures.Ice
 
                             while (actX <= limX)
                             {
-                                switch (limX - actX) //available space
-                                {
-                                    case 0: // 1 Tile
-                                        randNum = 3; // only SinglePiles (nothing else fits anyway)
-                                        break;
-                                    case 1: // 2 Tiles
-                                        randNum = 2;
-                                        break;
-                                    case 2: // 3 Tiles
-                                        randNum = WorldGen.genRand.Next(2); // prefer bigger Piles
-                                        break;
-                                    default: // more than 3
-                                        randNum = WorldGen.genRand.Next(4); // all prisonItem categories
-                                        break;
-                                }
                                 randNum = WorldGen.genRand.Next(4); // all prisonItem categories
                                 switch (randNum)
                                 {
@@ -3276,6 +3276,31 @@ namespace WorldGenMod.Structures.Ice
                             break;
 
                         case 2: // put skeletons
+                            y = freeR.Y0 + 1;
+                            area1 = new Rectangle2P(freeR.X0, y, freeR.X1, y, "dummyString");
+                            area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
+
+                            int availableX = area1.XTiles - area2.XTiles;
+                            while (availableX > 0)
+                            {
+                                int pile = WorldGen.genRand.Next(1,4); // only single ... large piles (wall skeletons don't fit)
+                                int item = WorldGen.genRand.Next(prisonItems_all[pile].Count); // get a specific pile item
+
+                                int type = prisonItems_all[pile][item].TileID;
+                                int style = prisonItems_all[pile][item].style;
+                                int xSprite = prisonItems_all[pile][item].add[(int)LineAutomat.Adds.Piles][1];
+                                int ySprite = prisonItems_all[pile][item].add[(int)LineAutomat.Adds.Piles][0];
+                                List<int> checkAdd;
+                                if      (pile == 0) checkAdd = [1,1,1,1]; // Wall skeletons
+                                else if (pile == 1) checkAdd = [1,1,1,0]; // LargePiles
+                                else if (pile == 2) checkAdd = [0,1,1,0]; // SmallPiles
+                                else                checkAdd = [0,0,0,0]; // SinglePiles
+
+                                Func.TryPlaceTile(area1, area2, (ushort)type, style: style, add: new(){ { "Piles", [xSprite, ySprite] }, { "CheckFree", checkAdd } } );
+
+                                availableX -= prisonItems_all[pile][item].size.x;
+                            }
+
                             break;
                     }
 
