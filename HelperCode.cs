@@ -569,18 +569,19 @@ namespace WorldGenMod
 
                     if (checkFree && !placementPosBlocked) // first check if it (still) makes sense to check object sprite staying inside "area"
                     {
-                        placementPosBlocked = !CheckFree(new Rectangle2P(x - add["CheckFree"][0], y - add["CheckFree"][2], x + add["CheckFree"][1], y + add["CheckFree"][3]));
+                        placementPosBlocked = !CheckFree(new Rectangle2P(x - add["CheckFree"][0], y - add["CheckFree"][2], x + add["CheckFree"][1], y + add["CheckFree"][3], "dummyString"));
+                        actTry++; //checking position counts as a try! Because if the CheckFree passes, WorldGen.PlaceTile should have no reason to fail
                     }
 
                     actRandPos++;
                     if( actRandPos > 25) return (false, 0, 0); //emergency break out to prevent an infinite loop
                 }
-                while ( placementPosBlocked);
+                while ( placementPosBlocked && (actTry < maxTry) );
 
 
 
                 // try placement
-                if (!Main.tile[x, y].HasTile)
+                if (!Main.tile[x, y].HasTile && (actTry < maxTry))
                 {
                     if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
                     else if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);

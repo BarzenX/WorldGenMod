@@ -3261,6 +3261,8 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     //ceiling stuff
+                    area1 = area2 = Rectangle2P.Empty;
+                    int pileStart = 0, pileEnd = 4;
                     switch (freeR.YTiles % 5) //every cell is 5 Tiles high
                     {
                         case 1: // put spikes
@@ -3279,30 +3281,115 @@ namespace WorldGenMod.Structures.Ice
                             y = freeR.Y0 + 1;
                             area1 = new Rectangle2P(freeR.X0, y, freeR.X1, y, "dummyString");
                             area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
+                            pileStart = 1; // only single until..
+                            pileEnd = 4;  // ..large piles (wall skeletons don't fit)
 
-                            int availableX = area1.XTiles - area2.XTiles;
-                            while (availableX > 0)
+                            break;
+
+                        case 3: // put skeletons and spikes
+                            y = freeR.Y0 + 2;
+                            area1 = new Rectangle2P(freeR.X0 + 1, y, freeR.X1 - 1, y, "dummyString");
+                            area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
+                            pileStart = 1; // only single until..
+                            pileEnd = 4;  // ..large piles
+
+                            //Spikes
+                            y = freeR.Y0;
+                            for (int i = freeR.X0; i <= doors[Door.Up].doorRect.X0 - 1; i++)
                             {
-                                int pile = WorldGen.genRand.Next(1,4); // only single ... large piles (wall skeletons don't fit)
-                                int item = WorldGen.genRand.Next(prisonItems_all[pile].Count); // get a specific pile item
+                                WorldGen.PlaceTile(i, y, TileID.Spikes);
+                            }
+                            for (int i = doors[Door.Up].doorRect.X1 + 1; i <= freeR.X1; i++)
+                            {
+                                WorldGen.PlaceTile(i, y, TileID.Spikes);
+                            }
 
-                                int type = prisonItems_all[pile][item].TileID;
-                                int style = prisonItems_all[pile][item].style;
-                                int xSprite = prisonItems_all[pile][item].add[(int)LineAutomat.Adds.Piles][1];
-                                int ySprite = prisonItems_all[pile][item].add[(int)LineAutomat.Adds.Piles][0];
-                                List<int> checkAdd;
-                                if      (pile == 0) checkAdd = [1,1,1,1]; // Wall skeletons
-                                else if (pile == 1) checkAdd = [1,1,1,0]; // LargePiles
-                                else if (pile == 2) checkAdd = [0,1,1,0]; // SmallPiles
-                                else                checkAdd = [0,0,0,0]; // SinglePiles
+                            for (int j = freeR.Y0; j <= freeR.Y0 + 2; j++)
+                            {
+                                WorldGen.PlaceTile(freeR.X0, j, TileID.Spikes);
+                                WorldGen.PlaceTile(freeR.X1, j, TileID.Spikes);
+                            }
 
-                                Func.TryPlaceTile(area1, area2, (ushort)type, style: style, add: new(){ { "Piles", [xSprite, ySprite] }, { "CheckFree", checkAdd } } );
+                            break;
 
-                                availableX -= prisonItems_all[pile][item].size.x;
+                        case 4: // put skeletons and spikes and banners
+                            y = freeR.Y0 + 3;
+                            area1 = new Rectangle2P(freeR.X0 + 1, y, freeR.X1 - 1, y, "dummyString");
+                            //area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
+                            pileStart = 1; // only single until..
+                            pileEnd = 4;  // ..large piles
+
+                            // banners
+                            bool placedLeft = false; //init
+                            x = doors[Door.Up].doorRect.X0 - 1;
+                            y = freeR.Y0;
+                            if (Chance.Perc(70))
+                            {
+                                Func.SlopeTile(x, y - 1, (int)Func.SlopeVal.Nope);
+                                if (Chance.Simple()) placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                                else placedLeft = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+
+                                if (placedLeft) area2.X0 -= 1; //adjust blocked area
+                            }
+
+                            bool placedRight = false; //init
+                            x = doors[Door.Up].doorRect.X1 + 1;
+                            y = freeR.Y0;
+                            if (Chance.Perc(70))
+                            {
+                                Func.SlopeTile(x, y - 1, (int)Func.SlopeVal.Nope);
+                                if (Chance.Simple()) placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 12); // Rusted Company Standard
+                                else placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
+
+                                if (placedRight) area2.X1 += 1; //adjust blocked area
+                            }
+
+                            //Spikes
+                            y = freeR.Y0;
+                            for (int i = freeR.X0; i <= doors[Door.Up].doorRect.X0 - 1; i++)
+                            {
+                                if (i == doors[Door.Up].doorRect.X0 - 1 && placedLeft) continue;
+                                WorldGen.PlaceTile(i, y, TileID.Spikes);
+                            }
+                            for (int i = doors[Door.Up].doorRect.X1 + 1; i <= freeR.X1; i++)
+                            {
+                                if (i == doors[Door.Up].doorRect.X1 + 1 && placedRight) continue;
+                                WorldGen.PlaceTile(i, y, TileID.Spikes);
+                            }
+
+                            for (int j = freeR.Y0; j <= freeR.Y0 + 3; j++)
+                            {
+                                WorldGen.PlaceTile(freeR.X0, j, TileID.Spikes);
+                                WorldGen.PlaceTile(freeR.X1, j, TileID.Spikes);
                             }
 
                             break;
                     }
+
+                    if (!area1.IsEmpty()) 
+                    {
+                        int availableX = area1.XTiles - area2.XTiles;
+                        while (availableX > 0)
+                        {
+                            int pile = WorldGen.genRand.Next(pileStart, pileEnd); // get a pile variant at random
+                            int item = WorldGen.genRand.Next(prisonItems_all[pile].Count); // get a specific pile item at random
+
+                            int type = prisonItems_all[pile][item].TileID;
+                            int style = prisonItems_all[pile][item].style;
+                            int xSprite = prisonItems_all[pile][item].add[(int)LineAutomat.Adds.Piles][1];
+                            int ySprite = prisonItems_all[pile][item].add[(int)LineAutomat.Adds.Piles][0];
+                            List<int> checkAdd;
+                            if (pile == 0) checkAdd = [1, 1, 1, 1]; // Wall skeletons
+                            else if (pile == 1) checkAdd = [1, 1, 1, 0]; // LargePiles
+                            else if (pile == 2) checkAdd = [0, 1, 1, 0]; // SmallPiles
+                            else checkAdd = [0, 0, 0, 0]; // SinglePiles
+
+                            Func.TryPlaceTile(area1, area2, (ushort)type, style: style, chance: 75, add: new() { { "Piles", [xSprite, ySprite] }, { "CheckFree", checkAdd } });
+
+                            availableX -= prisonItems_all[pile][item].size.x;
+                        }
+                    }
+                    
 
                     //WorldGen.PlaceTile(freeR.XCenter, freeR.YCenter, TileID.Painting3X3, style: 16);
                     //WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y0 + 1, TileID.Painting3X3, style: 16); // wall skeleton
