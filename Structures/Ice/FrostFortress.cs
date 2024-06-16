@@ -996,10 +996,10 @@ namespace WorldGenMod.Structures.Ice
 
             } while (!valid);
 
-            if (roomType == RoomID.BelowSide)
-            { 
-                roomDeco = 6; 
-            }
+            //if (roomType == RoomID.BelowSide)
+            //{
+            //    roomDeco = 6;
+            //}
             switch (roomDeco)
             {
                 case 0: // corridor: two tables, two lamps, a beam line, high rooms get another beam line and a painting
@@ -2504,7 +2504,7 @@ namespace WorldGenMod.Structures.Ice
                     // init vars
 
                     LineAutomat automat;
-                    Dictionary<int, List<int>> noAdd = [], Wall, Paint;
+                    Dictionary<int, List<int>> noAdd = [], Wall;
                     Dictionary<int, List<int>> WallAndPaint = new(){ {(int)LineAutomat.Adds.Wall,  [ Deco[S.BackWall],   0, -1, 0 ] },
                                                                      {(int)LineAutomat.Adds.Paint, [ Deco[S.StylePaint], 0, -1 ] }  };
                     int unusedXTiles, actX, actY;
@@ -3389,21 +3389,6 @@ namespace WorldGenMod.Structures.Ice
                             availableX -= prisonItems_all[pile][item].size.x;
                         }
                     }
-                    
-
-                    //WorldGen.PlaceTile(freeR.XCenter, freeR.YCenter, TileID.Painting3X3, style: 16);
-                    //WorldGen.PlaceTile(freeR.X0 + 1, freeR.Y0 + 1, TileID.Painting3X3, style: 16); // wall skeleton
-                    //WorldGen.PlaceTile(freeR.X1 - 1, freeR.Y0 + 1, TileID.Painting3X3, style: 17); // hanging skeleton
-                    //WorldGen.PlaceTile(freeR.XCenter, freeR.Y1, TileID.SkullLanterns, style: 0); //--> no, because cannot be estinguished
-                    //WorldGen.PlaceTile(freeR.XCenter - 1, freeR.Y1, TileID.Spikes, style: 0);
-                    //WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 2, TileID.TatteredWoodSign, style: 0);
-                    //WorldGen.PlaceTile(freeR.X1 - 2, freeR.Y1 - 2, TileID.TrapdoorClosed, style: 0);
-
-                    //WallID.WroughtIronFence
-                    // Rusted Company Standard
-                    // Lost Hopes of Man Banner
-                    // Caged Lantern or Oil Rag Sconce
-
                     break;
 
                 case 100: // empty room for display
