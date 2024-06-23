@@ -19,6 +19,7 @@ using System.IO.Pipelines;
 using static WorldGenMod.LineAutomat;
 using System.Drawing;
 using System.Threading.Channels;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 //TODO: sometimes the FrostFortress creates extremely slow - supposedly because of the frequent PlaceTile calls...what to do?
 
@@ -803,6 +804,12 @@ namespace WorldGenMod.Structures.Ice
             }
         }
 
+        /// <summary>
+        /// The main method for choosing and running the a rooms decoration
+        /// </summary>
+        /// <param name="room">The rectangular area of the room, including the outer walls</param>
+        /// <param name="roomType">Stating which type the room is of (see class "RoomID")</param>
+        /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
         public void DecorateRoom(Rectangle2P room, int roomType, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors)
         {
             Rectangle2P freeR = room; // the "free" room.... e.g. without the wall bricks
@@ -998,7 +1005,7 @@ namespace WorldGenMod.Structures.Ice
 
             //if (roomType == RoomID.BelowSide)
             //{
-            //    roomDeco = 6;
+            roomDeco = 7;
             //}
             switch (roomDeco)
             {
@@ -3389,6 +3396,122 @@ namespace WorldGenMod.Structures.Ice
                             availableX -= prisonItems_all[pile][item].size.x;
                         }
                     }
+                    break;
+
+                case 7: // treasury
+
+                    byte goldPaint = PaintID.DeepYellowPaint; // deep yellow is the color the most resembling a golden look...maybe in the future there will be something better?
+
+                    # region entrance: tables, chests, piggy bank, some single decorative items
+
+                    int entranceDecoHeight; // height where the decorative items get placed
+                    if (roomType == RoomID.BelowSide) // try creating the "entrance area" at the ceiling of the room
+                    {
+                        entranceDecoHeight = freeR.Y0 + 3;
+                        if (freeR.YTiles < 9) entranceDecoHeight = freeR.Y1; // 8 YTiles would just leave 2 Tiles for the "stash", until that height, put it to the bottom as well
+                    }
+                    else // enough room for the "stash", put the "entrance area" at the bottom of the room
+                    {
+                        entranceDecoHeight = freeR.Y1;
+                    }
+                    Rectangle2P entranceDeco= new(freeR.X0, entranceDecoHeight, freeR.X1, entranceDecoHeight, "dummy");
+                    Rectangle2P stashDoor= new( freeR.XCenter, entranceDecoHeight, 2, 1);
+
+
+                    Func.ReplaceWallArea(new(freeR.X0, freeR.Y0, freeR.X1, entranceDecoHeight, "dummy"), WallID.AncientGoldBrickWall);
+
+                    if (entranceDecoHeight != freeR.Y1) // put floor in case of sufficient big rooms
+                    {
+                        for (int i = freeR.X0; i <= freeR.X1; i++)
+                        {
+                            if (i == freeR.XCenter || i == freeR.XCenter + 1) continue; // reserve space for the trap door
+                            WorldGen.PlaceTile(i, entranceDecoHeight + 1, TileID.AncientGoldBrick);
+                        }
+
+                        // put door to access the "stash" below
+                        WorldGen.PlaceTile(freeR.XCenter, entranceDecoHeight + 1, TileID.TrapdoorClosed);
+                        WorldGen.paintTile(freeR.XCenter, entranceDecoHeight + 1, goldPaint);
+                        WorldGen.paintTile(freeR.XCenter + 1, entranceDecoHeight + 1, goldPaint);
+                    }
+
+                    List<int> decoCases = 
+                    [
+                        0, // Gold Chest
+                        1, // Marble Table
+                        2, // Marble Workbench
+                        3, // Coin bags (small piles)
+                        4  // Coins
+                    ];
+
+                    // put deco as long as TryPlaceTile() doesn't fail
+                    int failsInRow = 0;
+                    do
+                    {
+                        switch (WorldGen.genRand.Next(decoCases.Count)) // choose a decoCase at random
+                        {
+                            case 0:
+                                placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.Containers, style: 1, chance: 95,  // Gold Chest
+                                                                add: new() { { "CheckFree", [0, 1, 1, 0] },
+                                                                             { "CheckArea", [0, 1, 1, 0] } });
+                                break;
+
+                            case 1:
+                                placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.Tables, style: 34, chance: 95,  // Marble Table
+                                                                add: new() { { "CheckFree", [1, 1, 1, 0] },
+                                                                             { "CheckArea", [1, 1, 1, 0] } });
+                                //TODO: put stuff on it
+                                break;
+
+                            case 2:
+                                placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.WorkBenches, style: 30, chance: 95,  // Marble Workbench
+                                                                add: new() { { "CheckFree", [0, 1, 0, 0] },
+                                                                             { "CheckArea", [0, 1, 0, 0] } });
+                                //TODO: put stuff on it
+                                break;
+
+                            case 3:
+                                int stashType;
+                                int stashQuality = WorldGen.genRand.Next(100);
+
+                                if     (stashQuality >= 90) stashType = 18; // Gold coin stash
+                                else if(stashQuality >= 30) stashType = 17; // Silver coin stash
+                                else                        stashType = 16;      // Copper coin stash
+
+                                placeResult = Func.TryPlaceTile(entranceDeco, noBlock, TileID.SmallPiles, chance: 95,
+                                                                add: new() { { "Piles", [stashType, 1]   },
+                                                                             { "CheckFree", [0, 1, 0, 0] },
+                                                                             { "CheckArea", [0, 1, 0, 0] } });
+                                break;
+
+                            case 4:
+                                ushort coinType;
+                                int coinQuality = WorldGen.genRand.Next(100);
+
+                                if      (coinQuality >= 90) coinType = TileID.GoldCoinPile;   // Gold coins
+                                else if (coinQuality >= 30) coinType = TileID.SilverCoinPile; // Silver coins
+                                else                        coinType = TileID.CopperCoinPile; // Copper coins
+
+                                placeResult = Func.TryPlaceTile(entranceDeco, noBlock, coinType, chance: 95);
+
+                                //TODO: stack coins?
+                                break;
+
+                            default:
+                                placeResult = (false, 0, 0);
+                                break;
+
+                        }
+
+                        if (!placeResult.success) failsInRow++;
+                        else failsInRow = 0;
+
+                    } while (failsInRow < 3);
+
+                    #endregion
+
+
+                    // large gems with gem locks as paintings (in the middle)
+                    // marble table with some gold coins piling on top op it (maybe on the bottom)
                     break;
 
                 case 100: // empty room for display

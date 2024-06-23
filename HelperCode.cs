@@ -515,7 +515,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Tries to place a tile repeatedly in a given space (a straight line), each time variating the placement position.
+        /// Tries to place a tile repeatedly in a given space (a straight line!), each time variating the placement position.
         /// <br/> There is also an adjustable initial "placement chance" to make the placement even more randomized.
         /// </summary>
         /// <param name="area">The straight line (must be a horizontal or vertical line!) where the object shall be placed at random. </param>
@@ -526,7 +526,8 @@ namespace WorldGenMod
         /// <param name="chance">Chance of the part to be actually placed (0% .. chance .. 100%) </param>
         /// <param name="add"><br/>Additional data arranged as dictionary of "code" keys and "data" value pairs. Uses so far: 
         ///              <br/>Key "Piles" - Placing (large/small) piles: <br/> -> [0] = XSprite (count), [1] = YSprite (row)
-        ///              <br/>Key "CheckFree" - check if the object sprite actually stays inside "area": <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
+        ///              <br/>Key "CheckFree" - check in the stated area around the placement position if it's free of tiles: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
+        ///              <br/>Key "CheckArea" - check in the stated area around the placement position wheter "area" is left / "blockedArea" is entered: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
         ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
@@ -540,8 +541,10 @@ namespace WorldGenMod
 
             bool randomizeX = area.YTiles == 1;
             bool considerBlockedArea = !(blockedArea.IsEmpty());
-            bool checkFree = false;// = add.ContainsKey("CheckFree");
+            bool checkFree = false;
+            bool checkArea = false;
             if (add is not null) checkFree = add.ContainsKey("CheckFree");
+            if (add is not null) checkArea = add.ContainsKey("CheckArea");
             bool placementPosBlocked;
 
             int x, y, actTry = 0, actRandPos;
@@ -564,24 +567,43 @@ namespace WorldGenMod
                         y = WorldGen.genRand.Next(area.Y0, area.Y1 + 1); // Y0 <= y <= Y1
                     }
 
-                    if (considerBlockedArea) placementPosBlocked = blockedArea.Contains(x, y);
-                    else placementPosBlocked = false;
+                    placementPosBlocked = false; //init
 
-                    if (checkFree && !placementPosBlocked) // first check if it (still) makes sense to check object sprite staying inside "area"
+                    if (considerBlockedArea) placementPosBlocked = blockedArea.Contains(x, y);
+
+                    if (checkFree && !placementPosBlocked) // first check if it (still) makes sense to check if area free of tiles
                     {
                         placementPosBlocked = !CheckFree(new Rectangle2P(x - add["CheckFree"][0], y - add["CheckFree"][2], x + add["CheckFree"][1], y + add["CheckFree"][3], "dummyString"));
                         actTry++; //checking position counts as a try! Because if the CheckFree passes, WorldGen.PlaceTile should have no reason to fail
                     }
 
+                    if (checkArea && !placementPosBlocked) // first check if it (still) makes sense to check object sprite staying inside "area"
+                    {
+                        if (randomizeX)
+                        {
+                            for (int i = x - add["CheckFree"][0]; i <= x + add["CheckFree"][1]; i++)
+                            {
+                                placementPosBlocked |= blockedArea.Contains(i, y) || !area.Contains(i, y);
+                            }
+                        }
+                        else
+                        {
+                            for (int j = y - add["CheckFree"][2]; j <= y + add["CheckFree"][3]; j++)
+                            {
+                                placementPosBlocked |= blockedArea.Contains(x, j) || !area.Contains(x, j);
+                            }
+                        }
+                    }
+
                     actRandPos++;
-                    if( actRandPos > 25) return (false, 0, 0); //emergency break out to prevent an infinite loop
+                    if( actRandPos > 25) break; //emergency break out to prevent an infinite loop
                 }
                 while ( placementPosBlocked && (actTry < maxTry) );
 
 
 
                 // try placement
-                if (!Main.tile[x, y].HasTile && (actTry < maxTry))
+                if (!Main.tile[x, y].HasTile && !placementPosBlocked && (actTry < maxTry))
                 {
                     if (type == TileID.Fireplace) WorldGen.Place3x2(x, y, TileID.Fireplace); // Fireplace just doesn't work with "PlaceTile" don't know why
                     else if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
