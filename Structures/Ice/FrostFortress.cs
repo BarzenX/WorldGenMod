@@ -3429,7 +3429,7 @@ namespace WorldGenMod.Structures.Ice
                         }
 
                         // put door to access the "stash" below
-                        WorldGen.PlaceTile(freeR.XCenter, entranceDecoHeight + 1, TileID.TrapdoorClosed);
+                        WorldGen.PlaceObject(freeR.XCenter, entranceDecoHeight + 1, TileID.TrapdoorClosed);
                         WorldGen.paintTile(freeR.XCenter, entranceDecoHeight + 1, goldPaint);
                         WorldGen.paintTile(freeR.XCenter + 1, entranceDecoHeight + 1, goldPaint);
                     }
@@ -3440,72 +3440,237 @@ namespace WorldGenMod.Structures.Ice
                         1, // Marble Table
                         2, // Marble Workbench
                         3, // Coin bags (small piles)
-                        4  // Coins
+                        4, // Coins
+                        5  // Gold Golf Trophy
+                        // TileID: 85, Style: 8 -> Golden Grave Marker
+                    ];
+
+                    List<(ushort tileID, int style, int xTiles)> treasuryTableDeco =
+                    [
+                        (TileID.PiggyBank,0,2), // Piggy bank
+                        (TileID.Candelabras,0,2),// Candelabra
+                        (TileID.DjinnLamp,0,2),// Desert Spirit Lamp (Djinn Lamp)
+                        (TileID.Bottles,8,1), // Chalice
+                        (TileID.Candles,0,1), // Candle
+                        (TileID.SilverCoinPile,0,1) // (Copper/Silver/Gold) Coins, "Silver" is just a placeholder
                     ];
 
                     // put deco as long as TryPlaceTile() doesn't fail
                     int failsInRow = 0;
+                    int stashEntranceCase = -1;
+                    int treasurySurfaceSpace; // how much xTiles space on the surface there is (table = 3, workbench = 2)
+                    (ushort tileID, int style, int xTiles) treasuryTableDecoCase;
+                    bool stashEntranceCaseInit = true;
                     do
                     {
-                        switch (WorldGen.genRand.Next(decoCases.Count)) // choose a decoCase at random
+                        if      (stashEntranceCaseInit && stashEntranceCase == -1)  stashEntranceCase = 1; // first loop: force Marble Table
+                        else if (stashEntranceCaseInit && stashEntranceCase ==  1)  stashEntranceCase = 2; // next loop: force Marble Workbench
+                        else                                                        stashEntranceCase = WorldGen.genRand.Next(decoCases.Count); // choose a decoCase at random
+
+                        switch (stashEntranceCase)
                         {
                             case 0:
+                                #region Gold Chest
                                 placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.Containers, style: 1, chance: 95,  // Gold Chest
                                                                 add: new() { { "CheckFree", [0, 1, 1, 0] },
                                                                              { "CheckArea", [0, 1, 1, 0] } });
                                 break;
+                                #endregion
 
                             case 1:
+                                #region Marble Table
                                 placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.Tables, style: 34, chance: 95,  // Marble Table
                                                                 add: new() { { "CheckFree", [1, 1, 1, 0] },
                                                                              { "CheckArea", [1, 1, 1, 0] } });
-                                //TODO: put stuff on it
+                                if (placeResult.success)
+                                {
+                                    treasurySurfaceSpace = 3;
+                                    area1 = new(placeResult.x - 1, placeResult.y - 2, placeResult.x + 1, placeResult.y - 2, "dummy");
+                                    do
+                                    {
+                                        do treasuryTableDecoCase = treasuryTableDeco[WorldGen.genRand.Next(treasuryTableDeco.Count)]; // choose a treasuryTableDeco at random, that fits in the space
+                                        while (treasuryTableDecoCase.xTiles > treasurySurfaceSpace);
+
+                                        if (treasuryTableDecoCase.tileID == TileID.SilverCoinPile) if (Chance.Perc(10)) treasuryTableDecoCase.tileID = Func.CoinQuality(silverThreshold: 0); // define coin quality
+
+
+                                        placeResult = Func.TryPlaceTile(area1, noBlock, type: treasuryTableDecoCase.tileID, style: treasuryTableDecoCase.style, chance: 95,
+                                                                        add: new() { { "CheckFree", [0, treasuryTableDecoCase.xTiles - 1, 0, 0] },
+                                                                                     { "CheckArea", [0, treasuryTableDecoCase.xTiles - 1, 0, 0] } });
+
+                                        if (placeResult.success && treasuryTableDecoCase.tileID == TileID.Candelabras)   Func.UnlightCandelabra(placeResult.x, placeResult.y);
+                                        else if (placeResult.success && treasuryTableDecoCase.tileID == TileID.Candles)   Func.Unlight1x1(placeResult.x, placeResult.y);
+                                        else if (placeResult.success && (treasuryTableDecoCase.tileID == TileID.SilverCoinPile || treasuryTableDecoCase.tileID == TileID.GoldCoinPile))
+                                              { if (Chance.Perc(50))  WorldGen.PlaceTile(placeResult.x, placeResult.y - 1, Func.CoinQuality(silverThreshold: 0)); } // stack coins
+
+                                        treasurySurfaceSpace -= treasuryTableDecoCase.xTiles;
+                                    } while (treasurySurfaceSpace > 0);
+                                }
+                                
                                 break;
+                                #endregion
 
                             case 2:
+                                #region Marble Workbench
                                 placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.WorkBenches, style: 30, chance: 95,  // Marble Workbench
                                                                 add: new() { { "CheckFree", [0, 1, 0, 0] },
                                                                              { "CheckArea", [0, 1, 0, 0] } });
-                                //TODO: put stuff on it
+
+
+                                if (placeResult.success)
+                                {
+                                    treasurySurfaceSpace = 2;
+                                    area1 = new(placeResult.x, placeResult.y - 1, placeResult.x + 1, placeResult.y - 1, "dummy");
+                                    do
+                                    {
+                                        do treasuryTableDecoCase = treasuryTableDeco[WorldGen.genRand.Next(treasuryTableDeco.Count)]; // choose a treasuryTableDeco at random, that fits in the space
+                                        while (treasuryTableDecoCase.xTiles > treasurySurfaceSpace);
+
+                                        if (treasuryTableDecoCase.tileID == TileID.SilverCoinPile) treasuryTableDecoCase.tileID = Func.CoinQuality(silverThreshold: 0); // define coin quality
+
+
+                                        placeResult = Func.TryPlaceTile(area1, noBlock, type: treasuryTableDecoCase.tileID, style: treasuryTableDecoCase.style, chance: 95,
+                                                                        add: new() { { "CheckFree", [0, treasuryTableDecoCase.xTiles - 1, 0, 0] },
+                                                                                     { "CheckArea", [0, treasuryTableDecoCase.xTiles - 1, 0, 0] } });
+
+                                        if (placeResult.success && treasuryTableDecoCase.tileID == TileID.Candelabras) Func.UnlightCandelabra(placeResult.x, placeResult.y);
+                                        else if (placeResult.success && treasuryTableDecoCase.tileID == TileID.Candles) Func.Unlight1x1(placeResult.x, placeResult.y);
+                                        else if (placeResult.success && (treasuryTableDecoCase.tileID == TileID.CopperCoinPile || treasuryTableDecoCase.tileID == TileID.SilverCoinPile || treasuryTableDecoCase.tileID == TileID.GoldCoinPile))
+                                        { if (Chance.Perc(50)) WorldGen.PlaceTile(placeResult.x, placeResult.y - 1, Func.CoinQuality(silverThreshold: 0)); } // stack coins
+
+                                        treasurySurfaceSpace -= treasuryTableDecoCase.xTiles;
+                                    } while (treasurySurfaceSpace > 0);
+                                }
                                 break;
+                                #endregion
 
                             case 3:
+                                #region Coin stash
                                 int stashType;
                                 int stashQuality = WorldGen.genRand.Next(100);
 
                                 if     (stashQuality >= 90) stashType = 18; // Gold coin stash
                                 else if(stashQuality >= 30) stashType = 17; // Silver coin stash
-                                else                        stashType = 16;      // Copper coin stash
+                                else                        stashType = 16; // Copper coin stash
 
                                 placeResult = Func.TryPlaceTile(entranceDeco, noBlock, TileID.SmallPiles, chance: 95,
                                                                 add: new() { { "Piles", [stashType, 1]   },
                                                                              { "CheckFree", [0, 1, 0, 0] },
                                                                              { "CheckArea", [0, 1, 0, 0] } });
                                 break;
+                                #endregion
 
                             case 4:
-                                ushort coinType;
-                                int coinQuality = WorldGen.genRand.Next(100);
-
-                                if      (coinQuality >= 90) coinType = TileID.GoldCoinPile;   // Gold coins
-                                else if (coinQuality >= 30) coinType = TileID.SilverCoinPile; // Silver coins
-                                else                        coinType = TileID.CopperCoinPile; // Copper coins
+                                #region Coins
+                                ushort coinType = Func.CoinQuality(silverThreshold: 0);
 
                                 placeResult = Func.TryPlaceTile(entranceDeco, noBlock, coinType, chance: 95);
 
-                                //TODO: stack coins?
-                                break;
+                                if (placeResult.success)
+                                {
+                                    if (Chance.Perc(50))
+                                    {
+                                        placed =                       WorldGen.PlaceTile(placeResult.x, placeResult.y - 1, Func.CoinQuality(silverThreshold: 0)); // stack coins
+                                        if (placed && Chance.Perc(30)) WorldGen.PlaceTile(placeResult.x, placeResult.y - 2, Func.CoinQuality(silverThreshold: 0)); // stack coins
+                                    }
 
+                                    if (!Main.tile[placeResult.x - 1, placeResult.y].HasTile)
+                                    {
+                                        if(Chance.Perc(15)) WorldGen.PlaceTile(placeResult.x - 1, placeResult.y, Func.CoinQuality(silverThreshold: 0));
+                                    }
+                                    if (!Main.tile[placeResult.x + 1, placeResult.y].HasTile)
+                                    {
+                                        if (Chance.Perc(15)) WorldGen.PlaceTile(placeResult.x + 1, placeResult.y, Func.CoinQuality(silverThreshold: 0));
+                                    }
+
+                                }
+                                    
+                                //TODO: stack coins? make the stack wider?
+                                break;
+                            #endregion
+
+                            case 5:
+                                #region Golf Trophy
+
+                                placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.GolfTrophies, style: WorldGen.genRand.Next(1,3), chance: 95,  // Silver / Gold Golf Trophy
+                                                                add: new() { { "CheckFree", [1, 0, 1, 0] },
+                                                                             { "CheckArea", [1, 0, 1, 0] } });
+                                break;
+                                #endregion
                             default:
                                 placeResult = (false, 0, 0);
                                 break;
 
                         }
 
+                        if (stashEntranceCaseInit && stashEntranceCase == 2) stashEntranceCaseInit = false; // init done: stop forcing decos
+
                         if (!placeResult.success) failsInRow++;
                         else failsInRow = 0;
 
                     } while (failsInRow < 3);
+
+
+                    #region Shelves
+                    // left
+                    List<bool> treasuryShelfList = [];
+                    (int length, int start, int end) leftTreasuryShelf;
+                    int maxTreasuryShelfLength = 4;
+                    x = freeR.X0;
+                    y = entranceDecoHeight - 2;
+
+                    for (int i = x; i < freeR.XCenter; i++) treasuryShelfList.Add(!Main.tile[i, y].HasTile);
+                    leftTreasuryShelf = Func.GetLongestQueue(treasuryShelfList);
+
+                    if (leftTreasuryShelf.length >= 3)
+                    {
+                        if (leftTreasuryShelf.length > maxTreasuryShelfLength)
+                        {
+                            // limit shelf length and center it
+                            leftTreasuryShelf.start = (leftTreasuryShelf.length -  maxTreasuryShelfLength) / 2 + (leftTreasuryShelf.length - maxTreasuryShelfLength) % 2;
+                            leftTreasuryShelf.end = leftTreasuryShelf.start + (maxTreasuryShelfLength - 1);
+                            leftTreasuryShelf.length = maxTreasuryShelfLength;
+                        }
+                        for (int i = leftTreasuryShelf.start; i <= leftTreasuryShelf.end; i++)
+                        {
+                            WorldGen.PlaceTile(x + i, y, TileID.Platforms, style: 29); // Marble Platform
+                            if (Chance.Perc(75))
+                            { if (Chance.Perc(90))  WorldGen.PlaceTile(x + i, y - 1, Func.CoinQuality(silverThreshold: 0)); }
+                            else
+                            { if (Chance.Perc(90))  WorldGen.PlaceTile(x + i, y - 1, TileID.Bottles, style: 8); } //Chalice
+                        }
+                    }
+
+                    // right
+                    treasuryShelfList.Clear();
+                    (int length, int start, int end) rightTreasuryShelf;
+                    x = freeR.XCenter + 2;
+                    y = entranceDecoHeight - 2;
+
+                    for (int i = x; i <= freeR.X1; i++) treasuryShelfList.Add(!Main.tile[i, y].HasTile);
+                    rightTreasuryShelf = Func.GetLongestQueue(treasuryShelfList);
+
+                    if (rightTreasuryShelf.length >= 3)
+                    {
+                        if (rightTreasuryShelf.length > maxTreasuryShelfLength)
+                        {
+                            // limit shelf length and center it
+                            rightTreasuryShelf.start = (rightTreasuryShelf.length - maxTreasuryShelfLength) / 2 + (rightTreasuryShelf.length - maxTreasuryShelfLength) % 2;
+                            rightTreasuryShelf.end = rightTreasuryShelf.start + (maxTreasuryShelfLength - 1);
+                            rightTreasuryShelf.length = maxTreasuryShelfLength;
+                        }
+                        for (int i = rightTreasuryShelf.start; i <= rightTreasuryShelf.end; i++)
+                        {
+                            WorldGen.PlaceTile(x + i, y, TileID.Platforms, style: 29); // Marble Platform
+                            if (Chance.Perc(75))
+                            { if (Chance.Perc(90)) WorldGen.PlaceTile(x + i, y - 1, Func.CoinQuality(silverThreshold: 0)); }
+                            else
+                            { if (Chance.Perc(90)) WorldGen.PlaceTile(x + i, y - 1, TileID.Bottles, style: 8); } //Chalice
+                        }
+                    }
+
+                    //TODO: hang lamps, but first create stash wall
+                    #endregion
 
                     #endregion
 

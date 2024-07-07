@@ -15,6 +15,7 @@ using Terraria.Achievements;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Immutable;
 using static WorldGenMod.LineAutomat;
+using System.ComponentModel.DataAnnotations;
 
 namespace WorldGenMod
 {
@@ -526,7 +527,7 @@ namespace WorldGenMod
         /// <param name="chance">Chance of the part to be actually placed (0% .. chance .. 100%) </param>
         /// <param name="add"><br/>Additional data arranged as dictionary of "code" keys and "data" value pairs. Uses so far: 
         ///              <br/>Key "Piles" - Placing (large/small) piles: <br/> -> [0] = XSprite (count), [1] = YSprite (row)
-        ///              <br/>Key "CheckFree" - check in the stated area around the placement position if it's free of tiles: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
+        ///              <br/>Key "CheckFree" - check in the stated area around the placement position if it's free of tiles: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos
         ///              <br/>Key "CheckArea" - check in the stated area around the placement position wheter "area" is left / "blockedArea" is entered: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
@@ -541,11 +542,25 @@ namespace WorldGenMod
 
             bool randomizeX = area.YTiles == 1;
             bool considerBlockedArea = !(blockedArea.IsEmpty());
+
             bool checkFree = false;
-            bool checkArea = false;
             if (add is not null) checkFree = add.ContainsKey("CheckFree");
+            if (checkFree)
+            {
+                checkFree = (add["CheckFree"][0] >= 0)  && (add["CheckFree"][1] >= 0) && (add["CheckFree"][2] >= 0) && (add["CheckFree"][3] >= 0);
+                if (!checkFree) Debug.WriteLine("### WARNING ### - checkFree has wrong parameters!" + add["CheckFree"]);
+            }
+
+            bool checkArea = false;
             if (add is not null) checkArea = add.ContainsKey("CheckArea");
+            if (checkArea)
+            {
+                checkArea = (add["CheckArea"][0] >= 0) && (add["CheckArea"][1] >= 0) && (add["CheckArea"][2] >= 0) && (add["CheckArea"][3] >= 0);
+                if (!checkArea) Debug.WriteLine("### WARNING ### - checkArea has wrong parameters!" + add["CheckArea"]);
+            }
             bool placementPosBlocked;
+
+
 
             int x, y, actTry = 0, actRandPos;
             Tile actTile;
@@ -609,6 +624,8 @@ namespace WorldGenMod
                     else if (type == TileID.PotsSuspended) PlaceHangingLantern(x, y, TileID.PotsSuspended, style);
                     else if(type == TileID.LargePiles || type == TileID.LargePiles2) PlaceLargePile(x, y, add["Piles"][0], add["Piles"][1], type: type);
                     else if(type == TileID.SmallPiles) WorldGen.PlaceSmallPile(x, y, add["Piles"][0], add["Piles"][1]);
+                    else if(type == TileID.DjinnLamp) WorldGen.PlaceObject(x, y, type: type, style: style);
+                    else if(type == TileID.GolfTrophies) WorldGen.PlaceObject(x, y, type: type, style: style);
                     else WorldGen.PlaceTile(x, y, type, style: style);
 
                     // check placement
@@ -624,6 +641,68 @@ namespace WorldGenMod
             while ( actTry < maxTry );
 
             return (false, 0, 0);
+        }
+
+        /// <summary>
+        /// Randomly chooses a coin quality (copper, silver, gold) with customizable thresholds
+        /// </summary>
+        /// <param name="silverThreshold">The value over which the random value 0..99 counts as a silver coin (random >= silverThreshold) = silver coin </param>
+        /// <param name="goldThreshold">The value over which the random value 0..99 counts as a gold coin (random >= goldThreshold) = gold Coin </param>
+        /// <returns>The coin quality: 0 = error, TileID.CopperCoinPile(330) = copper, TileID.SilverCoinPile(331) = silver, TileID.GoldCoinPile(332) = gold </returns>
+        public static ushort CoinQuality(int silverThreshold = 30, int goldThreshold = 90)
+        {
+            if (goldThreshold < silverThreshold) return 0;
+
+            int coinQuality = WorldGen.genRand.Next(100);
+
+            if (coinQuality >= goldThreshold)        return TileID.GoldCoinPile;   // Gold coins
+            else if (coinQuality >= silverThreshold) return TileID.SilverCoinPile; // Silver coins
+            else                                     return TileID.CopperCoinPile; // Copper coins
+        }
+
+        /// <summary>
+        /// Searches through the handed over list for the longest line of consecutive "true" values
+        /// </summary>
+        /// <param name="line">Search list containing the true/false values </param>
+        /// <returns><br/>Tupel item1 <b>length</b>: length of the found consecutive "true" chain in the line
+        ///          <br/>Tupel item2 <b>start</b>: index of the start of the detected queue
+        ///          <br/>Tupel item3 <b>end</b>: index of the end of the detected queue </returns>
+        public static (int length, int start, int end) GetLongestQueue(List<bool> line)
+        {
+            int actLength = 0;
+            int actStart = -1;
+            int actEnd = -1;
+
+            int maxLength = 0;
+            int maxStart = 0;
+            int maxEnd = 0;
+
+            bool startFound = false;
+            for (int i = 0; i < line.Count; i++)
+            {
+                if (line[i])
+                {
+                    if (actStart < i && !startFound) actStart = i; startFound = true;
+                    actEnd = i;
+                    actLength = (actEnd - actStart) + 1;
+
+                    if (actLength > maxLength)
+                    {
+                        maxLength = actLength;
+                        maxStart = actStart;
+                        maxEnd = actEnd;
+                    }
+                }
+                else
+                {
+                    startFound = false;
+                    actStart = -1;
+                    actEnd = -1;
+                }
+            }
+
+            return (maxLength, maxStart, maxEnd);
+
         }
 
         /// <summary>
