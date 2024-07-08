@@ -3404,34 +3404,53 @@ namespace WorldGenMod.Structures.Ice
 
                     # region entrance: tables, chests, piggy bank, some single decorative items
 
+                    int treasuryEntranceYTiles = 4; // 4 YTiles height of where the "entrance" deco will be placed
+                    bool highEnoughForStash = freeR.YTiles > 8; // 8 YTiles would just leave 2 Tiles for the "stash" (8 - 4 "entrance" - 1 wall - 1 wall)
+
                     int entranceDecoHeight; // height where the decorative items get placed
                     if (roomType == RoomID.BelowSide) // try creating the "entrance area" at the ceiling of the room
                     {
-                        entranceDecoHeight = freeR.Y0 + 3;
-                        if (freeR.YTiles < 9) entranceDecoHeight = freeR.Y1; // 8 YTiles would just leave 2 Tiles for the "stash", until that height, put it to the bottom as well
+                        entranceDecoHeight = freeR.Y0 + (treasuryEntranceYTiles - 1);
+                        if (!highEnoughForStash) entranceDecoHeight = freeR.Y1; // room too small, put the "entrance" to the bottom
                     }
-                    else // enough room for the "stash", put the "entrance area" at the bottom of the room
+                    else // all other rooms have their "entrance" always at the bottom of the room
                     {
                         entranceDecoHeight = freeR.Y1;
                     }
-                    Rectangle2P entranceDeco= new(freeR.X0, entranceDecoHeight, freeR.X1, entranceDecoHeight, "dummy");
-                    Rectangle2P stashDoor= new( freeR.XCenter, entranceDecoHeight, 2, 1);
+                    Rectangle2P entranceDeco = new(freeR.X0, entranceDecoHeight, freeR.X1, entranceDecoHeight, "dummy");
+                    Rectangle2P stashDoor = new(freeR.XCenter, entranceDecoHeight + 1, 2, 1);
 
 
                     Func.ReplaceWallArea(new(freeR.X0, freeR.Y0, freeR.X1, entranceDecoHeight, "dummy"), WallID.AncientGoldBrickWall);
 
-                    if (entranceDecoHeight != freeR.Y1) // put floor in case of sufficient big rooms
+                    if (entranceDecoHeight != freeR.Y1) // put floor in case of "BelowSide" and sufficient high room
                     {
-                        for (int i = freeR.X0; i <= freeR.X1; i++)
+                        y = entranceDecoHeight + 1;
+                        for (int i = entranceDeco.X0; i <= entranceDeco.X1; i++)
                         {
-                            if (i == freeR.XCenter || i == freeR.XCenter + 1) continue; // reserve space for the trap door
-                            WorldGen.PlaceTile(i, entranceDecoHeight + 1, TileID.AncientGoldBrick);
+                            //if (i == freeR.XCenter || i == freeR.XCenter + 1) continue; // reserve space for the trap door
+                            if (stashDoor.Contains(i, y)) continue; // reserve space for the trap door
+                            WorldGen.PlaceTile(i, y, TileID.AncientGoldBrick);
                         }
 
                         // put door to access the "stash" below
-                        WorldGen.PlaceObject(freeR.XCenter, entranceDecoHeight + 1, TileID.TrapdoorClosed);
-                        WorldGen.paintTile(freeR.XCenter, entranceDecoHeight + 1, goldPaint);
-                        WorldGen.paintTile(freeR.XCenter + 1, entranceDecoHeight + 1, goldPaint);
+                        WorldGen.PlaceObject(freeR.XCenter  , y, TileID.TrapdoorClosed);
+                        WorldGen.paintTile(freeR.XCenter    , y, goldPaint);
+                        WorldGen.paintTile(freeR.XCenter + 1, y, goldPaint);
+
+                        stashDoor.Move(0, -1); // arrange the stash door rectangle so it can be used later as a blocker zone
+                    }
+
+                    
+                    if (!(roomType == RoomID.BelowSide) && highEnoughForStash) // put ceiling of "entrance area" for all other rooms if they're high enough
+                    {
+                        y = entranceDecoHeight - treasuryEntranceYTiles;
+                        Rectangle2P marbleDoor = new(doors[Door.Down].doorRect.X0, y, doors[Door.Down].doorRect.XTiles, 1);
+                        for (int i = freeR.X0; i <= freeR.X1; i++)
+                        {
+                            if (marbleDoor.Contains(i, y))  WorldGen.PlaceTile(i, y, TileID.Platforms, style: 29); // place the marble platform door
+                            else                            WorldGen.PlaceTile(i, y, TileID.AncientGoldBrick);
+                        }
                     }
 
                     List<int> decoCases = 
@@ -3668,15 +3687,42 @@ namespace WorldGenMod.Structures.Ice
                             { if (Chance.Perc(90)) WorldGen.PlaceTile(x + i, y - 1, TileID.Bottles, style: 8); } //Chalice
                         }
                     }
-
-                    //TODO: hang lamps, but first create stash wall
                     #endregion
 
+                    // try hang some marble lanterns
+                    if (highEnoughForStash)
+                    {
+                        y = -(treasuryEntranceYTiles - 1);
+
+                        placeResult = Func.TryPlaceTile(entranceDeco.CloneAndMove(0, y), noBlock, TileID.HangingLanterns, style: 36, chance: 95,  // marble lantern
+                                                        add: new() { { "CheckFree", [0, 0, 0, 1] },
+                                                                     { "CheckArea", [0, 0, 0, 1] } });
+
+                        if (placeResult.success) Func.UnlightLantern(placeResult.x, placeResult.y);
+
+
+                        placeResult = Func.TryPlaceTile(entranceDeco.CloneAndMove(0, y), noBlock, TileID.HangingLanterns, style: 36, chance: 95,  // marble lantern
+                                                        add: new() { { "CheckFree", [0, 0, 0, 1] },
+                                                                     { "CheckArea", [0, 0, 0, 1] } });
+
+                        if (placeResult.success) Func.UnlightLantern(placeResult.x, placeResult.y);
+                    }
+
+                    #endregion
+
+                    #region Stash
+                    if (highEnoughForStash)
+                    {
+                        //TODO
+                    }
+                    else
+                    {
+                        //TODO
+                    }
                     #endregion
 
 
                     // large gems with gem locks as paintings (in the middle)
-                    // marble table with some gold coins piling on top op it (maybe on the bottom)
                     break;
 
                 case 100: // empty room for display
