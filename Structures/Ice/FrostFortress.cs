@@ -3405,7 +3405,7 @@ namespace WorldGenMod.Structures.Ice
                     # region entrance: tables, chests, piggy bank, some single decorative items
 
                     int treasuryEntranceYTiles = 4; // 4 YTiles height of where the "entrance" deco will be placed
-                    bool highEnoughForStash = freeR.YTiles > 8; // 8 YTiles would just leave 2 Tiles for the "stash" (8 - 4 "entrance" - 1 wall - 1 wall)
+                    bool highEnoughForStash = freeR.YTiles >= 9; // 8 YTiles would just leave 2 Tiles for the "stash" (8 - 4 "entrance" - 1 wall - 1 wall)
 
                     int entranceDecoHeight; // height where the decorative items get placed
                     if (roomType == RoomID.BelowSide) // try creating the "entrance area" at the ceiling of the room
@@ -3442,7 +3442,7 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     
-                    if (!(roomType == RoomID.BelowSide) && highEnoughForStash) // put ceiling of "entrance area" for all other rooms if they're high enough
+                    if (!(roomType == RoomID.BelowSide) && highEnoughForStash) // put ceiling of "entrance area" (a.k.a floor of the stash) for all other rooms if they're high enough
                     {
                         y = entranceDecoHeight - treasuryEntranceYTiles;
                         Rectangle2P marbleDoor = new(doors[Door.Down].doorRect.X0, y, doors[Door.Down].doorRect.XTiles, 1);
@@ -3498,7 +3498,7 @@ namespace WorldGenMod.Structures.Ice
 
                             case 1:
                                 #region Marble Table
-                                placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.Tables, style: 34, chance: 95,  // Marble Table
+                                placeResult = Func.TryPlaceTile(entranceDeco, stashDoor, TileID.Tables, style: 34, chance: 95, maxTry: 8,  // Marble Table
                                                                 add: new() { { "CheckFree", [1, 1, 1, 0] },
                                                                              { "CheckArea", [1, 1, 1, 0] } });
                                 if (placeResult.success)
@@ -3713,7 +3713,132 @@ namespace WorldGenMod.Structures.Ice
                     #region Stash
                     if (highEnoughForStash)
                     {
-                        //TODO
+                        int stashCeiling, stashFloor, stashLeftWall, stashRightWall;
+                        int miniChamberCeiling, miniChamberFloor, miniChamberLeftWall, miniChamberRightWall;
+
+                        bool highEnoughForStashMiniChamber = freeR.YTiles >= 13; // 13 YTiles leave 3 Tiles to stand in the minichamber and 3 to stand in the stash
+                        #region Stash walls
+                        if (entranceDecoHeight == freeR.Y1) // stash is in the upper part of the room
+                        {
+                            stashCeiling = freeR.Y0;
+                            stashFloor = freeR.Y1 - treasuryEntranceYTiles;
+                            stashLeftWall = freeR.X0;
+                            stashRightWall = freeR.X1;
+
+                            for (int j = stashCeiling; j <= stashFloor; j++)
+                            {
+                                WorldGen.PlaceTile(stashLeftWall, j, TileID.AncientGoldBrick); // bricks left
+                                WorldGen.PlaceTile(stashRightWall, j, TileID.AncientGoldBrick); // bricks right
+                            }
+                            for (int i = stashLeftWall + 1; i <= stashRightWall - 1; i++)
+                            {
+                                if (doors[Door.Up].doorExist && (i == freeR.XCenter || i == freeR.XCenter + 1)) continue; // leave space for the trap door to the next floor
+                                WorldGen.PlaceTile(i, stashCeiling, TileID.AncientGoldBrick); // bricks ceiling
+                            }
+
+                            if (doors[Door.Up].doorExist)
+                            {
+                                // put trap door to access the "stash" from above
+                                WorldGen.PlaceObject(freeR.XCenter  , stashCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(freeR.XCenter    , stashCeiling, goldPaint);
+                                WorldGen.paintTile(freeR.XCenter + 1, stashCeiling, goldPaint);
+                            }
+
+                            // put backwall
+                            Func.PlaceWallArea(new(stashLeftWall, stashCeiling, stashRightWall, stashFloor, "dummyString"), WallID.GoldBrick);
+                            
+                            if (highEnoughForStashMiniChamber)
+                            {
+                                miniChamberCeiling = freeR.Y0 + 4;
+                                miniChamberFloor = stashFloor;
+                                miniChamberLeftWall = doors[Door.Up].doorRect.X0 - 1;
+                                miniChamberRightWall = doors[Door.Up].doorRect.X1 + 1;
+                                for (int j = miniChamberCeiling; j < miniChamberFloor; j++)
+                                {
+                                    WorldGen.PlaceTile(miniChamberLeftWall, j, TileID.AncientGoldBrick); // bricks minichamber left
+                                    WorldGen.PlaceTile(miniChamberRightWall, j, TileID.AncientGoldBrick); // bricks minichamber right
+                                }
+                                for (int i = miniChamberLeftWall + 1; i <= miniChamberRightWall - 1; i++)
+                                {
+                                    if (i == freeR.XCenter || i == freeR.XCenter + 1) continue; // leave space for the trap door to stash
+                                    WorldGen.PlaceTile(i, miniChamberCeiling, TileID.AncientGoldBrick); // bricks minichamber ceiling
+                                }
+
+                                // put trap door to access the "stash" from above
+                                WorldGen.PlaceObject(freeR.XCenter  , miniChamberCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(freeR.XCenter    , miniChamberCeiling, goldPaint);
+                                WorldGen.paintTile(freeR.XCenter + 1, miniChamberCeiling, goldPaint);
+
+                                // put backwall
+                                Func.PlaceWallArea(new(miniChamberLeftWall, miniChamberCeiling, miniChamberRightWall, miniChamberFloor, "dummyString"), WallID.AncientGoldBrickWall);
+                            }
+                        }
+                        else // stash is in the lower part of the room
+                        {
+                            stashCeiling = entranceDecoHeight + 1;
+                            stashFloor = freeR.Y1;
+                            stashLeftWall = freeR.X0;
+                            stashRightWall = freeR.X1;
+
+                            for (int j = stashCeiling + 1; j <= stashFloor; j++)
+                            {
+                                WorldGen.PlaceTile(stashLeftWall, j, TileID.AncientGoldBrick); // bricks left
+                                WorldGen.PlaceTile(stashRightWall, j, TileID.AncientGoldBrick); // bricks right
+                            }
+                            for (int i = stashLeftWall + 1; i <= stashRightWall - 1; i++)
+                            {
+                                if (doors[Door.Down].doorExist) // leave space at the bottom for a door
+                                {
+                                    if ((i == freeR.XCenter || i == freeR.XCenter + 1)) continue; // leave space for the trap door to the next floor
+                                    else if (highEnoughForStashMiniChamber && (i >= doors[Door.Up].doorRect.X0 && i <= doors[Door.Up].doorRect.X1)) continue; // leave this open, to resemble the upper stash marble platform
+                                }
+                                
+                                WorldGen.PlaceTile(i, stashFloor, TileID.AncientGoldBrick); // bricks floor
+                            }
+
+                            if (doors[Door.Down].doorExist && !highEnoughForStashMiniChamber)
+                            {
+                                // put trap door to access the "stash" from above
+                                WorldGen.PlaceObject(freeR.XCenter  , stashFloor, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(freeR.XCenter    , stashFloor, goldPaint);
+                                WorldGen.paintTile(freeR.XCenter + 1, stashFloor, goldPaint);
+                            }
+
+                            // put backwall
+                            Func.PlaceWallArea(new(stashLeftWall, stashCeiling, stashRightWall, stashFloor, "dummyString"), WallID.GoldBrick);
+
+                            if (highEnoughForStashMiniChamber)
+                            {
+                                miniChamberCeiling = stashCeiling + 4;
+                                miniChamberFloor = stashFloor;
+                                miniChamberLeftWall = doors[Door.Up].doorRect.X0 - 1;
+                                miniChamberRightWall = doors[Door.Up].doorRect.X1 + 1;
+                                for (int j = miniChamberCeiling; j < miniChamberFloor; j++)
+                                {
+                                    WorldGen.PlaceTile(miniChamberLeftWall, j, TileID.AncientGoldBrick); // bricks minichamber left
+                                    WorldGen.PlaceTile(miniChamberRightWall, j, TileID.AncientGoldBrick); // bricks minichamber right
+                                }
+                                for (int i = miniChamberLeftWall + 1; i <= miniChamberRightWall - 1; i++)
+                                {
+                                    if (i == freeR.XCenter || i == freeR.XCenter + 1) continue; // leave space for the trap door to stash
+                                    WorldGen.PlaceTile(i, miniChamberCeiling, TileID.AncientGoldBrick); // bricks minichamber ceiling
+                                }
+
+                                // put trap door to access the "stash" from above
+                                WorldGen.PlaceObject(freeR.XCenter  , miniChamberCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(freeR.XCenter    , miniChamberCeiling, goldPaint);
+                                WorldGen.paintTile(freeR.XCenter + 1, miniChamberCeiling, goldPaint);
+
+                                // put backwall
+                                Func.PlaceWallArea(new(miniChamberLeftWall, miniChamberCeiling, miniChamberRightWall, miniChamberFloor, "dummyString"), WallID.AncientGoldBrickWall);
+                            }
+                        }
+
+                        #endregion
+
+                        #region FillStash
+                        if (highEnoughForStashMiniChamber)
+                        #endregion
                     }
                     else
                     {

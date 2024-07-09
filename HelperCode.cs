@@ -661,6 +661,22 @@ namespace WorldGenMod
         }
 
         /// <summary>
+        /// Fills a room with coins, the shape of the top of the pile can be chosen
+        /// </summary>
+        /// <param name="topShape"> State how the top of the pile looks: 0 = whole rectangle filled, 1 = left-to-right slope, 2 = right-to left-slope, 3 = triangle </param>
+        /// <returns>If the placement was successful </returns>
+        public static bool CoinPile(Rectangle2P area, int topShape = 0)
+        {
+            if (goldThreshold < silverThreshold) return 0;
+
+            int coinQuality = WorldGen.genRand.Next(100);
+
+            if (coinQuality >= goldThreshold) return TileID.GoldCoinPile;   // Gold coins
+            else if (coinQuality >= silverThreshold) return TileID.SilverCoinPile; // Silver coins
+            else return TileID.CopperCoinPile; // Copper coins
+        }
+
+        /// <summary>
         /// Searches through the handed over list for the longest line of consecutive "true" values
         /// </summary>
         /// <param name="line">Search list containing the true/false values </param>
