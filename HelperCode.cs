@@ -16,6 +16,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Immutable;
 using static WorldGenMod.LineAutomat;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 
 namespace WorldGenMod
 {
@@ -663,17 +664,74 @@ namespace WorldGenMod
         /// <summary>
         /// Fills a room with coins, the shape of the top of the pile can be chosen
         /// </summary>
-        /// <param name="topShape"> State how the top of the pile looks: 0 = whole rectangle filled, 1 = left-to-right slope, 2 = right-to left-slope, 3 = triangle </param>
-        /// <returns>If the placement was successful </returns>
-        public static bool CoinPile(Rectangle2P area, int topShape = 0)
+        /// <param name="topShape"> How the top of the pile looks like: 0 = rectangular, 1 = left-to-right falling slope, 2 = left-to-right rising slope, 3 = triangle 
+        ///                         <br/> For shapes 1, 2, 3 the parameters <b>leftHeightRand</b> and <b>rightHeightRand</b> need to be set to actually achieve a shape. </param>
+        /// <param name="leftHeightRand"> How much of the left sides height gets randomized: 0..100 % from the top left corner to the bottom left corner. (25 = 75% height guaranteed, top 25% are variable) 
+        ///                               <br/> If <b>topShape = 0</b>, this value applies for the whole rectangle.</param>
+        /// <param name="rightHeightRand"> How much of the right sides height gets randomized: 0..100 % from the top right corner to the bottom right corner. (25 = 75% height guaranteed, top 25% are variable) 
+        ///                               <br/> If <b>topShape = 0</b>, this value wil be ignored.</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: if the pile calculation succeeded
+        ///          <br/>Tupel item2 <b>leftHeight</b>: height of the pile on the left
+        ///          <br/>Tupel item3 <b>rightHeight</b>: height of the pile on the right 
+        ///          <br/>Tupel item4 <b>coins</b>: two dimensional bool array, stating if a coin shall be placed on that position or not </returns>
+        public static (bool success, int leftHeight, int rightHeight, bool[,] coins) CoinPile(Rectangle2P area, int topShape = 0, int leftHeightRand = 0, int rightHeightRand = 0)
         {
-            if (goldThreshold < silverThreshold) return 0;
+            bool[,] empty = { { false } };
+            if (area.IsEmpty()) return (false, 0, 0, empty);
+            if (topShape == 0 && (leftHeightRand < 0 || leftHeightRand > 100)) return (false, 0, 0, empty);
+            if ((topShape > 0 && topShape <= 3) && (leftHeightRand < 0 || leftHeightRand > 100 || rightHeightRand < 0 || rightHeightRand > 100)) return (false, 0, 0, empty);
 
-            int coinQuality = WorldGen.genRand.Next(100);
+            int leftHeight =  (int)(area.YTiles * ((100.0f - WorldGen.genRand.Next(leftHeightRand  + 1)) / 100.0f));
+            int rightHeight = (int)(area.YTiles * ((100.0f - WorldGen.genRand.Next(rightHeightRand + 1)) / 100.0f));
 
-            if (coinQuality >= goldThreshold) return TileID.GoldCoinPile;   // Gold coins
-            else if (coinQuality >= silverThreshold) return TileID.SilverCoinPile; // Silver coins
-            else return TileID.CopperCoinPile; // Copper coins
+            int leftHeightIdx  = leftHeight  - 1; // because "coins" array indexes start at 0.
+            int rightHeightIdx = rightHeight - 1; // because "coins" array indexes start at 0.
+
+            //TODO: leftHeight = 0, leftHeightIdx would be -1!
+
+            bool[,] coins = new bool[area.YTiles, area.XTiles];
+            int[] leftSlope  = new int[area.XTiles];
+            int[] rightSlope = new int[area.XTiles];
+
+            if (topShape == 0) // rectangular
+            {
+                for (int i = 0; i < area.YTiles; i++)
+                {
+                    for (int j = 0; j < area.XTiles; j++)
+                    {
+                        if (i <= leftHeightIdx) coins[i, j] = true;
+                        else                    coins[i, j] = false;
+                    }
+                }
+                return (true, leftHeight, leftHeight, coins);
+            }
+            else if (topShape == 1) // left-to-right falling slope
+            {
+                leftSlope[0] = leftHeight;
+                for (int i = 1; i < leftSlope.Length; i++)
+                {
+                    leftSlope[i] = leftSlope[i - 1];
+                    if (Chance.Perc(50))
+                    {
+                        leftSlope[i] = Math.Max(leftSlope[i - 1]--, leftHeight);
+                        if (Chance.Perc(15)) leftSlope[i] = Math.Min(leftSlope[i]--, leftHeight); // second decrease, to make the slope even more diverse
+                    }
+                }
+            }
+            else return (false, 0, 0, empty);
+
+            // https://stackoverflow.com/questions/17814648/c-sharp-create-a-2d-array-and-then-loop-through-it
+            //int[,] array = new int[row, column];
+            //Random rand = new Random();
+
+            //for (int i = 0; i < row; i++)
+            //{
+            //    for (int j = 0; j < column; j++)
+            //    {
+            //        array[i, j] = rand.Next(0, 10);
+
+            //    }
+            //}
         }
 
         /// <summary>

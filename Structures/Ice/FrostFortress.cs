@@ -3714,7 +3714,7 @@ namespace WorldGenMod.Structures.Ice
                     if (highEnoughForStash)
                     {
                         int stashCeiling, stashFloor, stashLeftWall, stashRightWall;
-                        int miniChamberCeiling, miniChamberFloor, miniChamberLeftWall, miniChamberRightWall;
+                        int miniChamberCeiling = 0, miniChamberFloor = 0, miniChamberLeftWall = 0, miniChamberRightWall = 0; // init to not get compile-complaints...
 
                         bool highEnoughForStashMiniChamber = freeR.YTiles >= 13; // 13 YTiles leave 3 Tiles to stand in the minichamber and 3 to stand in the stash
                         #region Stash walls
@@ -3838,6 +3838,11 @@ namespace WorldGenMod.Structures.Ice
 
                         #region FillStash
                         if (highEnoughForStashMiniChamber)
+                        {
+                            Rectangle2P leftStash = new Rectangle2P(stashLeftWall + 1, stashCeiling + 1, miniChamberLeftWall - 1, stashFloor - 1, "dummyString");
+                            (bool success, int leftHeight, int rightHeight, bool[,] coins) left = Func.CoinPile(leftStash, 0, 25, 0);
+                        }
+                        
                         #endregion
                     }
                     else
