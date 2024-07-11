@@ -664,8 +664,16 @@ namespace WorldGenMod
         /// <summary>
         /// Fills a room with coins, the shape of the top of the pile can be chosen
         /// </summary>
-        /// <param name="topShape"> How the top of the pile looks like: 0 = rectangular, 1 = left-to-right falling slope, 2 = left-to-right rising slope, 3 = triangle 
-        ///                         <br/> For shapes 1, 2, 3 the parameters <b>leftHeightRand</b> and <b>rightHeightRand</b> need to be set to actually achieve a shape. </param>
+        /// <param name="topShape"> How the top of the pile looks like:
+        ///                         <br/> 0 = rectangular,
+        ///                         
+        ///                         <br/> 1 = left-to-right falling slope with left height given by leftHeightRand and random right height,
+        ///                         <br/> 2 = left-to-right falling slope with random left height and right height given by rightHeightRand,
+        ///                         
+        ///                         <br/> 3 = left-to-right rising slope with left height given by leftHeightRand and random right height,
+        ///                         <br/> 4 = left-to-right rising slope with random left height and right height given by rightHeightRand,
+        ///                         
+        ///                         <br/> 3 = pyramid shape, with left and right height given by leftHeightRand and rightHeightRand and a random middle height </param>
         /// <param name="leftHeightRand"> How much of the left sides height gets randomized: 0..100 % from the top left corner to the bottom left corner. (25 = 75% height guaranteed, top 25% are variable) 
         ///                               <br/> If <b>topShape = 0</b>, this value applies for the whole rectangle.</param>
         /// <param name="rightHeightRand"> How much of the right sides height gets randomized: 0..100 % from the top right corner to the bottom right corner. (25 = 75% height guaranteed, top 25% are variable) 
@@ -681,42 +689,53 @@ namespace WorldGenMod
             if (topShape == 0 && (leftHeightRand < 0 || leftHeightRand > 100)) return (false, 0, 0, empty);
             if ((topShape > 0 && topShape <= 3) && (leftHeightRand < 0 || leftHeightRand > 100 || rightHeightRand < 0 || rightHeightRand > 100)) return (false, 0, 0, empty);
 
-            int leftHeight =  (int)(area.YTiles * ((100.0f - WorldGen.genRand.Next(leftHeightRand  + 1)) / 100.0f));
-            int rightHeight = (int)(area.YTiles * ((100.0f - WorldGen.genRand.Next(rightHeightRand + 1)) / 100.0f));
+            int leftHeight =  (int)(area.YDiff * ((100.0f - WorldGen.genRand.Next(leftHeightRand  + 1)) / 100.0f));
+            int rightHeight = (int)(area.YDiff * ((100.0f - WorldGen.genRand.Next(rightHeightRand + 1)) / 100.0f));
 
-            int leftHeightIdx  = leftHeight  - 1; // because "coins" array indexes start at 0.
-            int rightHeightIdx = rightHeight - 1; // because "coins" array indexes start at 0.
 
-            //TODO: leftHeight = 0, leftHeightIdx would be -1!
-
-            bool[,] coins = new bool[area.YTiles, area.XTiles];
-            int[] leftSlope  = new int[area.XTiles];
-            int[] rightSlope = new int[area.XTiles];
+            bool[,] coins = new bool[area.YDiff, area.XDiff];
+            int[] leftSlope  = new int[area.XDiff];
+            int[] rightSlope = new int[area.XDiff];
 
             if (topShape == 0) // rectangular
             {
-                for (int i = 0; i < area.YTiles; i++)
+                // form array
+                for (int i = 0; i < area.XDiff; i++)
                 {
-                    for (int j = 0; j < area.XTiles; j++)
+                    for (int j = 0; j < area.YDiff; j++)
                     {
-                        if (i <= leftHeightIdx) coins[i, j] = true;
-                        else                    coins[i, j] = false;
+                        if (j < leftHeight) coins[j, i] = true;
+                        else                coins[j, i] = false;
                     }
                 }
                 return (true, leftHeight, leftHeight, coins);
             }
-            else if (topShape == 1) // left-to-right falling slope
+            else if (topShape == 1) // left-to-right falling slope with left height given by leftHeightRand and random right height
             {
+                // create left-to-right falling slope
                 leftSlope[0] = leftHeight;
                 for (int i = 1; i < leftSlope.Length; i++)
                 {
                     leftSlope[i] = leftSlope[i - 1];
                     if (Chance.Perc(50))
                     {
-                        leftSlope[i] = Math.Max(leftSlope[i - 1]--, leftHeight);
-                        if (Chance.Perc(15)) leftSlope[i] = Math.Min(leftSlope[i]--, leftHeight); // second decrease, to make the slope even more diverse
+                        leftSlope[i]--;
+                        if (Chance.Perc(15)) leftSlope[i]--; // second decrease, to make the slope even more diverse
+
+                        if (leftSlope[i] < 0) leftSlope[i] = 0;
                     }
                 }
+
+                // form array
+                for (int i = 0; i < area.XDiff; i++)
+                {
+                    for (int j = 0; j < area.YDiff; j++)
+                    {
+                        if (j < leftSlope[i]) coins[j, i] = true;
+                        else                  coins[j, i] = false;
+                    }
+                }
+                return (true, leftHeight, leftSlope[leftSlope.Length - 1], coins);
             }
             else return (false, 0, 0, empty);
 

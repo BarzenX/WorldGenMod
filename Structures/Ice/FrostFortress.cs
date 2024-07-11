@@ -3841,6 +3841,9 @@ namespace WorldGenMod.Structures.Ice
                         {
                             Rectangle2P leftStash = new Rectangle2P(stashLeftWall + 1, stashCeiling + 1, miniChamberLeftWall - 1, stashFloor - 1, "dummyString");
                             (bool success, int leftHeight, int rightHeight, bool[,] coins) left = Func.CoinPile(leftStash, 0, 25, 0);
+
+                            left = Func.CoinPile(leftStash, 1, 25, 0);
+
                         }
                         
                         #endregion
