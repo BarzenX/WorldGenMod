@@ -3844,6 +3844,18 @@ namespace WorldGenMod.Structures.Ice
 
                             left = Func.CoinPile(leftStash, 1, 25, 0);
 
+                            for (int i = 0; i <= leftStash.XDiff; i++)
+                            {
+                                for (int j = 0; j <= leftStash.YDiff; j++)
+                                {
+                                    if (left.coins[j, i])
+                                    {
+                                        x = leftStash.X0 + i;
+                                        y = leftStash.Y1 - j; // starting down left in the stash
+                                        WorldGen.PlaceTile(x, y, Func.CoinQuality(silverThreshold: 0));
+                                    }
+                                }
+                            }
                         }
                         
                         #endregion
