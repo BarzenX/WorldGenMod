@@ -694,8 +694,8 @@ namespace WorldGenMod
 
 
             bool[,] coins = new bool[area.YDiff + 1, area.XDiff + 1]; // "Diff + 1" so that the maximum value will be "Diff"....which later is needed to iterate through whole "area"
-            int[] leftSlope  = new int[area.XDiff + 1];
-            int[] rightSlope = new int[area.XDiff + 1];
+            int[] fallingSlope  = new int[area.XDiff + 1];
+            int[] risingSlope = new int[area.XDiff + 1];
 
             if (topShape == 0) // rectangular
             {
@@ -710,19 +710,20 @@ namespace WorldGenMod
                 }
                 return (true, leftHeight, leftHeight, coins);
             }
+
             else if (topShape == 1) // left-to-right falling slope with left height given by leftHeightRand and random right height
             {
                 // create left-to-right falling slope, starting on the left side
-                leftSlope[0] = leftHeight;
-                for (int i = 1; i < leftSlope.Length; i++)
+                fallingSlope[0] = leftHeight;
+                for (int i = 1; i < fallingSlope.Length; i++)
                 {
-                    leftSlope[i] = leftSlope[i - 1];
+                    fallingSlope[i] = fallingSlope[i - 1];
                     if (Chance.Perc(50))
                     {
-                        leftSlope[i]--;
-                        if (Chance.Perc(15)) leftSlope[i]--; // second decrease, to make the slope even more diverse
+                        fallingSlope[i]--;
+                        if (Chance.Perc(15)) fallingSlope[i]--; // second decrease, to make the slope even more diverse
 
-                        if (leftSlope[i] < 0) leftSlope[i] = 0;
+                        if (fallingSlope[i] < 0) fallingSlope[i] = 0;
                     }
                 }
 
@@ -731,25 +732,26 @@ namespace WorldGenMod
                 {
                     for (int j = 0; j <= area.YDiff; j++)
                     {
-                        if (j <= leftSlope[i]) coins[j, i] = true;
+                        if (j <= fallingSlope[i]) coins[j, i] = true;
                         else                   coins[j, i] = false;
                     }
                 }
-                return (true, leftHeight, leftSlope[leftSlope.Length - 1], coins);
+                return (true, leftHeight, fallingSlope[fallingSlope.Length - 1], coins);
             }
+
             else if (topShape == 2) // left-to-right falling slope with random left height and right height given by rightHeightRand
             {
                 // create left-to-right falling slope, starting on the right side
-                leftSlope[leftSlope.Length - 1] = rightHeight;
-                for (int i = leftSlope.Length - 2; i >= 0; i--)
+                fallingSlope[fallingSlope.Length - 1] = rightHeight;
+                for (int i = fallingSlope.Length - 2; i >= 0; i--)
                 {
-                    leftSlope[i] = leftSlope[i + 1];
+                    fallingSlope[i] = fallingSlope[i + 1];
                     if (Chance.Perc(50))
                     {
-                        leftSlope[i]++;
-                        if (Chance.Perc(15)) leftSlope[i]++; // second increase, to make the slope even more diverse
+                        fallingSlope[i]++;
+                        if (Chance.Perc(15)) fallingSlope[i]++; // second increase, to make the slope even more diverse
 
-                        if (leftSlope[i] >= area.YDiff) leftSlope[i] = area.YDiff;
+                        if (fallingSlope[i] > area.YDiff) fallingSlope[i] = area.YDiff;
                     }
                 }
 
@@ -758,12 +760,69 @@ namespace WorldGenMod
                 {
                     for (int j = 0; j <= area.YDiff; j++)
                     {
-                        if (j <= leftSlope[i]) coins[j, i] = true;
+                        if (j <= fallingSlope[i]) coins[j, i] = true;
                         else                   coins[j, i] = false;
                     }
                 }
-                return (true, leftHeight, leftSlope[leftSlope.Length - 1], coins);
+                return (true, fallingSlope[0], rightHeight, coins);
             }
+
+            else if (topShape == 3) // left-to-right rising slope with left height given by leftHeightRand and random right height
+            {
+                // create left-to-right rising slope, starting on the left side
+                risingSlope[0] = leftHeight;
+                for (int i = 1; i < risingSlope.Length; i++)
+                {
+                    risingSlope[i] = risingSlope[i - 1];
+                    if (Chance.Perc(50))
+                    {
+                        risingSlope[i]++;
+                        if (Chance.Perc(15)) risingSlope[i]++; // second decrease, to make the slope even more diverse
+
+                        if (risingSlope[i] > area.YDiff) risingSlope[i] = area.YDiff;
+                    }
+                }
+
+                // form array
+                for (int i = 0; i <= area.XDiff; i++)
+                {
+                    for (int j = 0; j <= area.YDiff; j++)
+                    {
+                        if (j <= risingSlope[i]) coins[j, i] = true;
+                        else coins[j, i] = false;
+                    }
+                }
+                return (true, leftHeight, risingSlope[risingSlope.Length - 1], coins);
+            }
+
+            else if (topShape == 4) // left-to-right rising slope with random left height and right height given by rightHeightRand
+            {
+                // create left-to-right rising slope, starting on the right side
+                risingSlope[risingSlope.Length - 1] = rightHeight;
+                for (int i = risingSlope.Length - 2; i >= 0; i--)
+                {
+                    risingSlope[i] = risingSlope[i + 1];
+                    if (Chance.Perc(50))
+                    {
+                        risingSlope[i]--;
+                        if (Chance.Perc(15)) risingSlope[i]--; // second decrease, to make the slope even more diverse
+
+                        if (risingSlope[i] < 0) risingSlope[i] = 0;
+                    }
+                }
+
+                // form array
+                for (int i = 0; i <= area.XDiff; i++)
+                {
+                    for (int j = 0; j <= area.YDiff; j++)
+                    {
+                        if (j <= risingSlope[i]) coins[j, i] = true;
+                        else coins[j, i] = false;
+                    }
+                }
+                return (true, risingSlope[0], rightHeight, coins);
+            }
+
             else return (false, 0, 0, empty);
 
             // https://stackoverflow.com/questions/17814648/c-sharp-create-a-2d-array-and-then-loop-through-it
