@@ -3739,9 +3739,9 @@ namespace WorldGenMod.Structures.Ice
                             if (doors[Door.Up].doorExist)
                             {
                                 // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(freeR.XCenter  , stashCeiling, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(freeR.XCenter    , stashCeiling, goldPaint);
-                                WorldGen.paintTile(freeR.XCenter + 1, stashCeiling, goldPaint);
+                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
                             }
 
                             // put backwall
@@ -3765,9 +3765,9 @@ namespace WorldGenMod.Structures.Ice
                                 }
 
                                 // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(freeR.XCenter  , miniChamberCeiling, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(freeR.XCenter    , miniChamberCeiling, goldPaint);
-                                WorldGen.paintTile(freeR.XCenter + 1, miniChamberCeiling, goldPaint);
+                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
 
                                 // put backwall
                                 Func.PlaceWallArea(new(miniChamberLeftWall, miniChamberCeiling, miniChamberRightWall, miniChamberFloor, "dummyString"), WallID.AncientGoldBrickWall);
@@ -3799,9 +3799,9 @@ namespace WorldGenMod.Structures.Ice
                             if (doors[Door.Down].doorExist && !highEnoughForStashMiniChamber)
                             {
                                 // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(freeR.XCenter  , stashFloor, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(freeR.XCenter    , stashFloor, goldPaint);
-                                WorldGen.paintTile(freeR.XCenter + 1, stashFloor, goldPaint);
+                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
                             }
 
                             // put backwall
@@ -3825,9 +3825,9 @@ namespace WorldGenMod.Structures.Ice
                                 }
 
                                 // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(freeR.XCenter  , miniChamberCeiling, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(freeR.XCenter    , miniChamberCeiling, goldPaint);
-                                WorldGen.paintTile(freeR.XCenter + 1, miniChamberCeiling, goldPaint);
+                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
 
                                 // put backwall
                                 Func.PlaceWallArea(new(miniChamberLeftWall, miniChamberCeiling, miniChamberRightWall, miniChamberFloor, "dummyString"), WallID.AncientGoldBrickWall);
@@ -3840,18 +3840,67 @@ namespace WorldGenMod.Structures.Ice
                         if (highEnoughForStashMiniChamber)
                         {
                             Rectangle2P leftStash = new Rectangle2P(stashLeftWall + 1, stashCeiling + 1, miniChamberLeftWall - 1, stashFloor - 1, "dummyString");
-                            (bool success, int leftHeight, int rightHeight, bool[,] coins) left = Func.CoinPile(leftStash, 0, 25, 0);
-
-                            left = Func.CoinPile(leftStash, 1, 25, 0);
+                            (bool success, int leftHeight, int rightHeight, bool[,] coins) leftCoins = Func.CoinPile(leftStash, 1, leftHeightRand: 25);
 
                             for (int i = 0; i <= leftStash.XDiff; i++)
                             {
                                 for (int j = 0; j <= leftStash.YDiff; j++)
                                 {
-                                    if (left.coins[j, i])
+                                    if (leftCoins.coins[j, i])
                                     {
                                         x = leftStash.X0 + i;
                                         y = leftStash.Y1 - j; // starting down left in the stash
+                                        WorldGen.PlaceTile(x, y, Func.CoinQuality(silverThreshold: 0));
+                                    }
+                                }
+                            }
+
+                            Rectangle2P rightStash = new Rectangle2P(miniChamberRightWall + 1, stashCeiling + 1, stashRightWall - 1, stashFloor - 1, "dummyString");
+                            (bool success, int leftHeight, int rightHeight, bool[,] coins) rightCoins = Func.CoinPile(rightStash, 4, rightHeightRand: 25);
+
+                            for (int i = 0; i <= rightStash.XDiff; i++)
+                            {
+                                for (int j = 0; j <= rightStash.YDiff; j++)
+                                {
+                                    if (rightCoins.coins[j, i])
+                                    {
+                                        x = rightStash.X0 + i;
+                                        y = rightStash.Y1 - j; // starting down left in the stash
+                                        WorldGen.PlaceTile(x, y, Func.CoinQuality(silverThreshold: 0));
+                                    }
+                                }
+                            }
+                        }
+
+                        else // NOT highEnoughForStashMiniChamber
+                        {
+                            Rectangle2P leftStash = new Rectangle2P(stashLeftWall + 1, stashCeiling + 1, stashDoor.X0 - 2, stashFloor - 1, "dummyString");
+                            (bool success, int leftHeight, int rightHeight, bool[,] coins) leftCoins = Func.CoinPile(leftStash, 1, leftHeightRand: 25);
+
+                            for (int i = 0; i <= leftStash.XDiff; i++)
+                            {
+                                for (int j = 0; j <= leftStash.YDiff; j++)
+                                {
+                                    if (leftCoins.coins[j, i])
+                                    {
+                                        x = leftStash.X0 + i;
+                                        y = leftStash.Y1 - j; // starting down left in the stash
+                                        WorldGen.PlaceTile(x, y, Func.CoinQuality(silverThreshold: 0));
+                                    }
+                                }
+                            }
+
+                            Rectangle2P rightStash = new Rectangle2P(stashDoor.X1 + 2, stashCeiling + 1, stashRightWall - 1, stashFloor - 1, "dummyString");
+                            (bool success, int leftHeight, int rightHeight, bool[,] coins) rightCoins = Func.CoinPile(rightStash, 4, rightHeightRand: 25);
+
+                            for (int i = 0; i <= rightStash.XDiff; i++)
+                            {
+                                for (int j = 0; j <= rightStash.YDiff; j++)
+                                {
+                                    if (rightCoins.coins[j, i])
+                                    {
+                                        x = rightStash.X0 + i;
+                                        y = rightStash.Y1 - j; // starting down left in the stash
                                         WorldGen.PlaceTile(x, y, Func.CoinQuality(silverThreshold: 0));
                                     }
                                 }
