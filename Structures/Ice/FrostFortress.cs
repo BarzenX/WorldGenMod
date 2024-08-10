@@ -3405,7 +3405,7 @@ namespace WorldGenMod.Structures.Ice
                     # region entrance: tables, chests, piggy bank, some single decorative items
 
                     int treasuryEntranceYTiles = 4; // 4 YTiles height of where the "entrance" deco will be placed
-                    bool highEnoughForStash = freeR.YTiles >= 9; // 8 YTiles would just leave 2 Tiles for the "stash" (8 - 4 "entrance" - 1 wall - 1 wall)
+                    bool highEnoughForStash = freeR.YTiles >= 9; // 8 YTiles would just leave 2 Tiles for standing in the "stash" (8 - 4 "entrance" - 1 wall - 1 wall)
 
                     int entranceDecoHeight; // height where the decorative items get placed
                     if (roomType == RoomID.BelowSide) // try creating the "entrance area" at the ceiling of the room
@@ -3711,9 +3711,7 @@ namespace WorldGenMod.Structures.Ice
                     #endregion
 
                     #region Stash
-                    if (highEnoughForStash)
-                    {
-                        List<int> StashDecoGemItems =
+                    List<int> StashDecoGemItems =
                         [
                             ItemID.Amber,
                             ItemID.Amethyst,
@@ -3724,6 +3722,8 @@ namespace WorldGenMod.Structures.Ice
                             ItemID.Topaz
                         ];
 
+                    if (highEnoughForStash)
+                    {
                         int stashCeiling, stashFloor, stashLeftWall, stashRightWall;
                         int miniChamberCeiling = 0, miniChamberFloor = 0, miniChamberLeftWall = 0, miniChamberRightWall = 0; // init to not get compile-complaints...
 
@@ -3979,6 +3979,132 @@ namespace WorldGenMod.Structures.Ice
                     else
                     {
                         //TODO
+
+
+
+
+
+
+
+                        Wall = new() { { (int)LineAutomat.Adds.Wall, [WallID.AncientGoldBrickWall, 0, -1, 0] } };
+                        automat = new((freeR.X0, freeR.Y0), (int)LineAutomat.Dirs.xPlus);
+
+
+                        hangSpace = freeR.XTiles;
+
+                        int max3Tiles = hangSpace / 3; // how many 3-tile items ( GemLocks or (ItemFrame + 1 Space)) fit inside the room
+                        max3Tiles -= max3Tiles % 2; // make it an even count, to better fit the even-tiles-room
+                        hangNum = WorldGen.genRand.Next(1 + (max3Tiles / 2)) * 2; // random amount of pairs * 2 = count
+
+
+                        unusedXTiles = hangSpace % 3; // GemLocks and (ItemFrame + 1 Space) both are 3 tiles wide
+                        
+                        int unusedXTilesItemFrames = hangSpace % 2; // ItemFrames are 2 tiles wide
+                        int hangNumItemFrame =       hangSpace / 2;
+
+                        if (unusedXTiles == 0) // only hangItems, no free spaces
+                        {
+                            for (int i = 1; i <= hangNum; i++)
+                            {
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                            }
+                        }
+                        else if (unusedXTiles == 1)
+                        {
+                            if (hangNum % 2 == 0) // even number of hangItems: space in the middle
+                            {
+                                for (int i = 1; i <= hangNum / 2; i++)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                                }
+
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+
+                                for (int i = 1; i <= hangNum / 2; i++)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                                }
+                            }
+                            else // uneven number of hangItems: take out 1 HangItem and distribute 4 spaces in symmetrical pairs
+                            {
+                                int firstSpacePos = WorldGen.genRand.Next((hangNum / 2) + 1) + 1; //e.g. 2 hangItems can have 3 positions where to put a pair of spaces
+                                int secondSpacePos = WorldGen.genRand.Next((hangNum / 2) + 1) + 1;
+
+                                for (int i = 1; i <= hangNum / 2; i++)
+                                {
+                                    if (i == firstSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == secondSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                                }
+
+                                if (firstSpacePos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, noAdd));
+                                if (secondSpacePos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, noAdd));
+
+                                for (int i = hangNum / 2; i >= 1; i--)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+
+                                    if (i == firstSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == secondSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                }
+                            }
+                        }
+                        else if (unusedXTiles == 2)
+                        {
+                            if (hangNum % 2 == 0) // even number of hangItems: distribute the spaces in a symmetrical pair
+                            {
+                                int SpacePairPos = WorldGen.genRand.Next((hangNum / 2) + 1) + 1; //e.g. 2 hangItems can have 3 positions where to put a pair of spaces
+
+                                for (int i = 1; i <= hangNum / 2; i++)
+                                {
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                                }
+
+                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, noAdd));
+
+                                for (int i = hangNum / 2; i >= 1; i--)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                }
+                            }
+                            else // uneven number of hangItems: distribute the spaces in a symmetrical pair (except in the middle)
+                            {
+                                int SpacePairPos = WorldGen.genRand.Next((hangNum / 2) + 1) + 1; //e.g. 2 hangItems can have 3 positions where to put a pair of spaces
+
+                                for (int i = 1; i <= hangNum / 2; i++)
+                                {
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                                }
+
+                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+
+                                for (int i = hangNum / 2; i >= 1; i--)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
+
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                }
+                            }
+                        }
+
+                        automat.Start();
+
+
+
+
+
+
+
+
                     }
                     #endregion
 
