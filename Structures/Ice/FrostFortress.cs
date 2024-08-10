@@ -3713,6 +3713,17 @@ namespace WorldGenMod.Structures.Ice
                     #region Stash
                     if (highEnoughForStash)
                     {
+                        List<int> StashDecoGemItems =
+                        [
+                            ItemID.Amber,
+                            ItemID.Amethyst,
+                            ItemID.Diamond,
+                            ItemID.Emerald,
+                            ItemID.Ruby,
+                            ItemID.Sapphire,
+                            ItemID.Topaz
+                        ];
+
                         int stashCeiling, stashFloor, stashLeftWall, stashRightWall;
                         int miniChamberCeiling = 0, miniChamberFloor = 0, miniChamberLeftWall = 0, miniChamberRightWall = 0; // init to not get compile-complaints...
 
@@ -3765,9 +3776,9 @@ namespace WorldGenMod.Structures.Ice
                                 }
 
                                 // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
-                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
+                                WorldGen.PlaceObject(stashDoor.X0, miniChamberCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, miniChamberCeiling, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, miniChamberCeiling, goldPaint);
 
                                 // put backwall
                                 Func.PlaceWallArea(new(miniChamberLeftWall, miniChamberCeiling, miniChamberRightWall, miniChamberFloor, "dummyString"), WallID.AncientGoldBrickWall);
@@ -3789,7 +3800,7 @@ namespace WorldGenMod.Structures.Ice
                             {
                                 if (doors[Door.Down].doorExist) // leave space at the bottom for a door
                                 {
-                                    if ((i == freeR.XCenter || i == freeR.XCenter + 1)) continue; // leave space for the trap door to the next floor
+                                    if ((i == freeR.XCenter || i == freeR.XCenter + 1)) continue; // leave space for the trap door to the next below room
                                     else if (highEnoughForStashMiniChamber && (i >= doors[Door.Up].doorRect.X0 && i <= doors[Door.Up].doorRect.X1)) continue; // leave this open, to resemble the upper stash marble platform
                                 }
                                 
@@ -3798,10 +3809,10 @@ namespace WorldGenMod.Structures.Ice
 
                             if (doors[Door.Down].doorExist && !highEnoughForStashMiniChamber)
                             {
-                                // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
-                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
+                                // put trap door to access the "stash" from the next below room
+                                WorldGen.PlaceObject(stashDoor.X0, stashFloor, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, stashFloor, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, stashFloor, goldPaint);
                             }
 
                             // put backwall
@@ -3824,10 +3835,10 @@ namespace WorldGenMod.Structures.Ice
                                     WorldGen.PlaceTile(i, miniChamberCeiling, TileID.AncientGoldBrick); // bricks minichamber ceiling
                                 }
 
-                                // put trap door to access the "stash" from above
-                                WorldGen.PlaceObject(stashDoor.X0, stashCeiling, TileID.TrapdoorClosed);
-                                WorldGen.paintTile(stashDoor.X0, stashCeiling, goldPaint);
-                                WorldGen.paintTile(stashDoor.X1, stashCeiling, goldPaint);
+                                // put trap door to access the "minichamer" from above
+                                WorldGen.PlaceObject(stashDoor.X0, miniChamberCeiling, TileID.TrapdoorClosed);
+                                WorldGen.paintTile(stashDoor.X0, miniChamberCeiling, goldPaint);
+                                WorldGen.paintTile(stashDoor.X1, miniChamberCeiling, goldPaint);
 
                                 // put backwall
                                 Func.PlaceWallArea(new(miniChamberLeftWall, miniChamberCeiling, miniChamberRightWall, miniChamberFloor, "dummyString"), WallID.AncientGoldBrickWall);
@@ -3836,7 +3847,7 @@ namespace WorldGenMod.Structures.Ice
 
                         #endregion
 
-                        #region FillStash
+                        #region FillStashWithCoins
                         if (highEnoughForStashMiniChamber)
                         {
                             Rectangle2P leftStash = new Rectangle2P(stashLeftWall + 1, stashCeiling + 1, miniChamberLeftWall - 1, stashFloor - 1, "dummyString");
@@ -3906,7 +3917,63 @@ namespace WorldGenMod.Structures.Ice
                                 }
                             }
                         }
-                        
+
+                        #endregion
+
+                        #region StashCeilingDeco
+
+                        if (Chance.Perc(75)) // two GemLocks next to each other
+                        {
+                            if (Chance.Perc(85))
+                            {
+                                placed = WorldGen.PlaceTile(freeR.XCenter - 1, stashCeiling + 2, TileID.GemLocks, style: WorldGen.genRand.Next(7));
+                                if (placed) WorldGen.ToggleGemLock(freeR.XCenter - 1, stashCeiling + 2, true);
+                            }
+
+                            if (Chance.Perc(85))
+                            {
+                                placed = WorldGen.PlaceTile(freeR.XCenter + 2, stashCeiling + 2, TileID.GemLocks, style: WorldGen.genRand.Next(7));
+                                if (placed) WorldGen.ToggleGemLock(freeR.XCenter + 2, stashCeiling + 2, true);
+                            }
+                        }
+                        else // GemLock, ItemFrame, GemLock
+                        {
+                            if (Chance.Perc(85))
+                            {
+                                placed = WorldGen.PlaceTile(freeR.XCenter - 2, stashCeiling + 2, TileID.GemLocks, style: WorldGen.genRand.Next(7));
+                                if (placed) WorldGen.ToggleGemLock(freeR.XCenter - 2, stashCeiling + 2, true);
+                            }
+
+                            if (Chance.Perc(90)) Func.PlaceItemFrame(freeR.XCenter, stashCeiling + 1, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)]);
+
+                            if (Chance.Perc(85))
+                            {
+                                placed = WorldGen.PlaceTile(freeR.XCenter + 3, stashCeiling + 2, TileID.GemLocks, style: WorldGen.genRand.Next(7));
+                                if (placed) WorldGen.ToggleGemLock(freeR.XCenter + 3, stashCeiling + 2, true);
+                            }
+                        }
+
+                        #endregion
+
+                        #region MiniChamberDeco
+                        if (highEnoughForStashMiniChamber)
+                        {
+                            
+
+                            int miniChamberItemFrameCount = (miniChamberFloor - miniChamberCeiling) / 2;
+                            for (int i = 0; i < miniChamberItemFrameCount; i++)
+                            {
+                                if (Chance.Perc(75)) // two ItemFrames
+                                {
+                                    if (Chance.Perc(85)) Func.PlaceItemFrame(miniChamberLeftWall + 1, miniChamberCeiling + 1 + (i * 2), item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)]);
+                                    if (Chance.Perc(85)) Func.PlaceItemFrame(miniChamberLeftWall + 3, miniChamberCeiling + 1 + (i * 2), item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)]);
+                                }
+                                else // one ItemFrame in the middle
+                                {
+                                    if (Chance.Perc(90)) Func.PlaceItemFrame(miniChamberLeftWall + 2, miniChamberCeiling + 1 + (i * 2), item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)]);
+                                }
+                            }
+                        }
                         #endregion
                     }
                     else
