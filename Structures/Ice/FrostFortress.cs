@@ -3993,14 +3993,13 @@ namespace WorldGenMod.Structures.Ice
                         hangSpace = freeR.XTiles;
 
                         int max3Tiles = hangSpace / 3; // how many 3-tile items ( GemLocks or (ItemFrame + 1 Space)) fit inside the room
-                        max3Tiles -= max3Tiles % 2; // make it an even count, to better fit the even-tiles-room
-                        hangNum = WorldGen.genRand.Next(1 + (max3Tiles / 2)) * 2; // random amount of pairs * 2 = count
+                        //max3Tiles -= max3Tiles % 2; // make it an even count, to better fit the even-tiles-room
+                        int hangNum3Tiles = WorldGen.genRand.Next(1 + (max3Tiles / 2)) * 2; // (random amount of pairs) * 2 = count
+
+                        int unusedXTilesItemFrames = hangSpace - (hangNum3Tiles * 3); // remaining space for ItemFrames (always an even number in even-tiles-rooms)
+                        int hangNumItemFrame = unusedXTilesItemFrames / 2;
 
 
-                        unusedXTiles = hangSpace % 3; // GemLocks and (ItemFrame + 1 Space) both are 3 tiles wide
-                        
-                        int unusedXTilesItemFrames = hangSpace % 2; // ItemFrames are 2 tiles wide
-                        int hangNumItemFrame =       hangSpace / 2;
 
                         if (unusedXTiles == 0) // only hangItems, no free spaces
                         {
@@ -4018,7 +4017,7 @@ namespace WorldGenMod.Structures.Ice
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
                                 }
 
-                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
 
                                 for (int i = 1; i <= hangNum / 2; i++)
                                 {
@@ -4032,21 +4031,21 @@ namespace WorldGenMod.Structures.Ice
 
                                 for (int i = 1; i <= hangNum / 2; i++)
                                 {
-                                    if (i == firstSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
-                                    if (i == secondSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == firstSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
+                                    if (i == secondSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
 
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
                                 }
 
-                                if (firstSpacePos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, noAdd));
-                                if (secondSpacePos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, noAdd));
+                                if (firstSpacePos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, []));
+                                if (secondSpacePos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, []));
 
                                 for (int i = hangNum / 2; i >= 1; i--)
                                 {
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
 
-                                    if (i == firstSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
-                                    if (i == secondSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == firstSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
+                                    if (i == secondSpacePos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
                                 }
                             }
                         }
@@ -4058,18 +4057,18 @@ namespace WorldGenMod.Structures.Ice
 
                                 for (int i = 1; i <= hangNum / 2; i++)
                                 {
-                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
 
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
                                 }
 
-                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, noAdd));
+                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (2, 0), (0, 0), 0, []));
 
                                 for (int i = hangNum / 2; i >= 1; i--)
                                 {
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
 
-                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
                                 }
                             }
                             else // uneven number of hangItems: distribute the spaces in a symmetrical pair (except in the middle)
@@ -4078,20 +4077,20 @@ namespace WorldGenMod.Structures.Ice
 
                                 for (int i = 1; i <= hangNum / 2; i++)
                                 {
-                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
 
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
                                 }
 
-                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
-                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                if (SpacePairPos > (hangNum / 2)) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
 
                                 for (int i = hangNum / 2; i >= 1; i--)
                                 {
                                     automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: hangItem.TileID, style: hangItem.style, size: (3, 3), toAnchor: (1, 0), chance: 75, add: Wall));
 
-                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
+                                    if (i == SpacePairPos) automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
                                 }
                             }
                         }

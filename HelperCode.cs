@@ -1630,7 +1630,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Resets the automat to its initial state (position and task list)
+        /// Resets the automat to its initial state (start position and cleared task list)
         /// </summary>
         public void Reset()
         {
@@ -1638,6 +1638,25 @@ namespace WorldGenMod
             this.YAct = this.YStart;
 
             this.Steps.Clear();
+        }
+
+        /// <summary>
+        /// Mirrors the actual list, adding the elements to the end of the list
+        /// </summary>
+        /// <param name="evenRoomMirror">Stating if the mirror should add a space as a separation (uneven room) or not (even room)</param>
+        public void MirrorSteps(bool evenRoomMirror = true)
+        {
+            if (this.Steps.Count > 0)
+            {
+                bool firstCycle = true;
+                for (int i = this.Steps.Count - 1; i >= 0; i--)
+                {
+                    if (firstCycle && !evenRoomMirror) Steps.Add(((int)Cmds.Space, 0, 0, size: (1, 1), (0, 0), 0, []));
+                    firstCycle = false;
+
+                    Steps.Add(this.Steps[i]);
+                }
+            }
         }
     }
 
