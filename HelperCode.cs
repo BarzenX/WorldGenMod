@@ -1435,10 +1435,10 @@ namespace WorldGenMod
         /// <br/> - Cmd=Space: *not used*
         /// 
         /// <br/> <b>Size</b>
-        /// <br/> - dimensions of the placed object
+        /// <br/> - dimensions of the placed object -> (x, y)
         /// 
         /// <br/> <b>ToAnchor</b>
-        /// <br/> - tile distances leading from the actual automat position to the multitile anchor point (TopToBottom is +Y and RightToLeft is +X)
+        /// <br/> - tile distances leading from the actual automat position to the multitile anchor point (TopToBottom is +Y and RightToLeft is +X) -> (x,y)
         /// 
         /// <br/> <b>Chance</b>
         /// <br/> - Pre-Chance-Check to if an object shall be placed or not
