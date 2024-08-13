@@ -4002,62 +4002,63 @@ namespace WorldGenMod.Structures.Ice
 
                         int max3Tiles = hangSpace / 3; // how many 3-tile items ( GemLocks or (ItemFrame + 1 Space)) fit inside the room
                         //max3Tiles -= max3Tiles % 2; // make it an even count, to better fit the even-tiles-room
-                        int hangPair3Tiles = WorldGen.genRand.Next(1 + (max3Tiles / 2)) * 2; // (random amount of pairs) * 2 = count
+                        int pair3Tiles = WorldGen.genRand.Next(1 + (max3Tiles / 2)); // random amount of pairs
 
-                        int unusedXTilesItemFrames = hangSpace - (hangPair3Tiles * 3); // remaining space for ItemFrames (always an even number in even-tiles-rooms)
+                        int unusedXTilesItemFrames = hangSpace - ((pair3Tiles * 2) * 3); // remaining space for ItemFrames (always an even number in even-tiles-rooms)
                         int hangNumItemFrame = unusedXTilesItemFrames / 2;
 
                         actX = freeR.X0; // init
 
                         if (hangNumItemFrame > 0) // chance to turn an ItemFrame into two banners (1 on the left and 1 on right end)
                         {
-                            if (Chance.Perc(70))
+                            if (Chance.Perc(50))
                             {
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 0), chance: 90, add: []));
                                 actX++;
+                                hangNumItemFrame--;
                             }
                         }
-                        else // chance to turn a GemLock-Pair into a banner and an ItemFrame on both sides
+                        else // chance to turn a GemLock-Pair into a banner + ItemFrame on both sides
                         {
-                            if (Chance.Perc(70))
+                            if (Chance.Perc(50))
                             {
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 0), chance: 90, add: []));
 
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
                                                                     size: (2, 2), toAnchor: (0, 0), chance: 90, add: WallAndPaint2));
                                 actX = actX + 3;
-                                hangPair3Tiles--;
+                                pair3Tiles--;
                             }
                         }
 
-                        if (hangPair3Tiles > 0)
+                        if (pair3Tiles > 0)
                         {
                             // chance to turn a GemLock-Pair into a marble lamp and an ItemFrame on both sides
-                            if (Chance.Perc(70))
+                            if (Chance.Perc(50))
                             {
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.HangingLanterns, style: 36, size: (1, 2), toAnchor: (0, 0), chance: 90, add: []));
                                 
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
                                                                     size: (2, 2), toAnchor: (0, 0), chance: 90, add: WallAndPaint2));
                                 actX = actX + 3;
-                                hangPair3Tiles--;
+                                pair3Tiles--;
                             }
                         }
 
-                        // put all GemLock pairs
-                        if (hangPair3Tiles > 0)
+                        // put all remaining GemLock pairs
+                        if (pair3Tiles > 0)
                         {
-                            for (int i = 1; i <= hangPair3Tiles; i++)
+                            for (int i = 1; i <= pair3Tiles; i++)
                             {
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.GemLocks, style: WorldGen.genRand.Next(7), size: (3, 3), toAnchor: (1, 1), chance: 90, add: Wall));
                                 actX = actX + 3;
                             }
                         }
                         
-                        // put all ItemFrame pairs
+                        // put all remaining ItemFrame pairs
                         if ( ((int)hangNumItemFrame / 2) > 0 )
                         {
-                            for (int i = 1; i <= hangPair3Tiles; i++)
+                            for (int i = 1; i <= (hangNumItemFrame / 2); i++)
                             {
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
                                                                     size: (2, 2), toAnchor: (0, 0), chance: 90, add: WallAndPaint2));
@@ -4065,7 +4066,7 @@ namespace WorldGenMod.Structures.Ice
                             }
                         }
 
-                        if(actX < freeR.XCenter) // because of the ItemFrame -> banner replace there might be a gap now
+                        if((hangNumItemFrame % 2) > 0) // if there's an uneven number of ItemFrames then the one in the middle of the room needs to be placed manually. Add just a space here
                         {
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
                         }
