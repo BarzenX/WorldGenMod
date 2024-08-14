@@ -1321,6 +1321,24 @@ namespace WorldGenMod
             BotRight = 3,
             BotLeft = 4
         }
+
+        public static Dictionary<TKey, TValue> CombineDicts<TKey, TValue>(params Dictionary<TKey, TValue>[] dictionaries)
+        {
+            var mergedDictionary = new Dictionary<TKey, TValue>();
+
+            foreach (var dictionary in dictionaries)
+            {
+                foreach (var kvp in dictionary)
+                {
+                    if (!mergedDictionary.ContainsKey(kvp.Key))
+                    {
+                        mergedDictionary[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+
+            return mergedDictionary;
+        }
     }
 
     internal class Chance
@@ -1403,13 +1421,17 @@ namespace WorldGenMod
         /// <br/> <b>Paint</b> "data" structure: PaintID, leftmost x-coordinate of sprite, topmost y-coordinate of sprite (given in relation to actual step position)
         /// <br/> <b>Banner</b> "data" structure: banner style for the command "BannerAndTile"
         /// <br/> <b>Piles</b> "data" structure: pile row index, pile column (count) index of the specific Tile texture file (185, 186 or 187)
+        /// <br/> <b>LightOff</b> "data" structure: "1" for calling the respective "unlight" function for the light source
+        /// <br/> <b>GemLockFill</b> "data" structure: "1" for calling the WorldGen.ToggleGemLock() function on a placed GemLock
         /// </summary>
         public enum Adds
         {
             Wall = 1,
             Paint = 2,
             Banner = 3,
-            Piles = 4
+            Piles = 4,
+            LightOff = 5,
+            GemLockFill = 6
         }
 
         /// <summary> The list of to-be-worked tasks
@@ -1564,6 +1586,24 @@ namespace WorldGenMod
                                 x = this.XAct + ActStep.add[(int)Adds.Paint][1];
                                 y = this.YAct + ActStep.add[(int)Adds.Paint][2];
                                 success = Func.PaintArea(new Rectangle2P(x, y, ActStep.size.x, ActStep.size.y), paint);
+                            }
+
+                            if (ActStep.add.ContainsKey((int)Adds.GemLockFill) && success)
+                            {
+                                if (ActStep.add[(int)Adds.GemLockFill][0] == 1) WorldGen.ToggleGemLock(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y, true); ;
+                            }
+
+                            if (ActStep.add.ContainsKey((int)Adds.LightOff) && success)
+                            {
+                                if (ActStep.add[(int)Adds.LightOff][0] == 1)
+                                {
+                                    if      (ActStep.item == TileID.Chandeliers)  Func.UnlightChandelier(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y);
+                                    else if (ActStep.item == TileID.Fireplace) Func.UnlightFireplace(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y);
+                                    else if (ActStep.item == TileID.HangingLanterns) Func.UnlightLantern(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y);
+                                    else if (ActStep.item == TileID.Candelabras) Func.UnlightCandelabra(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y);
+                                    else if (ActStep.item == TileID.Candles || ActStep.item == TileID.Torches) Func.Unlight1x1(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y);
+                                    else if (ActStep.item == TileID.Lamps) Func.UnlightLamp(this.XAct + ActStep.toAnchor.x, this.YAct + ActStep.toAnchor.y);
+                                }
                             }
                         }
                         break;

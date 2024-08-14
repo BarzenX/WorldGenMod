@@ -3978,24 +3978,19 @@ namespace WorldGenMod.Structures.Ice
                     }
                     else
                     {
-                        //TODO
-
-
-
-
-
-
+                        #region Stashless Ceiling Deco
                         automat = new((freeR.X0, freeR.Y0), (int)LineAutomat.Dirs.xPlus);
 
                         // Wall / WallAndPaint for GemLocks (3x3, anchor is center)
-                        Wall         = new() { { (int)LineAutomat.Adds.Wall,  [ WallID.AncientGoldBrickWall, 0, -1, 0 ] } };
-                        WallAndPaint = new() { { (int)LineAutomat.Adds.Wall,  [ WallID.AncientGoldBrickWall, 0, -1, 0 ] },
-                                               { (int)LineAutomat.Adds.Paint, [ PaintID.DeepYellowPaint    , 0, -1    ] }  };
+                        Wall                             = new() { { (int)LineAutomat.Adds.Wall,  [ WallID.AncientGoldBrickWall, 0, -1, 0 ] } };
+                        Dictionary<int, List<int>> Paint = new() { { (int)LineAutomat.Adds.Paint, [ PaintID.DeepYellowPaint    , 0, -1    ] } };
+                        Dictionary<int, List<int>> GemLockFill = new() { { (int)LineAutomat.Adds.GemLockFill, [1] } };
 
                         // Wall / WallAndPaint for ItemFrames (2x2, anchor is top left)
-                        Dictionary<int, List<int>> Wall2 =         new() { { (int)LineAutomat.Adds.Wall,  [ WallID.AncientGoldBrickWall, 0, 0, 0] } };
-                        Dictionary<int, List<int>> WallAndPaint2 = new() { { (int)LineAutomat.Adds.Wall,  [ WallID.AncientGoldBrickWall, 0, 0, 0 ] },
-                                                                           { (int)LineAutomat.Adds.Paint, [ PaintID.DeepYellowPaint    , 0, 0    ] }  };
+                        Dictionary<int, List<int>> Wall2 =  new() { { (int)LineAutomat.Adds.Wall,  [ WallID.AncientGoldBrickWall, 0, 0, 0 ] } };
+                        Dictionary<int, List<int>> Paint2 = new() { { (int)LineAutomat.Adds.Paint, [ PaintID.DeepYellowPaint    , 0, 0    ] } };
+
+                        Dictionary<int, List<int>> LightOff = new() { { (int)LineAutomat.Adds.LightOff, [1] } };
 
 
                         hangSpace = freeR.XTiles;
@@ -4025,7 +4020,7 @@ namespace WorldGenMod.Structures.Ice
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.Banners, style: Deco[S.Banner], size: (1, 3), toAnchor: (0, 0), chance: 90, add: []));
 
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
-                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: WallAndPaint2));
+                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: Func.CombineDicts(Wall2, Paint2) ));
                                 actX = actX + 3;
                                 pair3Tiles--;
                             }
@@ -4036,10 +4031,10 @@ namespace WorldGenMod.Structures.Ice
                             // chance to turn a GemLock-Pair into a marble lamp and an ItemFrame on both sides
                             if (Chance.Perc(50))
                             {
-                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.HangingLanterns, style: 36, size: (1, 2), toAnchor: (0, 0), chance: 90, add: []));
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.HangingLanterns, style: 36, size: (1, 2), toAnchor: (0, 0), chance: 90, add: LightOff));
                                 
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
-                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: WallAndPaint2));
+                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: Func.CombineDicts(Wall2, Paint2) ));
                                 actX = actX + 3;
                                 pair3Tiles--;
                             }
@@ -4050,7 +4045,8 @@ namespace WorldGenMod.Structures.Ice
                         {
                             for (int i = 1; i <= pair3Tiles; i++)
                             {
-                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.GemLocks, style: WorldGen.genRand.Next(7), size: (3, 3), toAnchor: (1, 1), chance: 90, add: Wall));
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.GemLocks, style: WorldGen.genRand.Next(7),
+                                                                    size: (3, 3), toAnchor: (1, 1), chance: 90, add: Func.CombineDicts(Wall, GemLockFill)));
                                 actX = actX + 3;
                             }
                         }
@@ -4061,7 +4057,7 @@ namespace WorldGenMod.Structures.Ice
                             for (int i = 1; i <= (hangNumItemFrame / 2); i++)
                             {
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
-                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: WallAndPaint2));
+                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: Func.CombineDicts(Wall2, Paint2)));
                                 actX = actX + 2;
                             }
                         }
@@ -4071,21 +4067,39 @@ namespace WorldGenMod.Structures.Ice
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
                         }
 
-                        automat.MirrorSteps();
+
+                        // the middle of the room is reached, mirror the steps, keeping the randomness
+                        for (int i = automat.Steps.Count - 1; i >= 0; i--)
+                        {
+                            if      (automat.Steps[i].cmd == (int)LineAutomat.Cmds.Space) automat.Steps.Add(automat.Steps[i]); // just copy spaces
+                            else if (automat.Steps[i].cmd == (int)LineAutomat.Cmds.ItemFrame)
+                            {
+                                automat.Steps.Add((cmd: (int)LineAutomat.Cmds.ItemFrame, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], style: 0,
+                                                                    size: (2, 2), toAnchor: (0, 0), chance: 90, add: Func.CombineDicts(Wall2, Paint2)));
+                            }
+                            else if (automat.Steps[i].cmd == (int)LineAutomat.Cmds.Tile)
+                            {
+                                if (automat.Steps[i].item == TileID.GemLocks)
+                                {
+                                    automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: TileID.GemLocks, style: WorldGen.genRand.Next(7),
+                                                                    size: (3, 3), toAnchor: (1, 1), chance: 90, add: Func.CombineDicts(Wall, GemLockFill)));
+                                }
+                                else automat.Steps.Add(automat.Steps[i]); // just copy other tiles
+                            }
+                        }
+
                         automat.Start();
 
 
 
-
-
-
-
-
+                        if ((hangNumItemFrame % 2) > 0) // fill the possible hole in the middle, that the automat just reserved with spaces
+                        {
+                            if (Chance.Perc(85)) Func.PlaceItemFrame(freeR.XCenter, freeR.Y0, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], paint: PaintID.DeepYellowPaint);
+                            if (Chance.Perc(85)) Func.PlaceItemFrame(freeR.XCenter, freeR.Y0 + 2, item: StashDecoGemItems[WorldGen.genRand.Next(StashDecoGemItems.Count)], paint: PaintID.DeepYellowPaint);
+                        }
+                        #endregion
                     }
                     #endregion
-
-
-                    // large gems with gem locks as paintings (in the middle)
                     break;
 
                 case 100: // empty room for display
