@@ -528,8 +528,8 @@ namespace WorldGenMod
         /// <param name="chance">Chance of the part to be actually placed (0% .. chance .. 100%) </param>
         /// <param name="add"><br/>Additional data arranged as dictionary of "code" keys and "data" value pairs. Uses so far: 
         ///              <br/>Key "Piles" - Placing (large/small) piles: <br/> -> [0] = XSprite (count), [1] = YSprite (row)
-        ///              <br/>Key "CheckFree" - check in the stated area around the placement position if it's free of tiles: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos
-        ///              <br/>Key "CheckArea" - check in the stated area around the placement position wheter "area" is left / "blockedArea" is entered: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos</param>
+        ///              <br/>Key "CheckFree" - check in the stated area around the placement position if it's free of tiles: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos ...  (basically the sprites dimensions around the anchor point)
+        ///              <br/>Key "CheckArea" - check in the stated area around the placement position wheter "area" is left / "blockedArea" is entered: <br/> -> [0], [1] = XTiles left / right of placePos, [2], [3] = YTiles above / below the placePos ...  (basically the sprites dimensions around the anchor point)</param>
         /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
         ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of successful placed object, otherwise 0
         ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of successful placed object, otherwise 0</returns>
@@ -597,14 +597,14 @@ namespace WorldGenMod
                     {
                         if (randomizeX)
                         {
-                            for (int i = x - add["CheckFree"][0]; i <= x + add["CheckFree"][1]; i++)
+                            for (int i = x - add["CheckArea"][0]; i <= x + add["CheckArea"][1]; i++)
                             {
                                 placementPosBlocked |= blockedArea.Contains(i, y) || !area.Contains(i, y);
                             }
                         }
                         else
                         {
-                            for (int j = y - add["CheckFree"][2]; j <= y + add["CheckFree"][3]; j++)
+                            for (int j = y - add["CheckArea"][2]; j <= y + add["CheckArea"][3]; j++)
                             {
                                 placementPosBlocked |= blockedArea.Contains(x, j) || !area.Contains(x, j);
                             }
@@ -627,6 +627,7 @@ namespace WorldGenMod
                     else if(type == TileID.SmallPiles) WorldGen.PlaceSmallPile(x, y, add["Piles"][0], add["Piles"][1]);
                     else if(type == TileID.DjinnLamp) WorldGen.PlaceObject(x, y, type: type, style: style);
                     else if(type == TileID.GolfTrophies) WorldGen.PlaceObject(x, y, type: type, style: style);
+                    else if(type == TileID.TeaKettle) WorldGen.PlaceObject(x, y, type: type, style: style);
                     else WorldGen.PlaceTile(x, y, type, style: style);
 
                     // check placement

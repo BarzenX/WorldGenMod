@@ -989,8 +989,8 @@ namespace WorldGenMod.Structures.Ice
             (bool success, int x, int y) placeResult, placeResult2;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = []; // for remembering positions
-            List<(ushort TileID, int style, byte chance)> randomItems = []; // for random item placement
-            int chestID, unusedXTiles;
+            List<(ushort TileID, int style, byte chance)> randomItems = [], randomItems2 = []; // for random item placement
+            int chestID, unusedXTiles, num;
 
             //choose room decoration at random
             bool valid;
@@ -1003,7 +1003,7 @@ namespace WorldGenMod.Structures.Ice
 
             } while (!valid);
 
-            roomDeco = 1;
+            roomDeco = 0;
 
             switch (roomDeco)
             {
@@ -1259,7 +1259,7 @@ namespace WorldGenMod.Structures.Ice
 
                 case 1: // kitchen with shelves
 
-                    #region wooden beam arch at floor and chains
+                    #region wooden beam arch at floor and hanging chains
                     for (y = freeR.Y1 - 3; y <= freeR.Y1; y++)
                     {
                         WorldGen.PlaceTile(doors[Door.Down].doorRect.X0, y, TileID.BorealBeam);
@@ -1327,152 +1327,135 @@ namespace WorldGenMod.Structures.Ice
                     Func.TryPlaceTile(area1, area2, TileID.TrashCan, style: 0, chance: 85); // trash can
 
                     Func.TryPlaceTile(area1, area2, TileID.Chairs, style: 21, chance: 85); // bar stool
+
+                    Func.TryPlaceTile(area1, area2, TileID.WorkBenches, style: 0, chance: 85); // wooden work bench
                     #endregion
 
-                    #region first shelf 
-                    if (freeR.YTiles >= 6)
+                    #region shelves
+
+                    randomItems.Clear();
+                    randomItems.Add((TileID.Bowls, 0, 50)); // bowl
+                    randomItems.Add((TileID.Bowls, 2, 50)); // fancy dishes
+                    randomItems.Add((TileID.FoodPlatter, style: 17, 50)); // food plate
+                    randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
+                    randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
+                    randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
+                    randomItems.Add((TileID.Bottles, 3, 50)); // Pink Vase
+                    randomItems.Add((TileID.Bottles, 4, 50)); // Mug
+                    randomItems.Add((TileID.Bottles, 5, 50)); // Dynasty Cup
+                    randomItems.Add((TileID.Bottles, 6, 50)); // Wine Glass
+                    randomItems.Add((TileID.Bottles, 7, 50)); // Honey Cup
+                    randomItems.Add((TileID.Bottles, 8, 50)); // Chalice
+                    randomItems.Add((TileID.TeaKettle, 0, 50)); // Teapot
+                    randomItems.Add((TileID.ClayPot, 0, 50)); // ClayPot
+
+                    randomItems2.Clear();
+                    randomItems2.Add((TileID.TeaKettle, 0, 50)); // Teapot
+                    randomItems2.Add((TileID.FishingCrate, 0, 50)); // wooden fishing crate
+                    randomItems2.Add((TileID.Containers, 5, 50)); // wooden barrel
+                    randomItems2.Add((TileID.Kegs, 0, 50)); // wooden keg
+
+                    List<short> food =
+                    [
+                        ItemID.Apple,
+                        ItemID.Apricot,
+                        ItemID.Cherry,
+                        ItemID.Plum,
+                        ItemID.RoastedDuck,
+                        ItemID.Bass,
+                        ItemID.Trout,
+                        ItemID.TundraTrout,
+                    ];
+
+
+                    // define blocked area for random placement
+                    area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, doors[Door.Up].doorRect.Y1, doors[Door.Up].doorRect.X1, doors[Door.Down].doorRect.Y0, "dummyString");
+
+                    // init dynamic var
+                    int kitchenShelfHeight = freeR.Y1 - 4;
+                    int kitchenShelfMinTiles = 6; // 4 for floor deco, 5 for shelf, 6 for 1-tile items
+                    bool first = true;
+                    rememberPos.Clear();
+
+                    while (freeR.YTiles >= kitchenShelfMinTiles)
                     {
-                        int kitchenShelfHeight = freeR.Y1 - 4;
-
-                        for (x = freeR.X0; x <= doors[Door.Down].doorRect.X0 - 1; x++)
+                        // create shelves
+                        if (Chance.Perc(80) || first)
                         {
-                            WorldGen.PlaceTile(x, kitchenShelfHeight, TileID.Platforms, style: 19); // Boreal wood platform
-                            WorldGen.paintTile(x, kitchenShelfHeight, (byte)Deco[S.StylePaint]);
-                        }
-                        for (x = doors[Door.Down].doorRect.X1 + 1; x <= freeR.X1; x++)
-                        {
-                            WorldGen.PlaceTile(x, kitchenShelfHeight, TileID.Platforms, style: 19); // Boreal wood platform
-                            WorldGen.paintTile(x, kitchenShelfHeight, (byte)Deco[S.StylePaint]);
+                            for (x = freeR.X0; x <= doors[Door.Down].doorRect.X0 - 1; x++)
+                            {
+                                placed = WorldGen.PlaceTile(x, kitchenShelfHeight, TileID.Platforms, style: 19); // Boreal wood platform
+                                if(placed) WorldGen.paintTile(x, kitchenShelfHeight, (byte)Deco[S.StylePaint]);
+                            }
                         }
 
-                        //put deco on first shelf
+                        if (Chance.Perc(80) || first)
+                        {
+                            for (x = doors[Door.Down].doorRect.X1 + 1; x <= freeR.X1; x++)
+                            {
+                                placed = WorldGen.PlaceTile(x, kitchenShelfHeight, TileID.Platforms, style: 19); // Boreal wood platform
+                                if (placed) WorldGen.paintTile(x, kitchenShelfHeight, (byte)Deco[S.StylePaint]);
+                            }
+                        }
+
+                        // try stacking wooden crates from last shelf
+                        if (rememberPos.Count > 0) // wooden crates have been placed succesfully on the lower shelf
+                        {
+                            for (int posNum = 0; posNum <= rememberPos.Count - 1; posNum++) // for every placed crate
+                            {
+                                if (Chance.Simple()) WorldGen.Place2x2(rememberPos[posNum].x + 1, rememberPos[posNum].y - 2, TileID.FishingCrate, style: 0); // try stack another
+                                // Explanation: PlaceTile didn't work at all and looks like Place2x2 doesn't use the same anchor point as PlaceTile...that's why the +1 is necessary
+                            }
+                        }
+                        rememberPos.Clear();
+
+                        //put deco on shelf
                         area1 = new Rectangle2P(freeR.X0, kitchenShelfHeight - 1, freeR.X1, kitchenShelfHeight - 1, "dummyString");
-                        area2 = doors[Door.Down].doorRect.CloneAndMove(0, -6);
                         unusedXTiles = freeR.XTiles - doors[Door.Down].doorRect.XTiles;
-
-                        randomItems.Clear();
-                        randomItems.Add((TileID.Bowls, 0, 50)); // bowl
-                        randomItems.Add((TileID.Bowls, 2, 50)); // fancy dishes
-                        randomItems.Add((TileID.FoodPlatter, style: 17, 50)); // food plate
-                        randomItems.Add((TileID.Bottles, 0, 50)); // Bottle
-                        randomItems.Add((TileID.Bottles, 1, 50)); // Lesser Healing Potion
-                        randomItems.Add((TileID.Bottles, 2, 50)); // Lesser Mana Potion
-                        randomItems.Add((TileID.Bottles, 3, 50)); // Pink Vase
-                        randomItems.Add((TileID.Bottles, 4, 50)); // Mug
-                        randomItems.Add((TileID.Bottles, 5, 50)); // Dynasty Cup
-                        randomItems.Add((TileID.Bottles, 6, 50)); // Wine Glass
-                        randomItems.Add((TileID.Bottles, 7, 50)); // Honey Cup
-                        randomItems.Add((TileID.Bottles, 8, 50)); // Chalice
-                        randomItems.Add((TileID.TeaKettle, 0, 50)); // Teapot
-                        randomItems.Add((TileID.ClayPot, 0, 50)); // ClayPot
-
 
                         if (freeR.YTiles >= 7) // high enought for 2 YTile stuff?
                         {
-                            placeResult = Func.TryPlaceTile(area1, area2, TileID.Kegs, style: 0, chance: 50); // wooden keg
-                            if (placeResult.success) unusedXTiles -= 2;
-
-                            placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
-                            if (placeResult.success)
+                            for (int i = 1; i <= 3; i++) // just 3 is enough
                             {
-                                rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
-                                unusedXTiles -= 2;
-                            }
+                                num = WorldGen.genRand.Next(randomItems2.Count);
+                                placeResult = Func.TryPlaceTile(area1, area2, randomItems2[num].TileID, style: randomItems2[num].style, chance: randomItems2[num].chance); // one random item of the 2x2-tiles list
 
-                            placeResult = Func.TryPlaceTile(area1, area2, TileID.Containers, style: 5, chance: 50); // wooden barrel
-                            if (placeResult.success) unusedXTiles -= 2;
+                                if (placeResult.success)
+                                {
+                                    unusedXTiles -= 2;
+                                    if(randomItems2[num].TileID == TileID.FishingCrate) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later stacking try
+                                }
+                            }
                         }
+
                         for (int i = 1; i <= unusedXTiles + 3; i++) // unusedXTiles + a little more to compensate Chance fails
                         {
-                            int num = WorldGen.genRand.Next(randomItems.Count);
-                            Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
+                            num = WorldGen.genRand.Next(randomItems.Count);
+                            Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the 1-tile list
                         }
-                    }
-                    #endregion
 
-                    #region second shelf 
-                    if (freeR.YTiles >= 9)
-                    {
-                        if (Chance.Simple())
+                        // ItemFrame with food in the middle
+                        if (Chance.Perc(75) && (freeR.Y0 <= kitchenShelfHeight - 2))
                         {
-                            for (x = freeR.X0; x <= doors[Door.Down].doorRect.X0 - 2; x++)
-                            {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: 19); // Boreal wood platform
-                                WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
-                            }
+                            Func.PlaceItemFrame(freeR.XCenter, kitchenShelfHeight - 2, Deco[S.BackWall], Deco[S.StylePaint], item: food[WorldGen.genRand.Next(food.Count)]);
                         }
 
-                        if (Chance.Simple())
-                        {
-                            for (x = doors[Door.Down].doorRect.X1 + 2; x <= freeR.X1; x++)
-                            {
-                                WorldGen.PlaceTile(x, freeR.Y1 - 7, TileID.Platforms, style: 19); // Boreal wood platform
-                                WorldGen.paintTile(x, freeR.Y1 - 7, (byte)Deco[S.StylePaint]);
-                            }
-                        }
-
-                        // try stacking wooden crates
-                        if (rememberPos.Count > 0) // wooden crates have been placed succesfully on the lower shelf
-                        {
-                            for (int posNum = 0; posNum <= rememberPos.Count - 1; posNum++) // for every placed crate
-                            {
-                                if (Chance.Simple()) WorldGen.Place2x2(rememberPos[posNum].x + 1, rememberPos[posNum].y - 2, TileID.FishingCrate, style: 0); // try stack another
-                                // Explanation: PlaceTile didn't work at all and looks like Place2x2 doesn't use the same anchor point as PlaceTile...that's why the +1 is necessary
-                            }
-                        }
-
-                        //put deco on second shelf
-                        area1 = new Rectangle2P(freeR.X0, freeR.Y1 - 8, freeR.X1, freeR.Y1 - 8, "dummyString");
-                        area2 = doors[Door.Down].doorRect.CloneAndMove(0, -9);
-                        rememberPos.Clear();
-                        if (freeR.YTiles >= 10)
-                        {
-                            Func.TryPlaceTile(area1, area2, TileID.Kegs, style: 0, chance: 50); // wooden keg
-
-                            placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
-                            if (placeResult.success) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
-
-                            Func.TryPlaceTile(area1, area2, TileID.Bottles, style: WorldGen.genRand.Next(9), chance: 50); // any 1x1 dish
-                            Func.TryPlaceTile(area1, area2, TileID.FoodPlatter, style: 17, chance: 50); // food plate
-
-                            placeResult = Func.TryPlaceTile(area1, area2, TileID.FishingCrate, style: 0, chance: 50); // wooden fishing crate
-                            if (placeResult.success) rememberPos.Add((placeResult.x, placeResult.y)); // remember placement position for later
-
-                            for (int i = 1; i <= 9; i++)
-                            {
-                                int num = WorldGen.genRand.Next(randomItems.Count);
-                                Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 1; i <= 15; i++)
-                            {
-                                int num = WorldGen.genRand.Next(randomItems.Count);
-                                Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
-                            }
-                        }
-
-                        // try stacking wooden crates
-                        if (rememberPos.Count > 0) // wooden crates have been placed succesfully on the lower shelf
-                        {
-                            for (int posNum = 0; posNum <= rememberPos.Count - 1; posNum++) // for every placed crate
-                            {
-                                if (Chance.Simple()) WorldGen.Place2x2(rememberPos[posNum].x + 1, rememberPos[posNum].y - 2, TileID.FishingCrate, style: 0); // try stack another
-                                // Explanation: PlaceTile didn't work at all and looks like Place2x2 doesn't use the same anchor point as PlaceTile...that's why the +1 is necessary
-                            }
-                        }
-
+                        kitchenShelfMinTiles += 3;
+                        kitchenShelfHeight -= 3;
+                        first = false;
                     }
                     #endregion
 
                     // try placing some hanging pots at the ceiling
                     area1 = new Rectangle2P(freeR.X0, freeR.Y0, freeR.X1, freeR.Y0, "dummyString");
-                    area2 = doors[Door.Up].doorRect.CloneAndMove(0, 1);
+                    if (doors[Door.Up].doorExist) area2 = doors[Door.Up].doorRect.CloneAndMove(0, 1);
+                    else                          area2 = Rectangle2P.Empty;
+
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: Deco[S.HangingPot], chance: 60); // hanging pot with herb
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: 0, chance: 60); // hanging empty pot
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: Deco[S.HangingPot], chance: 60); // hanging pot with herb
                     Func.TryPlaceTile(area1, area2, TileID.PotsSuspended, style: 5, chance: 60); // hanging pot with blink rot
+
 
                     Func.PlaceStinkbug(freeR);
 
@@ -1493,53 +1476,109 @@ namespace WorldGenMod.Structures.Ice
                     WorldGen.SlopeTile(doors[Door.Up].doorRect.X1 + 1, doors[Door.Up].doorRect.Y1, 0); // undo possible slope of the updoor so the beams blend better
 
 
-                    // deco in the middle of the room
-                    // statue at floor
-                    if (Chance.Simple())
+                    # region deco in the middle of the room
+
+                    randomItems.Clear();
+                    randomItems.Add((TileID.Statues, 0, 60)); // armor statue
+                    randomItems.Add((TileID.Statues, 1, 60)); // angel statue
+                    randomItems.Add((TileID.GrandfatherClocks, Deco[S.Clock], 60)); // armor statue
+
+                    // statue/clock at floor
+                    if (Chance.Perc(75))
                     {
                         x = freeR.XCenter;
                         if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of statue (2 xTiles) in an odd xTiles rooms
                         y = freeR.Y1;
-                        if (Chance.Perc(60)) WorldGen.PlaceTile(x, y, TileID.Statues, style: 0); // armor statue
-                        else if (Chance.Perc(60)) WorldGen.PlaceTile(x, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // angel statue
-                        else if (Chance.Perc(60)) WorldGen.PlaceTile(x, y, TileID.Statues, style: 1); // angel statue
+                        
+                        num = WorldGen.genRand.Next(randomItems.Count);
+                        WorldGen.PlaceTile(x, y, randomItems[num].TileID, style: randomItems[num].style); // random item from the list
                     }
 
+
                     // item frames hanging on 2/3's room height
+                    num = WorldGen.genRand.Next(4);
+                    switch (num)
+                    {
+                        case 0: // 3 ItemFrames in a triangle shape
+                            if (Chance.Perc(75))
+                            {
+                                // frame 1
+                                x = freeR.XCenter - 1;
+                                y = freeR.Y0 + freeR.YTiles / 3 - 1;
+                                Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
+
+                                // frame 2
+                                x = freeR.XCenter + 1;
+                                Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
+
+                                // frame 3
+                                x = freeR.XCenter;
+                                if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
+                                y = freeR.Y0 + freeR.YTiles / 3 + 1;
+                                Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
+                            }
+                            break;
+
+                        case 1: // 2 ItemFrames next to each other
+                            if (Chance.Perc(75))
+                            {
+                                // frame 1
+                                x = freeR.XCenter - 1;
+                                y = freeR.Y0 + freeR.YTiles / 3;
+                                Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
+
+                                // frame 2
+                                x = freeR.XCenter + 1;
+                                Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
+                            }
+                            break;
+
+
+                        case 2: // 1 item frame
+                            if (Chance.Perc(75))
+                            {
+                                x = freeR.XCenter;
+                                if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
+                                y = freeR.Y0 + freeR.YTiles / 3;
+                                Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
+                            }
+                            break;
+
+                        case 3: // 1 painting
+                            if (Chance.Perc(75))
+                            {
+                                if(freeR.IsEvenX())
+                                {
+                                    x = freeR.XCenter;
+                                    y = freeR.Y0 + freeR.YTiles / 3;
+                                    area1 = new Rectangle2P(x, y - 1, x + 1, y + 1, "dummyString");
+                                    Place2x3PaintingByStyle(area1, Deco[S.StyleSave], true);
+                                }
+                                else
+                                {
+                                    x = freeR.XCenter;
+                                    y = freeR.Y0 + freeR.YTiles / 3;
+                                    area1 = new Rectangle2P(x - 1, y - 1, x + 1, y + 1, "dummyString");
+                                    Place3x3PaintingByStyle(area1, Deco[S.StyleSave], true);
+                                }
+                            }
+                            break;
+
+                        default:
+                            break;
+                    }
+
                     if ((freeR.YTiles >= 12))
                     {
-                        if (Chance.Simple())
-                        {
-                            // frame 1
-                            x = doors[Door.Up].doorRect.X0;
-                            y = freeR.Y0 + freeR.YTiles / 3 - 1;
-                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
-
-                            // frame 2
-                            x = doors[Door.Up].doorRect.X1 - 1;
-                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
-
-
-                            // frame 3
-                            x = freeR.XCenter;
-                            if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
-                            y = freeR.Y0 + freeR.YTiles / 3 + 1;
-                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
-                        }
+                        
                     }
                     else if ((freeR.YTiles >= 8))
                     {
-                        if (Chance.Simple())
-                        {
-                            // frame 1
-                            x = freeR.XCenter;
-                            if (!freeR.IsEvenX()) x -= WorldGen.genRand.Next(2); // to variate position of item frame (2 xTiles) in an odd xTiles rooms
-                            y = freeR.Y0 + freeR.YTiles / 3;
-                            Func.PlaceItemFrame(x, y, paint: Deco[S.StylePaint]);
-                        }
+                        
                     }
+                    #endregion
 
-                    //choose side for bookcase + candelabra and for working bench + books
+                    //create sides
                     area1 = new Rectangle2P(freeR.X0, freeR.Y1, doors[Door.Down].doorRect.X0 - 2, freeR.Y1, "dummyString"); // left side
                     area2 = new Rectangle2P(doors[Door.Down].doorRect.X1 + 2, freeR.Y1, freeR.X1, freeR.Y1, "dummyString"); // right side
 
@@ -1550,49 +1589,47 @@ namespace WorldGenMod.Structures.Ice
                         area2 = area3;
                     }
 
-                    // side 1: bookcase and candelabra
+                    // side 1: bookcase and candelabra on it
                     placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Bookcases, style: Deco[S.Bookcase]); // Bookcase
                     if (placeResult.success) placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -4), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on bookcase
                     if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
 
                     // side 2: chest, workbench and candle and chair
                     rememberPos.Clear(); //init
-                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 70); // Workbench
+                    placeResult = Func.TryPlaceTile(area2, noBlock, TileID.WorkBenches, style: Deco[S.Workbench], chance: 70, add: new() { { "CheckArea", [0, 1, 0, 0] } }); // Workbench
                     if (placeResult.success)
                     {
                         rememberPos.Add((placeResult.x, placeResult.y));
                         placeResult = Func.TryPlaceTile(area2.CloneAndMove(0, -1), noBlock, TileID.Candles, style: Deco[S.Candle], chance: 75); // Try put candle on workbench
                         if (placeResult.success) Func.Unlight1x1(placeResult.x, placeResult.y); // unlight candle
 
-                        if ( !Main.tile[rememberPos[0].x - 1, rememberPos[0].y].HasTile) // left of workbench is free
+                        x = rememberPos[0].x - 1;
+                        y = rememberPos[0].y;
+                        if ( !Main.tile[x, y].HasTile && freeR.Contains(x,y)) // left of workbench is free and not on a side door
                         {
-                            x = rememberPos[0].x - 1;
-                            y = rememberPos[0].y;
                             if (Chance.Simple()) WorldGen.PlaceTile(x, y, TileID.Chairs, style: Deco[S.Chair]); // try place chair
                             if (Main.tile[x, y].HasTile) Func.ChairTurnRight(x, y); // if placed, change the facing direction of the chair
                         }
-                        if (!Main.tile[rememberPos[0].x + 2, rememberPos[0].y].HasTile) // right of workbench is free
+
+                        x = rememberPos[0].x + 2;
+                        y = rememberPos[0].y;
+                        if (!Main.tile[x, y].HasTile && freeR.Contains(x, y)) // right of workbench is free and not on a side door
                         {
-                            x = rememberPos[0].x + 2;
-                            y = rememberPos[0].y;
                             if (Chance.Simple()) WorldGen.PlaceTile(x, y, TileID.Chairs, style: Deco[S.Chair]); // try place chair
                         }
                     }
                     else
                     {
-                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Tables, style: Deco[S.Table], chance: 85); // Table
+                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Tables, style: Deco[S.Table], chance: 85, add: new() { { "CheckArea", [1, 1, 1, 0] } }); // Table
                         if (placeResult.success)
                         {
                             x = placeResult.x - WorldGen.genRand.Next(2);
                             y = placeResult.y - 2;
                             WorldGen.PlaceTile(x, y, TileID.MusicBoxes, style: 0); // music box
-                            WorldGen.paintTile(x, y - 1,     (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x, y,         (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x + 1, y - 1, (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x + 1, y,     (byte)Deco[S.StylePaint]);
+                            Func.PaintArea(new Rectangle2P(x, y - 1, x + 1, y, "dummyString"), Deco[S.StylePaint]);
 
                         }
-                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70); // Chest
+                        placeResult = Func.TryPlaceTile(area2, noBlock, TileID.Containers, style: Deco[S.Chest], chance: 70, add: new() { { "CheckArea", [0, 1, 1, 0] } }); // Chest
                         if (placeResult.success)
                         {
                             chestID = Chest.FindChest(placeResult.x, placeResult.y - 1);
@@ -1600,7 +1637,7 @@ namespace WorldGenMod.Structures.Ice
                         }
                     }
 
-                    // still side 2: shelf with books above workbench and chair
+                    // still side 2: shelf with books
                     if (freeR.YTiles >= 6)
                     {
                         area2.Move(0, -4);
@@ -2189,7 +2226,7 @@ namespace WorldGenMod.Structures.Ice
 
                                     for (int i = 1; i <= 3; i++)
                                     {
-                                        int num = WorldGen.genRand.Next(randomItems.Count);
+                                        num = WorldGen.genRand.Next(randomItems.Count);
                                         Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
                                     }
                                 }
@@ -2266,7 +2303,7 @@ namespace WorldGenMod.Structures.Ice
 
                                     for (int i = 1; i <= 3; i++)
                                     {
-                                        int num = WorldGen.genRand.Next(randomItems.Count);
+                                        num = WorldGen.genRand.Next(randomItems.Count);
                                         Func.TryPlaceTile(area1, noBlock, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
                                     }
                                 }
@@ -2369,7 +2406,7 @@ namespace WorldGenMod.Structures.Ice
 
                         for (int i = 1; i <= 8; i++)
                         {
-                            int num = WorldGen.genRand.Next(randomItems.Count);
+                            num = WorldGen.genRand.Next(randomItems.Count);
                             placeResult = Func.TryPlaceTile(area1, area2, randomItems[num].TileID, style: randomItems[num].style, chance: randomItems[num].chance); // one random item of the list
                             
                             if (placeResult.success && randomItems[num].TileID == TileID.FishingCrate)
@@ -2442,7 +2479,7 @@ namespace WorldGenMod.Structures.Ice
 
                     for (int i = 1; i <= freeR.XTiles / 2; i++) // every item is 2 xTiles wide --> fill the room
                     {
-                        int num = WorldGen.genRand.Next(floorItems.Count);
+                        num = WorldGen.genRand.Next(floorItems.Count);
                         placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, floorItems[num].TileID, style: floorItems[num].style, chance: 50); // one random item of the list
 
 
@@ -2753,7 +2790,7 @@ namespace WorldGenMod.Structures.Ice
                                 automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, noAdd));
                                 actX += 2;
 
-                                int num = ((freeR.XTiles - (2 + 1)) / 3);
+                                num = ((freeR.XTiles - (2 + 1)) / 3);
                                 unusedXTiles = ((freeR.XTiles - (2 + 1)) % 3);
                                 if (unusedXTiles == 0) // left "1 banner + 1 space" and right "1 banner" and the "ItemFrame + 1 space" can leave a 1 or 2 Tile gap!
                                 { // no gap
