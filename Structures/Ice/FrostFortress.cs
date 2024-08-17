@@ -164,6 +164,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.BedWallpaper] = WallID.StarsWallpaper;
                     Deco[S.PaintingWallpaper] = WallID.SparkleStoneWallpaper;
                     Deco[S.Dresser] = 30;  // Tile ID 88 (Dressers) -> Type 30=Frozen
+                    Deco[S.Piano] = 7;     // Tile ID 87 (Pianos) -> Type 7=Frozen
                     break;
 
                 case S.StyleBoreal: // Boreal
@@ -198,6 +199,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
                     Deco[S.PaintingWallpaper] = WallID.LivingWood;
                     Deco[S.Dresser] = 18;  // Tile ID 88 (Dressers) -> Type 18=Boreal
+                    Deco[S.Piano] = 23;    // Tile ID 87 (Pianos) -> Type 23=Boreal
                     break;
 
                 case S.StyleDarkLead: // Dark Lead
@@ -232,6 +234,7 @@ namespace WorldGenMod.Structures.Ice
                     Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
                     Deco[S.PaintingWallpaper] = WallID.BluegreenWallpaper;
                     Deco[S.Dresser] = 1;  // Tile ID 88 (Dressers) -> Type 1=Ebonwood
+                    Deco[S.Piano] = 1;    // Tile ID 87 (Pianos) -> Type 1=Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
                     break;
             }
@@ -1009,23 +1012,35 @@ namespace WorldGenMod.Structures.Ice
             {
                 case 0: // corridor: two tables, two lamps, a beam line, high rooms get another beam line and a painting
 
-                    // table left
+                    // clock in the middle
+                    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
+
+                    #region left side
+                    // table
                     x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
                     y = freeR.Y1;
                     placed = false;
-                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
-                    else if (Chance.Simple()) Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); //Broken Table covered in CobWeb
-
-                    // stuff on the left table
-                    if (placed)
+                    if (Chance.Simple())
                     {
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
+                        placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+
+                        if (placed) // stuff on the left table
+                        {
+                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
+                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
+                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
+                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
+                        }
+                    }
+                    else if (Chance.Simple())
+                    {
+                        Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); // Broken Table covered in CobWeb
+                        //Func.TryPlaceTile(new Rectangle2P(freeR.X0, freeR.Y1, doors[Door.Up].doorRect.X0 - 1, freeR.Y1, "dummyString"), Rectangle2P.Empty, TileID.SmallPiles, chance: 80, add: new() { { "Piles", [31, 1] } });
+                        if (Chance.Perc(75)) WorldGen.PlaceSmallPile(x - 3, y, 31, 1); // broken chair
+                        if (Chance.Perc(75)) WorldGen.PlaceSmallPile(x + 2, y, 31, 1); // broken chair
                     }
 
-                    // statue left
+                    // statue
                     if (Chance.Simple()) WorldGen.PlaceTile(freeR.X0 + WorldGen.genRand.Next(3), freeR.Y1, TileID.Statues, style: 0); // Armor Statue
 
                     // Stool left and right of the table
@@ -1047,13 +1062,10 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.paintTile(x + 2, y - 1, (byte)Deco[S.StylePaint]);
                         }
                     }
-
-                    // clock in the middle
-                    if (Chance.Perc(75))   WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
+                    #endregion
 
 
-                    //__________________________________________________________________________________________________________________________________
-                    // right side
+                    #region right side
 
                     // table right
                     x = freeR.XCenter + WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
@@ -1093,13 +1105,16 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.paintTile(x + 2, y - 1, (byte)Deco[S.StylePaint]);
                         }
                     }
+                    #endregion
 
 
-
+                    #region top room: fancy wallpaper, with paintings and windows
 
                     // wooden beam
                     if (freeR.YTiles >= 8) // if less than 8 tiles, there won't be enough space for the lanterns to look good
                     {
+                        int lowerStuco, upperStuco; // room height where the fancy wallpaper starts and ends
+
                         y = freeR.Y1 - 4;
                         Tile tile;
 
@@ -1118,65 +1133,74 @@ namespace WorldGenMod.Structures.Ice
                                 WorldGen.paintWall(x, y, (byte)Deco[S.StylePaint]);
                             }
                         }
-                    }
 
-                    // if room is too high, there will be a lot of unused space...fill it
-                    if (freeR.YTiles >= 12)
-                    {
-                        int lowerBeam = y;
-                        int upperBeam = freeR.Y0 + 3;
+                        lowerStuco = y - 1;
+                        upperStuco = freeR.Y0 + 2;
 
-                        // wooden beam
-                        for (x = freeR.X0; x <= freeR.X1; x++)
+                        // if room is too high, put another beam to make more use of the room height
+                        if (freeR.YTiles >= 12)
                         {
-                            if (!(Main.tile[x, upperBeam].WallType == 0))
+                            lowerStuco = y - 1;
+                            upperStuco = freeR.Y0 + 4;
+
+                            // wooden beam above the fancy wallpaper
+                            for (x = freeR.X0; x <= freeR.X1; x++)
                             {
-                                WorldGen.PlaceTile(x, upperBeam, TileID.BorealBeam);
-                                WorldGen.paintTile(x, upperBeam, (byte)Deco[S.StylePaint]);
+                                if (!(Main.tile[x, upperStuco - 1].WallType == 0))
+                                {
+                                    WorldGen.PlaceTile(x, upperStuco - 1, TileID.BorealBeam);
+                                    WorldGen.paintTile(x, upperStuco - 1, (byte)Deco[S.StylePaint]);
+                                }
                             }
                         }
 
-                        // fill in-between the walls with a fancy wallpaper
-                        Func.ReplaceWallArea(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.PaintingWallpaper]);
+                        // put fancy wallpaper
+                        Func.ReplaceWallArea(new Rectangle2P(freeR.X0, upperStuco, freeR.X1, lowerStuco, "dummyString"), Deco[S.PaintingWallpaper]);
+
+                        if (lowerStuco == upperStuco)
+                        {
+                            // fancy wallpaper below the one wooden beam so it looks nicer
+                            Func.ReplaceWallArea(new Rectangle2P(freeR.X0, lowerStuco + 2, freeR.X1, lowerStuco + 2, "dummyString"), Deco[S.PaintingWallpaper]);
+                        }
 
                         //painting
-                        (bool success, Rectangle2P paintingArea, int paintingType, int failReason) paintingResult =  PlacePainting(new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"), Deco[S.StyleSave], centerErrorX: -88);
+                        (bool success, Rectangle2P paintingArea, int paintingType, int failReason) paintingResult =  PlacePainting(new Rectangle2P(freeR.X0, upperStuco, freeR.X1, lowerStuco, "dummyString"), Deco[S.StyleSave], centerErrorX: -88);
                         Rectangle2P windowLeft = Rectangle2P.Empty;
                         Rectangle2P windowRight = Rectangle2P.Empty;
 
                         if (paintingResult.success)
                         {
-                            if ((lowerBeam - upperBeam >= 5) && (paintingResult.paintingArea.X0 - freeR.X0) >= 4) // check for a reasonable size of the window space
+                            if ((lowerStuco - upperStuco >= 3) && (paintingResult.paintingArea.X0 - freeR.X0) >= 4) // check for a reasonable size of the window space
                             {
-                                windowLeft  = new(freeR.X0 + 1, upperBeam + 2, paintingResult.paintingArea.X0 - 2, lowerBeam - 2, "dummyString");
-                                windowRight = new(paintingResult.paintingArea.X1 + 2, upperBeam + 2, freeR.X1 - 1, lowerBeam - 2, "dummyString");
+                                windowLeft  = new(freeR.X0 + 1, upperStuco + 1, paintingResult.paintingArea.X0 - 2, lowerStuco - 1, "dummyString");
+                                windowRight = new(paintingResult.paintingArea.X1 + 2, upperStuco + 1, freeR.X1 - 1, lowerStuco - 1, "dummyString");
                             }
                         }
                         else
                         {
-                            if ((paintingResult.failReason == 1 || paintingResult.failReason == 4) && (lowerBeam - upperBeam >= 5) && Chance.Perc(75)) // put windows without a painting
+                            if ((paintingResult.failReason == 1 || paintingResult.failReason == 4) && (lowerStuco - upperStuco >= 3) && Chance.Perc(75)) // put windows without a painting
                             {
                                 if (Chance.Simple())
                                 {
-                                    windowLeft = new(freeR.X0 + 1, upperBeam + 2, doors[Door.Up].doorRect.X0 - 1, lowerBeam - 2, "dummyString");
-                                    windowRight = new(doors[Door.Up].doorRect.X1 + 1, upperBeam + 2, freeR.X1 - 1, lowerBeam - 2, "dummyString");
+                                    windowLeft = new(freeR.X0 + 1, upperStuco + 1, doors[Door.Up].doorRect.X0 - 1, lowerStuco - 1, "dummyString");
+                                    windowRight = new(doors[Door.Up].doorRect.X1 + 1, upperStuco + 1, freeR.X1 - 1, lowerStuco - 1, "dummyString");
                                 }
                                 else
                                 {
-                                    windowLeft = new(freeR.X0 + 1, upperBeam + 2, doors[Door.Up].doorRect.X0, lowerBeam - 2, "dummyString");
-                                    windowRight = new(doors[Door.Up].doorRect.X1 + 1, upperBeam + 2, freeR.X1, lowerBeam - 2, "dummyString");
+                                    windowLeft = new(freeR.X0 + 1, upperStuco + 1, doors[Door.Up].doorRect.X0, lowerStuco - 1, "dummyString");
+                                    windowRight = new(doors[Door.Up].doorRect.X1 + 1, upperStuco + 1, freeR.X1, lowerStuco - 1, "dummyString");
                                 }
                             }
                             else if (paintingResult.failReason == 2)
                             {
-                                ((bool, bool) success, (Rectangle2P, Rectangle2P) paintingArea, (int, int) paintingType, (int, int) failReason) paintingsResult = Place2Paintings(area: new Rectangle2P(freeR.X0, upperBeam + 1, freeR.X1, lowerBeam - 1, "dummyString"),
+                                ((bool, bool) success, (Rectangle2P, Rectangle2P) paintingArea, (int, int) paintingType, (int, int) failReason) paintingsResult = Place2Paintings(area: new Rectangle2P(freeR.X0, upperStuco, freeR.X1, lowerStuco, "dummyString"),
                                                                                                                                                                                   style: Deco[S.StyleSave],
                                                                                                                                                                                   placeMode: WorldGen.genRand.Next(11,13),
                                                                                                                                                                                   allowType: (byte)paintingResult.paintingType);
                                 
-                                if ((lowerBeam - upperBeam >= 5) && (paintingsResult.paintingArea.Item2.X0 - paintingsResult.paintingArea.Item1.X1) >= 4) // check for a reasonable size of the window space
+                                if ((lowerStuco - upperStuco >= 3) && (paintingsResult.paintingArea.Item2.X0 - paintingsResult.paintingArea.Item1.X1) >= 4) // check for a reasonable size of the window space
                                 {
-                                    windowLeft = new(paintingsResult.paintingArea.Item1.X1 + 2, upperBeam + 2, paintingsResult.paintingArea.Item2.X0 - 2, lowerBeam - 2, "dummyString");
+                                    windowLeft = new(paintingsResult.paintingArea.Item1.X1 + 2, upperStuco + 1, paintingsResult.paintingArea.Item2.X0 - 2, lowerStuco - 1, "dummyString");
                                     windowRight = Rectangle2P.Empty;
                                 }
                             }
@@ -1187,7 +1211,6 @@ namespace WorldGenMod.Structures.Ice
                         {
                             Func.ReplaceWallArea(windowLeft, WallID.Glass);
                             Func.ReplaceWallArea(windowRight, WallID.Glass);
-                            Tile tile;
 
                             rememberPos.Clear();
                             y = windowLeft.Y1;
@@ -1235,7 +1258,7 @@ namespace WorldGenMod.Structures.Ice
                             }
                         }
                     }
-
+                    #endregion
 
                     // lantern left
                     placed = false;
@@ -1589,10 +1612,23 @@ namespace WorldGenMod.Structures.Ice
                         area2 = area3;
                     }
 
-                    // side 1: bookcase and candelabra on it
+                    // side 1: bookcase or piano and candelabra on it
                     placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Bookcases, style: Deco[S.Bookcase]); // Bookcase
-                    if (placeResult.success) placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -4), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on bookcase
-                    if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
+                    if (placeResult.success)
+                    {
+                        placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -4), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on bookcase
+                        if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
+                    }
+                    else
+                    {
+                        placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Pianos, style: Deco[S.Piano], add: new() { { "CheckArea", [1, 1, 1, 0] } }); // piano
+                        if (placeResult.success)
+                        {
+                            placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -2), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on piano
+                            if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
+                        }
+                    }
+                        
 
                     // side 2: chest, workbench and candle and chair
                     rememberPos.Clear(); //init
@@ -4874,6 +4910,7 @@ namespace WorldGenMod.Structures.Ice
         public const String BedWallpaper = "BedWallpaper";
         public const String PaintingWallpaper = "PaintingWallpaper";
         public const String Dresser = "Dresser";
+        public const String Piano = "Piano";
 
         public const int StyleSnow = 0;
         public const int StyleBoreal = 1;
