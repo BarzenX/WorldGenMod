@@ -1006,105 +1006,121 @@ namespace WorldGenMod.Structures.Ice
 
             } while (!valid);
 
-            roomDeco = 0;
+            //roomDeco = 2;
 
             switch (roomDeco)
             {
                 case 0: // corridor: two tables, two lamps, a beam line, high rooms get another beam line and a painting
 
-                    // clock in the middle
-                    if (Chance.Perc(75)) WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
-
-                    #region left side
-                    // table
-                    x = freeR.XCenter - WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
-                    y = freeR.Y1;
-                    placed = false;
-                    if (Chance.Simple())
+                    // clock / potted tree in the middle
+                    if (Chance.Perc(65)) WorldGen.PlaceTile(freeR.XCenter, y, TileID.GrandfatherClocks, style: Deco[S.Clock]); // Clock
+                    else if (Chance.Perc(65))
                     {
-                        placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+                        placed = WorldGen.PlaceObject(freeR.XCenter + 1, y, TileID.PottedPlants1, style: 3); // potted forest tree
+                        if(placed) Func.PaintArea(new Rectangle2P(freeR.XCenter, y - 4, freeR.XCenter + 1, y, "dummyString"), Deco[S.StylePaint]);
+                    }
 
-                        if (placed) // stuff on the left table
+                    #region left and right side
+
+                    for (int i = 0; i <= 1; i++)
+                    {
+                        int leftEnd, rightEnd;
+                        if (i == 0) //left side
                         {
-                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
-                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
-                            if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
+                            leftEnd = freeR.X0;
+                            rightEnd = doors[Door.Down].doorRect.X0;
+                            x = rightEnd - WorldGen.genRand.Next(3, rightEnd - leftEnd);
+                            y = freeR.Y1;
+                            area1 = new Rectangle2P(leftEnd, y, rightEnd, y, "dummyString");
                         }
-                    }
-                    else if (Chance.Simple())
-                    {
-                        Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); // Broken Table covered in CobWeb
-                        //Func.TryPlaceTile(new Rectangle2P(freeR.X0, freeR.Y1, doors[Door.Up].doorRect.X0 - 1, freeR.Y1, "dummyString"), Rectangle2P.Empty, TileID.SmallPiles, chance: 80, add: new() { { "Piles", [31, 1] } });
-                        if (Chance.Perc(75)) WorldGen.PlaceSmallPile(x - 3, y, 31, 1); // broken chair
-                        if (Chance.Perc(75)) WorldGen.PlaceSmallPile(x + 2, y, 31, 1); // broken chair
-                    }
-
-                    // statue
-                    if (Chance.Simple()) WorldGen.PlaceTile(freeR.X0 + WorldGen.genRand.Next(3), freeR.Y1, TileID.Statues, style: 0); // Armor Statue
-
-                    // Stool left and right of the table
-                    if (placed)
-                    {
+                        else // right side
+                        {
+                            leftEnd = doors[Door.Down].doorRect.X1;
+                            rightEnd = freeR.X1;
+                            x = leftEnd + WorldGen.genRand.Next(3, rightEnd - leftEnd);
+                            y = freeR.Y1;
+                            area1 = new Rectangle2P(leftEnd, y, rightEnd, y, "dummyString");
+                        }
+                        
+                        placed = false;
                         placed2 = false;
-                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x - 2, y, TileID.Chairs, style: 21); // left bar stool
-                        if (placed2)
+
+                        // table / broken table
+                        if (Chance.Simple())
                         {
-                            WorldGen.paintTile(x - 2, y,     (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x - 2, y - 1, (byte)Deco[S.StylePaint]);
+                            placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
+
+                            if (placed) // stuff on the left table
+                            {
+                                if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
+                                if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
+                                if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
+                                if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
+                            }
+                        }
+                        else if (Chance.Simple())
+                        {
+                            placed2 = Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); // Broken Table covered in CobWeb 
                         }
 
-                        placed2 = false;
-                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x + 2, y, TileID.Chairs, style: 21); // left bar stool
-                        if (placed2)
+
+                        // statue
+                        randomItems.Clear();
+                        randomItems.Add((TileID.Statues, 0, 50)); // Armor Statue
+                        randomItems.Add((TileID.Statues, 14, 50)); // Gargoyle Statue
+                        randomItems.Add((TileID.Statues, 11, 50)); // Reaper Statue
+                        randomItems.Add((TileID.Statues, 12, 50)); // Woman Statue
+                        num = WorldGen.genRand.Next(randomItems.Count);
+                        if (Chance.Simple()) Func.TryPlaceTile(area1, Rectangle2P.Empty, randomItems[num].TileID, style: randomItems[num].style, add: new() { { "CheckArea", [0, 1, 1, 0] } }); // Statue
+
+
+                        // Stools or broken chairs left and right of the table / broken table
+                        if (placed || placed2)
                         {
-                            WorldGen.paintTile(x + 2, y,     (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x + 2, y - 1, (byte)Deco[S.StylePaint]);
+                            if (Chance.Simple())
+                            {
+                                if (Chance.Perc(75) && (x - 2) >= leftEnd)
+                                {
+                                    placed2 = WorldGen.PlaceTile(x - 2, y, TileID.Chairs, style: 21); // left bar stool
+                                    if (placed2) Func.PaintArea(new Rectangle2P(x - 2, y - 1, x - 2, y, "dummyString"), Deco[S.StylePaint]);
+                                }
+                            }
+                            else
+                            {
+                                if (Chance.Perc(75) && (x - 3) >= leftEnd)
+                                {
+                                    placed2 = WorldGen.PlaceSmallPile(x - 3, y, 31, 1); // left broken chair
+                                    if (placed2) Func.PaintArea(new Rectangle2P(x - 3, y, x - 2, y, "dummyString"), Deco[S.StylePaint]);
+                                }
+                            }
+
+                            if (Chance.Simple())
+                            {
+                                if (Chance.Perc(75) && (x + 3) <= rightEnd)
+                                {
+                                    placed2 = WorldGen.PlaceTile(x + 2, y, TileID.Chairs, style: 21); // right bar stool
+                                    if (placed2) Func.PaintArea(new Rectangle2P(x + 2, y - 1, x + 2, y, "dummyString"), Deco[S.StylePaint]);
+                                }
+                            }
+                            else
+                            {
+                                if (Chance.Perc(75) && (x + 2) <= rightEnd)
+                                {
+                                    placed2 = WorldGen.PlaceSmallPile(x + 2, y, 31, 1); // right broken chair
+                                    if (placed2) Func.PaintArea(new Rectangle2P(x + 2, y, x + 3, y, "dummyString"), Deco[S.StylePaint]);
+                                }
+                            }
                         }
+                        else
+                        {
+                            placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.Benches, style: 0, chance: 80, add: new() { { "CheckArea", [1, 1, 1, 0] } }); // normal Bench
+                            if (placeResult.success) Func.PaintArea(new Rectangle2P(placeResult.x - 1, y - 1, placeResult.x + 1, y, "dummyString"), Deco[S.StylePaint]);
+
+                            placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.Dressers, style: Deco[S.Dresser], chance: 80, add: new() { { "CheckArea", [1, 1, 1, 0] } }); // Dresser
+                        }
+                        placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.Containers, style: Deco[S.Chest], chance: 80, add: new() { { "CheckArea", [0, 1, 1, 0] } }); // Chest
                     }
-                    #endregion
-
-
-                    #region right side
-
-                    // table right
-                    x = freeR.XCenter + WorldGen.genRand.Next(3, freeR.XDiff / 2 - 1);
-                    y = freeR.Y1;
-                    placed = false;
-                    if (Chance.Simple()) placed = WorldGen.PlaceTile(x, y, TileID.Tables, style: Deco[S.Table]); // Table
-                    else if (Chance.Simple()) Func.PlaceLargePile(x, y, 22, 0, 186, paint: (byte)Deco[S.StylePaint]); //Broken Table covered in CobWeb
-
-                    // stuff on the right table
-                    if (placed)
-                    {
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.FoodPlatter); // food plate
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 4); // mug
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 0); // bottle
-                        if (Chance.Simple()) WorldGen.PlaceTile(x + WorldGen.genRand.Next(-1, 2), y - 2, TileID.Bottles, style: 8); // Chalice
-                    }
-
-                    // statue right
-                    if (Chance.Simple()) WorldGen.PlaceTile(freeR.X1 - WorldGen.genRand.Next(1, 4), freeR.Y1, TileID.Statues, style: 0); // Armor Statue
-
-                    // Stool left and right of the table
-                    if (placed)
-                    {
-                        placed2 = false;
-                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x - 2, y, TileID.Chairs, style: 21); // left bar stool
-                        if (placed2)
-                        {
-                            WorldGen.paintTile(x - 2, y,     (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x - 2, y - 1, (byte)Deco[S.StylePaint]);
-                        }
-
-                        placed2 = false;
-                        if (Chance.Simple()) placed2 = WorldGen.PlaceTile(x + 2, y, TileID.Chairs, style: 21); // left bar stool
-                        if (placed2)
-                        {
-                            WorldGen.paintTile(x + 2, y,     (byte)Deco[S.StylePaint]);
-                            WorldGen.paintTile(x + 2, y - 1, (byte)Deco[S.StylePaint]);
-                        }
-                    }
+                    
                     #endregion
 
 
@@ -1126,7 +1142,7 @@ namespace WorldGenMod.Structures.Ice
                                 WorldGen.PlaceTile(x, y, TileID.BorealBeam);
                                 WorldGen.paintTile(x, y, (byte)Deco[S.StylePaint]);
                             }
-                            if (tile.TileType == TileID.GrandfatherClocks && !(tile.WallType == 0))
+                            if ((tile.TileType == TileID.GrandfatherClocks || tile.TileType == TileID.PottedPlants1) && !(tile.WallType == 0))
                             {
                                 WorldGen.KillWall(x, y);
                                 WorldGen.PlaceWall(x, y, WallID.BorealWood);
@@ -1504,7 +1520,8 @@ namespace WorldGenMod.Structures.Ice
                     randomItems.Clear();
                     randomItems.Add((TileID.Statues, 0, 60)); // armor statue
                     randomItems.Add((TileID.Statues, 1, 60)); // angel statue
-                    randomItems.Add((TileID.GrandfatherClocks, Deco[S.Clock], 60)); // armor statue
+                    randomItems.Add((TileID.GrandfatherClocks, Deco[S.Clock], 60)); // Clock
+                    randomItems.Add((TileID.PottedPlants1, 3, 60)); // potted forest tree
 
                     // statue/clock at floor
                     if (Chance.Perc(75))
@@ -1514,7 +1531,12 @@ namespace WorldGenMod.Structures.Ice
                         y = freeR.Y1;
                         
                         num = WorldGen.genRand.Next(randomItems.Count);
-                        WorldGen.PlaceTile(x, y, randomItems[num].TileID, style: randomItems[num].style); // random item from the list
+                        if (randomItems[num].TileID == TileID.PottedPlants1)
+                        {
+                            placed = WorldGen.PlaceObject(x + 1, y, TileID.PottedPlants1, style: 3); // potted forest tree
+                            if (placed) Func.PaintArea(new Rectangle2P(x, y - 4, x + 1, y, "dummyString"), Deco[S.StylePaint]);
+                        }
+                        else WorldGen.PlaceTile(x, y, randomItems[num].TileID, style: randomItems[num].style); // random item from the list
                     }
 
 
@@ -1613,13 +1635,13 @@ namespace WorldGenMod.Structures.Ice
                     }
 
                     // side 1: bookcase or piano and candelabra on it
-                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Bookcases, style: Deco[S.Bookcase]); // Bookcase
+                    placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Bookcases, style: Deco[S.Bookcase], chance: 75);  // Bookcase
                     if (placeResult.success)
                     {
                         placeResult = Func.TryPlaceTile(area1.CloneAndMove(0, -4), noBlock, TileID.Candelabras, style: Deco[S.Candelabra], chance: 75); // Try put candelabra on bookcase
                         if (placeResult.success) Func.UnlightCandelabra(placeResult.x, placeResult.y); // unlight candelabra
                     }
-                    else
+                    else if( Chance.Perc(75))
                     {
                         placeResult = Func.TryPlaceTile(area1, noBlock, TileID.Pianos, style: Deco[S.Piano], add: new() { { "CheckArea", [1, 1, 1, 0] } }); // piano
                         if (placeResult.success)
@@ -3701,7 +3723,6 @@ namespace WorldGenMod.Structures.Ice
 
                                 }
                                     
-                                //TODO: stack coins? make the stack wider?
                                 break;
                             #endregion
 
