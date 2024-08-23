@@ -96,6 +96,8 @@ namespace WorldGenMod.Structures.Ice
 
         public void FillAndChooseStyle()
         {
+            Deco.Clear(); // init
+
             // create dictionary entries
             Deco.Add(S.StyleSave, 0);
             Deco.Add(S.Brick, 0);
@@ -250,12 +252,8 @@ namespace WorldGenMod.Structures.Ice
 
         public void GenerateFortress(Point16 MainRoomPos)
         {
-            if (!WorldGenMod.generateFrostFortresses)
-            {
-                return;
-            }
+            if (!WorldGenMod.generateFrostFortresses)  return;
 
-            Deco.Clear();
             traps.Clear();
 
             FillAndChooseStyle();
