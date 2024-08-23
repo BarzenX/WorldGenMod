@@ -9,6 +9,7 @@ using Terraria.IO;
 using Terraria.Utilities;
 using Terraria.DataStructures;
 using System;
+using WorldGenMod.Structures.Ice;
 
 namespace WorldGenMod.Structures.Underworld
 {
@@ -223,6 +224,8 @@ namespace WorldGenMod.Structures.Underworld
 
             int totalTiles = 0;
             int maxTiles = Math.Min(Main.maxTilesX / 8, maxChurchLength);
+            int actX, actY;
+            bool leftDoor, rightDoor;
             while (totalTiles < maxTiles)
             {
                 int roomWidth = WorldGen.genRand.Next(12, 80);
@@ -232,77 +235,120 @@ namespace WorldGenMod.Structures.Underworld
                 int roomHeight = WorldGen.genRand.Next(12, 30);
 
                 float ratio = roomHeight / roomWidth;
-                int towerHeight;
-                if (ratio > 1.2f) towerHeight = WorldGen.genRand.Next(10, 20);
-                else              towerHeight = WorldGen.genRand.Next(5, 10);
+                int roofHeight;
+                if (ratio > 1.2f) roofHeight = WorldGen.genRand.Next(10, 20);
+                else              roofHeight = WorldGen.genRand.Next(5, 10);
 
                 if (generationSide == -1) // left world side
                 {
-                    bool leftDoor = totalTiles != 0;
-                    bool rightDoor = (totalTiles + roomWidth) < maxTiles;
+                    leftDoor = totalTiles != 0;
+                    rightDoor = (totalTiles + roomWidth) < maxTiles;
+                    actX = startPosX + totalTiles;
+                    actY = startPosY - roomHeight;
 
-                    GenerateRoom(new Rectangle(startPosX + totalTiles, startPosY - roomHeight, roomWidth, roomHeight), towerHeight, leftDoor, rightDoor);
+                    GenerateRoom(new Rectangle2P(actX, actY, roomWidth, roomHeight), roofHeight, leftDoor, rightDoor);
                     totalTiles += roomWidth;
                 }
                 else if (generationSide == 1) // right world side
                 {
-                    bool rightDoor = totalTiles != 0;
-                    bool leftDoor = (totalTiles + roomWidth) < maxTiles;
+                    rightDoor = totalTiles != 0;
+                    leftDoor = (totalTiles + roomWidth) < maxTiles;
+                    actX = startPosX - totalTiles - roomWidth;
+                    actY = startPosY - roomHeight;
 
-                    GenerateRoom(new Rectangle(startPosX - totalTiles - roomWidth, startPosY - roomHeight, roomWidth, roomHeight), towerHeight, leftDoor, rightDoor);
+                    GenerateRoom(new Rectangle2P(actX, actY, roomWidth, roomHeight), roofHeight, leftDoor, rightDoor);
                     totalTiles += roomWidth;
                 }
             }
         }
 
-
-        public void GenerateRoom(Rectangle room, int towerHeight = 10, bool leftDoor = false, bool rightDoor = false, int extraCount = 0)
+        /// <summary>
+        /// Creates a room of the Chastised Church 
+        /// </summary>
+        /// <param name="room">The area of the room, including walls</param>
+        /// <param name="roofHeight">Tile height of the roof on top of a room</param>
+        /// <param name="leftDoor">States if the room has a left door (e.g. if there is another room on the left)</param>
+        /// <param name="rightDoor">States if the room has a right door (e.g. if there is another room on the right)</param>
+        /// <param name="belowCount">Stating how many rooms below the main line this particular room is. 0 = main line</param>
+        public bool GenerateRoom(Rectangle2P room, int roofHeight = 10, bool leftDoor = false, bool rightDoor = false, int belowCount = 0)
         {
-            Rectangle hollowRect = room;
-            hollowRect.Width -= 4;
-            hollowRect.Height -= 4;
-            hollowRect.X += 2;
-            hollowRect.Y += 2;
+            // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
+            Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
 
-            if (room.Y + room.Height >= Main.maxTilesY || room.X + room.Height >= Main.maxTilesX || room.X <= 0)
+            int x, y; //temp variables for later calculations;
+
+            if (room.Y1 >= Main.maxTilesY || room.X1 >= Main.maxTilesX || room.X0 <= 0) return false;
+
+            // calculate if this room will have a "cellar".... is needed now for creating the doors
+            int nextCellarYTiles = (int)(room.YTiles * WorldGen.genRand.NextFloat(0.8f, 1.2f));
+            bool downRoomExist = WorldGen.genRand.NextBool(2 + belowCount) && belowCount <= 3 && room.Y1 + nextCellarYTiles < Main.maxTilesY - 2;
+
+
+            // create door rectangles
+            #region door rectangles
+            Dictionary<int, (bool doorExist, Rectangle2P doorRect)> doors = []; // a dictionary for working and sending the doors in a compact way
+
+            int leftRightDoorsYTiles = 3; // how many tiles the left and right doors are high
+            y = freeR.Y1 - (leftRightDoorsYTiles - 1);
+            Rectangle2P leftDoorRect = new(room.X0, y, wThick, leftRightDoorsYTiles);
+            Rectangle2P rightDoorRect = new(freeR.X1 + 1, y, wThick, leftRightDoorsYTiles);
+
+            int upDownDoorXTiles = 4; // how many tiles the up and down doors are wide
+            int adjustX = 0; // init
+            if (freeR.XTiles % 2 == 1 && upDownDoorXTiles % 2 == 0) upDownDoorXTiles++; // an odd number of x-tiles in the room also requires an odd number of platforms so the door is symmetrical
+            else adjustX = -1; //in even XTile rooms there is a 2-tile-center and XCenter will be the left tile of the two. To center an even-numberd door in this room, you have to subtract 1. Odd XTile rooms are fine
+            x = (freeR.XCenter) - (upDownDoorXTiles / 2 + adjustX);
+            Rectangle2P upDoorRect = new(x, room.Y0, upDownDoorXTiles, wThick);
+            Rectangle2P downDoorRect = new(x, freeR.Y1 + 1, upDownDoorXTiles, wThick);
+
+            doors.Add(Door.Left, (leftDoor, leftDoorRect));
+            doors.Add(Door.Right, (rightDoor, rightDoorRect));
+            doors.Add(Door.Up, (belowCount > 0, upDoorRect));
+            doors.Add(Door.Down, (downRoomExist, downDoorRect));
+            #endregion
+
+
+
+
+
+
+
+
+
+
+
+
+
+            List<Rectangle2P> windows = new();
+            if (room.YTiles > 12 && room.XTiles > 12)
             {
-                return;
-            }
-
-            bool noBreakPoint = WorldGen.genRand.NextBool();
-            Vector2 wallBreakPoint = new(room.X + WorldGen.genRand.Next(room.Width), room.Y + WorldGen.genRand.Next(room.Height));
-
-            List<Rectangle> doors = new();
-            if (leftDoor) doors.Add(new Rectangle(room.X, room.Y + room.Height - 5, 2, 3));
-            if (rightDoor) doors.Add(new Rectangle(room.X + room.Width - 2, room.Y + room.Height - 5, 2, 3));
-
-            List<Rectangle> windows = new();
-            if (room.Height > 12 && room.Width > 12)
-            {
-                if (room.Width <= 16)
+                if (room.XTiles <= 16)
                 {
-                    windows.Add(new Rectangle(room.Center.X - 2, room.Y + 4, 4, room.Height - 8));
+                    windows.Add(new Rectangle2P(room.XCenter - 2, room.Y0 + 4, 4, room.YTiles - 8));
                 }
                 else
                 {
-                    for (int i = 1; i < room.Width / 8 / 2; i++)
+                    for (int i = 1; i < room.XTiles / 8 / 2; i++)
                     {
-                        windows.Add(new Rectangle(room.X + i * 8, room.Y + 4, 4, room.Height - 8));
-                        windows.Add(new Rectangle(room.X + room.Width - i * 8 - 4, room.Y + 4, 4, room.Height - 8));
+                        windows.Add(new Rectangle2P(room.X0 + i * 8, room.Y0 + 4, 4, room.YTiles - 8));
+                        windows.Add(new Rectangle2P(room.X0 + room.XTiles - i * 8 - 4, room.Y0 + 4, 4, room.YTiles - 8));
                     }
                 }
             }
 
-            for (int i = room.X; i < room.X + room.Width; i++)
+            bool noBreakPoint = Chance.Simple();
+            Vector2 wallBreakPoint = new(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y0 + WorldGen.genRand.Next(room.YTiles));
+
+            for (int i = room.X0; i < room.X1; i++)
             {
-                for (int j = room.Y; j < room.Y + room.Height; j++)
+                for (int j = room.Y0; j < room.Y1; j++)
                 {
                     WorldGen.KillWall(i, j);
                     WorldGen.EmptyLiquid(i, j);
                     if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(4f, 12f) || noBreakPoint) WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
                     else if (!noBreakPoint) WorldGen.PlaceWall(i, j, Deco[S.CrookedWall]);
 
-                    if (j == room.Y + room.Height - 2)
+                    if (j == room.Y1 - 1)
                     {
                         WorldGen.PlaceTile(i, j, Deco[S.Floor], true, true);
                     }
@@ -314,21 +360,21 @@ namespace WorldGenMod.Structures.Underworld
                 }
             }
 
-            for (int i = hollowRect.X; i < hollowRect.X + hollowRect.Width; i++)
+            for (int i = freeR.X0; i <= freeR.X1; i++)
             {
-                for (int j = hollowRect.Y; j < hollowRect.Y + hollowRect.Height; j++)
+                for (int j = freeR.Y0; j <= freeR.Y1; j++)
                 {
                     WorldGen.KillTile(i, j);
                 }
             }
 
-            if (doors.Count != 0)
+            if (doors.Count > 0)
             {
-                foreach (Rectangle doorRect in doors)
+                foreach (Rectangle2P doorRect in doors)
                 {
-                    for (int i = doorRect.X; i < doorRect.X + doorRect.Width; i++)
+                    for (int i = doorRect.X0; i <= doorRect.X1; i++)
                     {
-                        for (int j = doorRect.Y; j < doorRect.Y + doorRect.Height; j++)
+                        for (int j = doorRect.Y0; j <= doorRect.Y1; j++)
                         {
                             WorldGen.KillTile(i, j);
                             WorldGen.KillWall(i, j);
@@ -339,13 +385,13 @@ namespace WorldGenMod.Structures.Underworld
                 }
             }
 
-            if (windows.Count != 0 && extraCount == 0)
+            if (windows.Count > 0 && belowCount == 0)
             {
-                foreach (Rectangle windowRect in windows)
+                foreach (Rectangle2P windowRect in windows)
                 {
-                    for (int i = windowRect.X; i < windowRect.X + windowRect.Width; i++)
+                    for (int i = windowRect.X0; i <= windowRect.X1; i++)
                     {
-                        for (int j = windowRect.Y; j < windowRect.Y + windowRect.Height; j++)
+                        for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
                         {
                             WorldGen.KillWall(i, j);
                             if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(4f, 12f) || noBreakPoint)
@@ -358,71 +404,71 @@ namespace WorldGenMod.Structures.Underworld
                 }
             }
 
-            for (int i = room.Center.X - room.Width / 2; i < room.Center.X + room.Width / 2; i++)
+            for (int i = room.X0; i < room.X1; i++)
             {
-                float currentMultiplier = 1f - Math.Abs(i - room.Center.X) / (room.Width / 2f);
-                for (int j1 = 0; j1 < (int)(towerHeight * currentMultiplier); j1++)
+                float currentMultiplier = 1f - Math.Abs(i - room.XCenter) / (room.XTiles / 2f);
+                for (int j1 = 0; j1 < (int)(roofHeight * currentMultiplier); j1++)
                 {
-                    int j = room.Y - 1 - j1;
+                    int j = room.Y0 - 1 - j1;
                     WorldGen.PlaceTile(i, j, Deco[S.TowerBrick], true, true);
                 }
             }
 
-            if (WorldGen.genRand.NextBool() && room.Height >= 12)
+            if (WorldGen.genRand.NextBool() && room.YTiles >= 12)
             {
-                int j = room.Y + WorldGen.genRand.Next(4, room.Height - 6);
+                int j = room.Y0 + WorldGen.genRand.Next(4, room.YTiles - 6);
                 for (int i = 0; i < WorldGen.genRand.Next(3, 7); i++)
                 {
-                    WorldGen.PlaceTile(i + room.X + 2, j, TileID.Platforms, true, false, style: 13);
-                    WorldGen.PlaceTile(i + room.X + 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
+                    WorldGen.PlaceTile(i + room.X0 + 2, j, TileID.Platforms, true, false, style: 13);
+                    WorldGen.PlaceTile(i + room.X0 + 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
                 }
             }
 
-            if (WorldGen.genRand.NextBool() && room.Height >= 12)
+            if (WorldGen.genRand.NextBool() && room.YTiles >= 12)
             {
-                int j = room.Y + WorldGen.genRand.Next(4, room.Height - 6);
+                int j = room.Y0 + WorldGen.genRand.Next(4, room.YTiles - 6);
                 for (int i = 0; i < WorldGen.genRand.Next(3, 7); i++)
                 {
-                    WorldGen.PlaceTile(-i + room.X + room.Width - 2, j, TileID.Platforms, true, false, style: 13);
-                    WorldGen.PlaceTile(-i + room.X + room.Width - 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
+                    WorldGen.PlaceTile(-i + room.X0 + room.XTiles - 2, j, TileID.Platforms, true, false, style: 13);
+                    WorldGen.PlaceTile(-i + room.X0 + room.XTiles - 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
                 }
             }
 
-            for (int i = room.X; i < room.X + room.Width; i++)
+            for (int i = room.X0; i <= room.X1; i++)
             {
-                int j = room.Y + 2;
+                int j = room.Y0 + 2;
                 WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 13);
             }
 
-            if (WorldGen.genRand.NextBool(2 + extraCount) && extraCount < 4 && room.Y + room.Height * 2 < Main.maxTilesY - 2)
+            if (downRoomExist)
             {
-                int width = (int)(room.Width * WorldGen.genRand.NextFloat(0.5f, 1f));
-                Rectangle nextRoom = new(room.X + WorldGen.genRand.Next(room.Width - width), room.Y + room.Height, width, room.Height);
+                int width = (int)(room.XTiles * WorldGen.genRand.NextFloat(0.5f, 1f));
+                Rectangle2P belowRoom = new(room.X0 + WorldGen.genRand.Next(room.XTiles - width), room.Y1 + 1, width, nextCellarYTiles);
 
-                GenerateRoom(nextRoom, 0, false, false, extraCount + 1);
+                GenerateRoom(belowRoom, 0, false, false, belowCount + 1);
 
-                for (int i = nextRoom.Center.X - 2; i <= nextRoom.Center.X + 2; i++)
+                for (int i = belowRoom.XCenter - 2; i <= belowRoom.XCenter + 2; i++)
                 {
-                    WorldGen.KillTile(i, room.Y + room.Height - 2);
-                    WorldGen.KillTile(i, room.Y + room.Height - 1);
-                    WorldGen.KillTile(i, room.Y + room.Height);
-                    WorldGen.KillTile(i, room.Y + room.Height + 1);
+                    WorldGen.KillTile(i, room.Y0 + room.Y1 - 1);
+                    WorldGen.KillTile(i, room.Y0 + room.Y1    );
+                    WorldGen.KillTile(i, room.Y0 + room.Y1 + 1);
+                    WorldGen.KillTile(i, room.Y0 + room.Y1 + 2);
                 }
             }
 
-            for (int i = room.X; i < room.X + room.Width; i++)
+            for (int i = room.X0; i <= room.X1; i++)
             {
-                int j = room.Y + room.Height - 2;
+                int j = room.Y1 - 1;
                 WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 13);
             }
 
-            if (extraCount > 0 && WorldGen.genRand.NextBool(3) || WorldGen.genRand.NextBool(6))
+            if (belowCount > 0 && Chance.Perc(33) || Chance.Perc(16))
             {
-                WorldGen.TileRunner(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 2, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Hellstone, true);
+                WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Hellstone, true);
             }
-            else if (WorldGen.genRand.NextBool(4))
+            else if (Chance.Perc(25))
             {
-                WorldGen.TileRunner(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 2, WorldGen.genRand.NextFloat(3f, 7f), 3, Deco[S.EvilTile], true);
+                WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(3f, 7f), 3, Deco[S.EvilTile], true);
             }
 
 
@@ -449,7 +495,7 @@ namespace WorldGenMod.Structures.Underworld
             //    WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 35);
             //}
 
-
+            return true;
         }
 
 

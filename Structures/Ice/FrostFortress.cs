@@ -31,6 +31,7 @@ namespace WorldGenMod.Structures.Ice
         List<Point16> traps = [];
         readonly int gap = -1; // the horizontal gap between two side room columns
         readonly int wThick = 2; // the tickness of the outer walls and ceilings in code
+        readonly int forceEvenRoom = 1; // 1 = force all rooms to have an even XTiles count; 0 = force all side rooms to have an odd XTiles count
 
         Dictionary<string, int> Deco = []; // the dictionary where the styles of tiles are stored
 
@@ -289,7 +290,6 @@ namespace WorldGenMod.Structures.Ice
             // generate all other rooms
             int sideRoomWidthMin = 16; // attention: smaller than 16 will break most room decoration
             int sideRoomWidthMax = 22;
-            int forceEvenRoom = 1; // 1 = force all side rooms to have an even XTiles count; 0 = force all side rooms to have an odd XTiles count
             int sideRoomX0, sideRoomY0, sideRoomX1, sideRoomY1; //create variables
             int verticalRoomX0, verticalRoomY0, verticalRoomX1, verticalRoomY1; //create variables
 
@@ -506,11 +506,10 @@ namespace WorldGenMod.Structures.Ice
         /// <returns>Hands back the room dimensions input</returns>
         public Rectangle2P GenerateRoom(Rectangle2P room, int roomType, bool leftDoor = false, bool rightDoor = false, bool upDoor = false, bool downDoor = false)
         {
-            // the "free" room.... e.g. the rooms free inside (not the wall bricks)
+            // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
             Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
 
-            int x; //temp variable for later calculations;
-            int y; //temp variable for later calculations;
+            int x, y; //temp variable for later calculations;
 
             bool noBreakPoint = Chance.Simple(); //force the background wall of the room to have no holes
             Vector2 wallBreakPoint = new(room.X0 + WorldGen.genRand.Next(room.XDiff), room.Y0 + WorldGen.genRand.Next(room.YDiff));
