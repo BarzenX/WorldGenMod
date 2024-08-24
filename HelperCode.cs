@@ -1715,6 +1715,8 @@ namespace WorldGenMod
         private int yTiles; //The amount of tiles on the y side of the rectangular region defined by this Rectangle2Point
         private int xCenter; //The x-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if xTiles is even, there is no real middle, and the smaller x-coordinate of the "double tile center" will be returned)
         private int yCenter; //The y-coordinate of the center point of the rectangular region defined by this Rectangle2Point (if yTiles is even, there is no real middle, and the smaller y-coordinate of the "double tile center" will be returned)
+        private bool xEven; //States if the XTiles-count of the rectangular region defined by this Rectangle2Point is an even number or not
+        private bool yEven; //States if the YTiles-count of the rectangular region defined by this Rectangle2Point is an even number or not
 
         /// <summary>
         /// Initializes a new instance of the Rectangle2Point structure with the specified values. 
@@ -1744,6 +1746,9 @@ namespace WorldGenMod
 
             this.xCenter = x0 + this.xdiff / 2;
             this.yCenter = y0 + this.ydiff / 2;
+
+            this.xEven = (xTiles % 2 == 0);
+            this.yEven = (yTiles % 2 == 0);
         }
 
         /// <summary>
@@ -1774,6 +1779,9 @@ namespace WorldGenMod
 
             this.xCenter = x0 + this.xdiff / 2;
             this.yCenter = y0 + this.ydiff / 2;
+
+            this.xEven = (xTiles % 2 == 0);
+            this.yEven = (yTiles % 2 == 0);
         }
 
         /// <summary>
@@ -1806,6 +1814,9 @@ namespace WorldGenMod
 
             this.xCenter = x0 + this.xdiff / 2;
             this.yCenter = y0 + this.ydiff / 2;
+
+            this.xEven = (xTiles % 2 == 0);
+            this.yEven = (yTiles % 2 == 0);
         }
 
         /// <summary>
@@ -1819,6 +1830,8 @@ namespace WorldGenMod
                 this.x0 = value;
                 this.xdiff = this.x1 - this.x0;
                 this.xTiles = xdiff + 1;
+
+                this.xEven = (xTiles % 2 == 0);
             }
         }
 
@@ -1833,6 +1846,8 @@ namespace WorldGenMod
                 this.y0 = value;
                 this.ydiff = this.y1 - this.y0;
                 this.yTiles = ydiff + 1;
+
+                this.yEven = (yTiles % 2 == 0);
             }
         }
 
@@ -1847,6 +1862,8 @@ namespace WorldGenMod
                 this.x1 = value;
                 this.xdiff = this.x1 - this.x0;
                 this.xTiles = xdiff + 1;
+
+                this.xEven = (xTiles % 2 == 0);
             }
         }
 
@@ -1861,6 +1878,8 @@ namespace WorldGenMod
                 this.y1 = value;
                 this.ydiff = this.y1 - this.y0;
                 this.yTiles = ydiff + 1;
+
+                this.yEven = (yTiles % 2 == 0);
             }
         }
 
@@ -1912,6 +1931,22 @@ namespace WorldGenMod
         public readonly int YCenter
         {
             get => yCenter;
+        }
+
+        /// <summary>
+        /// Reads if the XTiles-count of the room is an even number or not
+        /// </summary>
+        public readonly bool XEven
+        {
+            get => xEven;
+        }
+
+        /// <summary>
+        /// Reads if the YTiles-count of the room is an even number or not
+        /// </summary>
+        public readonly bool YEven
+        {
+            get => yEven;
         }
 
         /// <summary>

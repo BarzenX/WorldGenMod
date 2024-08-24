@@ -606,7 +606,7 @@ namespace WorldGenMod.Structures.Ice
             {
                 if ((upRoom && doorNum == Door.Down) || (downRoom && doorNum == Door.Up))
                 {
-                    continue; // these door are already created by their previous room, no need to to
+                    continue; // these doors are already created by their previous room, no need to do it again
                 }
 
                 if (doors[doorNum].doorExist)
