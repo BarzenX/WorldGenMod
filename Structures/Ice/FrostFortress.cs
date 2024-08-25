@@ -30,7 +30,7 @@ namespace WorldGenMod.Structures.Ice
         List<Vector2> fortresses = [];
         List<Point16> traps = [];
         readonly int gap = -1; // the horizontal gap between two side room columns
-        readonly int wThick = 2; // the tickness of the outer walls and ceilings in code
+        readonly int wThick = 2; // the thickness of the outer walls and ceilings in code
         readonly int forceEvenRoom = 1; // 1 = force all rooms to have an even XTiles count; 0 = force all side rooms to have an odd XTiles count
 
         Dictionary<string, int> Deco = []; // the dictionary where the styles of tiles are stored
@@ -723,8 +723,8 @@ namespace WorldGenMod.Structures.Ice
             }
             if (downDoor && !upRoom)
             {
-                WorldGen.SlopeTile(downDoorRect.X0 - 1, downDoorRect.Y1, (int)Func.SlopeVal.BotRight); // updoor left corner
-                WorldGen.SlopeTile(downDoorRect.X1 + 1, downDoorRect.Y1, (int)Func.SlopeVal.BotLeft); // updoor right corner
+                WorldGen.SlopeTile(downDoorRect.X0 - 1, downDoorRect.Y1, (int)Func.SlopeVal.BotRight); // downDoor left corner
+                WorldGen.SlopeTile(downDoorRect.X1 + 1, downDoorRect.Y1, (int)Func.SlopeVal.BotLeft); // downDoor right corner
             }
             #endregion
 
@@ -738,8 +738,7 @@ namespace WorldGenMod.Structures.Ice
         }
 
         /// <summary>
-        /// Shifting a side room of the main room some blocks, leaves a gap that has to be filled.
-        /// This is also the location where the door should be placed (will be placed in the middle of the gap)
+        /// Shifting a side room of the main room some blocks away, leaves a gap that has to be filled.
         /// </summary>
         /// <param name="previousRoom">The rectangle of the previous created side room</param>
         /// <param name="actualRoom">The rectangle of the just created side room</param>
@@ -789,7 +788,7 @@ namespace WorldGenMod.Structures.Ice
                         WorldGen.PlaceTile(i, j, Deco[S.Floor], true, true);
                         WorldGen.PlaceWall(i, j, Deco[S.BackWall]); //put the designated background wall
                     }
-                    else if (j >= previousRoom.Y1 - wThick - 2 && j <= previousRoom.Y1 - wThick ) // a left or a right door
+                    else if (j >= previousRoom.Y1 - wThick - 2 && j <= previousRoom.Y1 - wThick) // the door between the rooms
                     {
                         WorldGen.KillTile(i, j); //leave the "door" free
 
