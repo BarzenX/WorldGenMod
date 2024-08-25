@@ -132,6 +132,7 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.BackWall, 0);
             Deco.Add(S.CrookedWall, 0);
             Deco.Add(S.WindowWall, 0);
+            Deco.Add(S.WindowPaint, 0);
             Deco.Add(S.DoorWall, 0);
             Deco.Add(S.DoorPlat, 0);
             Deco.Add(S.Door, 0);
@@ -165,15 +166,16 @@ namespace WorldGenMod.Structures.Underworld
             {
                 case S.StyleHellstone: // Hellstone
                     Deco[S.StyleSave] = S.StyleHellstone;
-                    Deco[S.Brick] = TileID.HellstoneBrick;
-                    Deco[S.RoofBrick] = TileID.HellstoneBrick;
+                    Deco[S.Brick] = TileID.AncientHellstoneBrick;
+                    Deco[S.RoofBrick] = TileID.AncientHellstoneBrick;
                     Deco[S.Floor] = TileID.ObsidianBrick;
                     if (Chance.Simple()) Deco[S.Floor] = TileID.AncientSilverBrick;
                     Deco[S.EvilTile] = TileID.Crimstone;
                     Deco[S.BackWall] = WallID.HellstoneBrickUnsafe;
                     Deco[S.CrookedWall] = WallID.Flesh;
                     Deco[S.WindowWall] = WallID.RedStainedGlass;
-                    Deco[S.DoorWall] = WallID.ObsidianBrickUnsafe;
+                    Deco[S.WindowPaint] = PaintID.DeepRedPaint;
+                    Deco[S.DoorWall] = WallID.CrimtaneBrick;
 
                     Deco[S.DoorPlat] = 35; // Tile ID 19 (Plattforms) -> Type 35=Frozen
                     Deco[S.Door] = 27;     // Tile ID 10 (Doors) -> Type 27=Frozen (Closed)
@@ -203,17 +205,18 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Piano] = 7;     // Tile ID 87 (Pianos) -> Type 7=Frozen
                     break;
 
-                case S.StyleObsidian: // Obsidian
-                    Deco[S.StyleSave] = S.StyleObsidian;
-                    Deco[S.Brick] = TileID.ObsidianBrick;
-                    Deco[S.RoofBrick] = TileID.ObsidianBrick;
-                    Deco[S.Floor] = TileID.HellstoneBrick;
-                    if (Chance.Simple()) Deco[S.Floor] = TileID.AncientGoldBrick;
+                case S.StyleTitanstone: // Titanstone
+                    Deco[S.StyleSave] = S.StyleTitanstone;
+                    Deco[S.Brick] = TileID.Titanstone;
+                    Deco[S.RoofBrick] = TileID.Titanstone;
+                    Deco[S.Floor] = TileID.CrimtaneBrick;
+                    if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
                     Deco[S.EvilTile] = TileID.Ebonstone;
-                    Deco[S.BackWall] = WallID.ObsidianBrickUnsafe;
-                    Deco[S.CrookedWall] = WallID.CorruptionUnsafe2;
+                    Deco[S.BackWall] = WallID.EbonstoneEcho;
+                    Deco[S.CrookedWall] = WallID.CorruptionUnsafe1;
                     Deco[S.WindowWall] = WallID.RedStainedGlass;
-                    Deco[S.DoorWall] = WallID.HellstoneBrickUnsafe;
+                    Deco[S.WindowPaint] = PaintID.DeepRedPaint;
+                    Deco[S.DoorWall] = WallID.Shadewood;
 
                     Deco[S.DoorPlat] = 28; // Tile ID 19 (Plattforms) -> Type 28=Granite
                     Deco[S.Door] = 15;     // Tile ID 10 (Doors) -> Type 15=Iron (Closed)
@@ -243,13 +246,19 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Piano] = 23;    // Tile ID 87 (Pianos) -> Type 23=Boreal
                     break;
 
-                case S.StyleSomething: //TODO: look for another type of brick. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
-                    Deco[S.StyleSave] = S.StyleSomething;
-                    Deco[S.Brick] = TileID.LeadBrick;
-                    Deco[S.Floor] = TileID.EbonstoneBrick;
-                    //TODO: find something (Platinum Brick meh, Titanstone block meh)     if (Chance.Simple())   Deco[Style.Floor] = TileID.AncientSilverBrick;
-                    Deco[S.BackWall] = WallID.BlueDungeonSlab;
-                    Deco[S.DoorWall] = WallID.Bone;
+                case S.StyleBlueBrick: //TODO: look for another type of brick. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
+                    Deco[S.StyleSave] = S.StyleBlueBrick;
+                    Deco[S.Brick] = TileID.BlueDungeonBrick;
+                    Deco[S.RoofBrick] = TileID.BlueDungeonBrick;
+                    Deco[S.Floor] = TileID.Ebonstone;
+                    if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
+                    Deco[S.EvilTile] = TileID.Ebonstone;
+                    Deco[S.BackWall] = WallID.Shadewood;
+                    Deco[S.CrookedWall] = WallID.DemoniteBrick;
+                    Deco[S.WindowWall] = WallID.BlueStainedGlass;
+                    Deco[S.WindowPaint] = PaintID.BluePaint;
+                    Deco[S.DoorWall] = WallID.HellstoneBrickUnsafe;
+
                     Deco[S.DoorPlat] = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
                     Deco[S.Door] = 16;     // Tile ID 10 (Doors) -> Type 16=Blue Dungeon (Closed)
                     Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
@@ -612,7 +621,7 @@ namespace WorldGenMod.Structures.Underworld
                             if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(4f, 12f) || noBreakPoint)
                             {
                                 WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
-                                WorldGen.paintWall(i, j, PaintID.DeepRedPaint);
+                                WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);
                             }
                         }
                     }
@@ -648,7 +657,7 @@ namespace WorldGenMod.Structures.Underworld
                 while (left <= right)
                 {   
                     currentMultiplier = 1f - ((float)Math.Abs(left - leftHighest) / (float)leftDiff);
-                    for (int j1 = 0; j1 <= (int)(roofHeight * currentMultiplier); j1++)
+                    for (int j1 = 0; j1 < (int)(roofHeight * currentMultiplier); j1++)
                     {
                         int j = room.Y0 - 1 - j1;
                         WorldGen.PlaceTile(left, j, Deco[S.RoofBrick], true, true);
@@ -863,6 +872,7 @@ namespace WorldGenMod.Structures.Underworld
         public const String BackWall = "BackWall";
         public const String CrookedWall = "CrookedWall";
         public const String WindowWall = "WindowWall";
+        public const String WindowPaint = "WindowPaint";
         public const String DoorWall = "DoorWall";
         public const String DoorPlat = "DoorPlatform";
         public const String Door = "Door";
@@ -891,9 +901,9 @@ namespace WorldGenMod.Structures.Underworld
         public const String Dresser = "Dresser";
         public const String Piano = "Piano";
 
-        public const int StyleObsidian = 0;
+        public const int StyleTitanstone = 0;
         public const int StyleHellstone = 1;
-        public const int StyleSomething = 2; //TODO: find a third style
+        public const int StyleBlueBrick = 2; //TODO: find a third style
     }
 
     internal class RoomID
