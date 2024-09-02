@@ -135,7 +135,9 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.WindowPaint, 0);
             Deco.Add(S.DoorWall, 0);
             Deco.Add(S.DoorPlat, 0);
+            Deco.Add(S.DoorPlatPaint, 0);
             Deco.Add(S.Door, 0);
+            Deco.Add(S.DoorPaint, 0);
             Deco.Add(S.Chest, 0);
             Deco.Add(S.Campfire, 0);
             Deco.Add(S.Table, 0);
@@ -169,7 +171,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Brick] = TileID.AncientHellstoneBrick;
                     Deco[S.RoofBrick] = TileID.AncientHellstoneBrick;
                     Deco[S.Floor] = TileID.ObsidianBrick;
-                    if (Chance.Simple()) Deco[S.Floor] = TileID.AncientSilverBrick;
+                    if (Chance.Simple()) Deco[S.Floor] = TileID.CrimtaneBrick;
                     Deco[S.EvilTile] = TileID.Crimstone;
                     Deco[S.BackWall] = WallID.HellstoneBrickUnsafe;
                     Deco[S.CrookedWall] = WallID.Flesh;
@@ -177,8 +179,10 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.WindowPaint] = PaintID.DeepRedPaint;
                     Deco[S.DoorWall] = WallID.CrimtaneBrick;
 
-                    Deco[S.DoorPlat] = 35; // Tile ID 19 (Plattforms) -> Type 35=Frozen
-                    Deco[S.Door] = 27;     // Tile ID 10 (Doors) -> Type 27=Frozen (Closed)
+                    Deco[S.DoorPlat] = 10; // Tile ID 19 (Plattforms) -> Type 10=Brass Shelf
+                    Deco[S.DoorPlatPaint] = PaintID.RedPaint;
+                    Deco[S.Door] = TileID.TallGateClosed;
+                    Deco[S.DoorPaint] = PaintID.RedPaint;
                     Deco[S.Chest] = 11;    // Tile ID 21 (Cests) -> Type 11=Frozen
                     Deco[S.Campfire] = 3;  // Tile ID 215 (Campfire) -> Type 3=Frozen
                     Deco[S.Table] = 24;    // Tile ID 14 (Tables) -> Type 24=Frozen
@@ -219,7 +223,9 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.DoorWall] = WallID.Shadewood;
 
                     Deco[S.DoorPlat] = 28; // Tile ID 19 (Plattforms) -> Type 28=Granite
-                    Deco[S.Door] = 15;     // Tile ID 10 (Doors) -> Type 15=Iron (Closed)
+                    Deco[S.DoorPlatPaint] = PaintID.None;
+                    Deco[S.Door] = TileID.TallGateClosed;
+                    Deco[S.DoorPaint] = PaintID.None;
                     Deco[S.Chest] = 33;    // Tile ID 21 (Cests) -> Type 33=Boreal
                     Deco[S.Campfire] = 0;  // Tile ID 215 (Campfire) -> Type 0=Normal
                     Deco[S.Table] = 28;    // Tile ID 14 (Tables) -> Type 33=Boreal
@@ -250,17 +256,19 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.StyleSave] = S.StyleBlueBrick;
                     Deco[S.Brick] = TileID.BlueDungeonBrick;
                     Deco[S.RoofBrick] = TileID.BlueDungeonBrick;
-                    Deco[S.Floor] = TileID.Ebonstone;
+                    Deco[S.Floor] = TileID.EbonstoneBrick;
                     if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
                     Deco[S.EvilTile] = TileID.Ebonstone;
                     Deco[S.BackWall] = WallID.Shadewood;
-                    Deco[S.CrookedWall] = WallID.DemoniteBrick;
+                    Deco[S.CrookedWall] = WallID.Corruption3Echo;
                     Deco[S.WindowWall] = WallID.BlueStainedGlass;
                     Deco[S.WindowPaint] = PaintID.BluePaint;
-                    Deco[S.DoorWall] = WallID.HellstoneBrickUnsafe;
+                    Deco[S.DoorWall] = WallID.SpookyWood;
 
-                    Deco[S.DoorPlat] = 43; // Tile ID 19 (Plattforms) -> Type 43=Stone
-                    Deco[S.Door] = 16;     // Tile ID 10 (Doors) -> Type 16=Blue Dungeon (Closed)
+                    Deco[S.DoorPlat] = 16; // Tile ID 19 (Plattforms) -> Type 43=Spooky
+                    Deco[S.DoorPlatPaint] = PaintID.DeepBluePaint;
+                    Deco[S.Door] = TileID.TallGateClosed;
+                    Deco[S.DoorPlatPaint] = PaintID.RedPaint;
                     Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
                     Deco[S.Campfire] = 7;  // Tile ID 215 (Campfire) -> Type 0=Bone
                     Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood
@@ -664,7 +672,7 @@ namespace WorldGenMod.Structures.Underworld
                     }
 
                     currentMultiplier = 1f - ((float)Math.Abs(right - rightHighest) / (float)rightDiff);
-                    for (int j1 = 0; j1 <= (int)(roofHeight * currentMultiplier); j1++)
+                    for (int j1 = 0; j1 < (int)(roofHeight * currentMultiplier); j1++)
                     {
                         int j = room.Y0 - 1 - j1;
                         WorldGen.PlaceTile(right, j, Deco[S.RoofBrick], true, true);
@@ -732,7 +740,7 @@ namespace WorldGenMod.Structures.Underworld
             // Patches of tiles
             if (belowCount > 0 && Chance.Perc(33) || Chance.Perc(16))
             {
-                WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Hellstone, true);
+                WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Obsidian, true);
             }
             else if (Chance.Perc(25))
             {
@@ -875,7 +883,9 @@ namespace WorldGenMod.Structures.Underworld
         public const String WindowPaint = "WindowPaint";
         public const String DoorWall = "DoorWall";
         public const String DoorPlat = "DoorPlatform";
+        public const String DoorPlatPaint = "DoorPlatformPaint";
         public const String Door = "Door";
+        public const String DoorPaint = "DoorPaint";
         public const String Chest = "Chest";
         public const String Campfire = "Campfire";
         public const String Table = "Table";
@@ -901,9 +911,9 @@ namespace WorldGenMod.Structures.Underworld
         public const String Dresser = "Dresser";
         public const String Piano = "Piano";
 
-        public const int StyleTitanstone = 0;
-        public const int StyleHellstone = 1;
-        public const int StyleBlueBrick = 2; //TODO: find a third style
+        public const int StyleHellstone = 0;
+        public const int StyleTitanstone = 1;
+        public const int StyleBlueBrick = 2;
     }
 
     internal class RoomID
