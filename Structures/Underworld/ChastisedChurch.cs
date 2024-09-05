@@ -217,7 +217,7 @@ namespace WorldGenMod.Structures.Underworld
                     if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
                     Deco[S.EvilTile] = TileID.Ebonstone;
                     Deco[S.BackWall] = WallID.EbonstoneEcho;
-                    Deco[S.CrookedWall] = WallID.CorruptionUnsafe1;
+                    Deco[S.CrookedWall] = WallID.Corruption4Echo;// Corruption1Echo;
                     Deco[S.WindowWall] = WallID.RedStainedGlass;
                     Deco[S.WindowPaint] = PaintID.DeepRedPaint;
                     Deco[S.DoorWall] = WallID.Shadewood;
@@ -265,10 +265,10 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.WindowPaint] = PaintID.BluePaint;
                     Deco[S.DoorWall] = WallID.SpookyWood;
 
-                    Deco[S.DoorPlat] = 16; // Tile ID 19 (Plattforms) -> Type 43=Spooky
+                    Deco[S.DoorPlat] = 16; // Tile ID 19 (Plattforms) -> Type 16=Spooky
                     Deco[S.DoorPlatPaint] = PaintID.DeepBluePaint;
                     Deco[S.Door] = TileID.TallGateClosed;
-                    Deco[S.DoorPlatPaint] = PaintID.RedPaint;
+                    Deco[S.DoorPaint] = PaintID.RedPaint;
                     Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
                     Deco[S.Campfire] = 7;  // Tile ID 215 (Campfire) -> Type 0=Bone
                     Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood
@@ -493,17 +493,43 @@ namespace WorldGenMod.Structures.Underworld
 
 
             #region place backwall
-            bool noBreakPoint = Chance.Perc(40);
-            Vector2 wallBreakPoint = new(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y0 + WorldGen.genRand.Next(room.YTiles));
+            bool noBreakPoint1, noBreakPoint2;
+            Vector2 wallBreakPoint1, wallBreakPoint2;
+            bool awayEnough1, awayEnough2;
+
+            if (room.XTiles < 30) // just one breakpoint
+            {
+                noBreakPoint1 = Chance.Perc(40);
+                wallBreakPoint1 = new(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y0 + WorldGen.genRand.Next(room.YTiles));
+
+                noBreakPoint2 = true;
+                wallBreakPoint2 = new(room.X1, room.Y0); //create a vecor, just to be safe
+            }
+            else // two brea points, one on the left, another one on the right
+            {
+                noBreakPoint1 = Chance.Perc(40);
+                wallBreakPoint1 = new(room.X0 + WorldGen.genRand.Next(room.XTiles) / 2, room.Y0 + WorldGen.genRand.Next(room.YTiles));
+
+                noBreakPoint2 = Chance.Perc(40);
+                wallBreakPoint2 = new(room.X1 - WorldGen.genRand.Next(room.XTiles) / 2, room.Y0 + WorldGen.genRand.Next(room.YTiles));
+            }
+            
+            
             int outdoFreeR = 1; // how many tiles outside of freeR the backwall shall be placed (so the edge of the backwall won't be visible at the border of freeR)
             
             for (int i = freeR.X0 - outdoFreeR; i <= freeR.X1 + outdoFreeR; i++)
             {
                 for (int j = freeR.Y0 - outdoFreeR; j <= freeR.Y1 + outdoFreeR; j++)
                 {
-                    if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(4f, 12f) || noBreakPoint) WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
-                    else if (!noBreakPoint) WorldGen.PlaceWall(i, j, Deco[S.CrookedWall]);
+                    if (noBreakPoint1) awayEnough1 = true;
+                    else               awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreakPoint1) > WorldGen.genRand.NextFloat(3f, 12f);
 
+                    if (noBreakPoint2) awayEnough2 = true;
+                    else               awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreakPoint2) > WorldGen.genRand.NextFloat(3f, 12f);
+
+
+                    if ( awayEnough1 && awayEnough2 ) WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
+                    else WorldGen.PlaceWall(i, j, Deco[S.CrookedWall]);
                 }
             }
             #endregion
@@ -538,10 +564,14 @@ namespace WorldGenMod.Structures.Underworld
                         {
                             WorldGen.KillWall(i, j);
 
-                            if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(1f, 7f) || noBreakPoint)
-                            {
-                                WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
-                            }
+                            if (noBreakPoint1) awayEnough1 = true;
+                            else               awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreakPoint1) > WorldGen.genRand.NextFloat(1f, 7f);
+
+                            if (noBreakPoint2) awayEnough2 = true;
+                            else               awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreakPoint2) > WorldGen.genRand.NextFloat(1f, 7f);
+
+
+                            if ( awayEnough1 && awayEnough2) WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
                         }
                     }
                 }
@@ -613,6 +643,69 @@ namespace WorldGenMod.Structures.Underworld
                 WorldGen.KillWall(x, y);
                 WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
             }
+
+            // put actual doors
+            if (belowCount == 0) // only the main line has left/right doors
+            {
+                if (previousRoom.X0 < room.X0 ) // rooms advancing from left to right: put left door
+                {
+                    bool placed;
+
+                    x = room.X0; // right side rooms always have a left door
+                    y = freeR.Y1;//;
+                    placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // left gate
+
+                    if (placed )//&& Deco[S.DoorPaint] > PaintID.None)
+                    {
+                        Func.GateTurn(x, y);
+                        for (int i = 0; i < doorHeight; i++)
+                        {
+                            WorldGen.paintTile(x, y - i, (byte)Deco[S.DoorPaint]);
+                        }
+                    }
+
+
+
+                    if (gap > 0 && doors[Door.Right].doorExist) // in case there is a gap between side rooms and this right side room also has a right door
+                    {
+                        x = room.X1;
+                        placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
+
+                        if (placed && Deco[S.DoorPaint] > PaintID.None)
+                        {
+                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint]);
+                        }
+                    }
+                }
+
+                else // rooms advancing from right to left: put right door
+                {
+                    bool placed;
+
+                    x = room.X1; // left side rooms always have a right door
+                    y = freeR.Y1 - (doorHeight - 1);
+                    placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // right gate
+
+                    if (placed && Deco[S.DoorPaint] > PaintID.None)
+                    {
+                        for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint]);
+                    }
+
+
+
+                    if (gap > 0 && doors[Door.Left].doorExist) // in case there is a gap between side rooms and this left side room also has a left door
+                    {
+                        x = room.X0;
+                        placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
+
+                        if (placed && Deco[S.DoorPaint] > PaintID.None)
+                        {
+                            Func.GateTurn(x, y);
+                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint]);
+                        }
+                    }
+                }
+            }
             #endregion
 
 
@@ -626,7 +719,15 @@ namespace WorldGenMod.Structures.Underworld
                         for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
                         {
                             WorldGen.KillWall(i, j);
-                            if (Vector2.Distance(new Vector2(i, j), wallBreakPoint) > WorldGen.genRand.NextFloat(4f, 12f) || noBreakPoint)
+
+                            if (noBreakPoint1) awayEnough1 = true;
+                            else awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreakPoint1) > WorldGen.genRand.NextFloat(4f, 12f);
+
+                            if (noBreakPoint2) awayEnough2 = true;
+                            else awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreakPoint2) > WorldGen.genRand.NextFloat(4f, 12f);
+
+
+                            if (awayEnough1 && awayEnough2)
                             {
                                 WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
                                 WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);

@@ -231,6 +231,25 @@ namespace WorldGenMod
         }
 
         /// <summary>
+        /// Changes a TallGate's facing direction from "Door knob on the left" (standard appearance after placing) to "Door knob on the right"
+        /// </summary>
+        /// <param name="x">The x-coordinate used for placing the TallGate (bottommost tile)</param>
+        /// <param name="y">The y-coordinate used for placing the TallGate (bottommost tile)</param>
+        public static void GateTurn(int x, int y)
+        {
+            Tile tile = Main.tile[x, y];
+            if (tile.TileType != TileID.TallGateClosed && tile.TileType != TileID.TallGateOpen) return; // check if it's really a TallGate
+
+            if (tile.TileFrameY < 94) // TallGate is in "standard appearance"
+            {
+                for (int j = y - 4; j <= y; j++) //a TallGate is 5 tiles high
+                {
+                    Main.tile[x, j].TileFrameY += 94; // ake the TallGate turn around
+                }
+            }
+        }
+
+        /// <summary>
         /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187).
         /// <br/>Has an option for painting the pile.
         /// </summary>
