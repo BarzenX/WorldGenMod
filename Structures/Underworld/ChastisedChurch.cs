@@ -130,6 +130,7 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.Floor, 0);
             Deco.Add(S.EvilTile, 0);
             Deco.Add(S.BackWall, 0);
+            Deco.Add(S.BackWallPaint, 0);
             Deco.Add(S.CrookedWall, 0);
             Deco.Add(S.WindowWall, 0);
             Deco.Add(S.WindowPaint, 0);
@@ -174,7 +175,8 @@ namespace WorldGenMod.Structures.Underworld
                     if (Chance.Simple()) Deco[S.Floor] = TileID.CrimtaneBrick;
                     Deco[S.EvilTile] = TileID.Crimstone;
                     Deco[S.BackWall] = WallID.HellstoneBrickUnsafe;
-                    Deco[S.CrookedWall] = WallID.Flesh;
+                    Deco[S.BackWallPaint] = PaintID.None;
+                    Deco[S.CrookedWall] = WallID.Crimson4Echo;
                     Deco[S.WindowWall] = WallID.RedStainedGlass;
                     Deco[S.WindowPaint] = PaintID.DeepRedPaint;
                     Deco[S.DoorWall] = WallID.CrimtaneBrick;
@@ -214,18 +216,19 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Brick] = TileID.Titanstone;
                     Deco[S.RoofBrick] = TileID.Titanstone;
                     Deco[S.Floor] = TileID.CrimtaneBrick;
-                    if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
+                    if (Chance.Simple()) Deco[S.Floor] = TileID.GrayBrick;
                     Deco[S.EvilTile] = TileID.Ebonstone;
-                    Deco[S.BackWall] = WallID.EbonstoneEcho;
-                    Deco[S.CrookedWall] = WallID.Corruption4Echo;// Corruption1Echo;
+                    Deco[S.BackWall] = WallID.GraniteBlock;
+                    Deco[S.BackWallPaint] = PaintID.GrayPaint;
+                    Deco[S.CrookedWall] = WallID.Lava3Echo;
                     Deco[S.WindowWall] = WallID.RedStainedGlass;
                     Deco[S.WindowPaint] = PaintID.DeepRedPaint;
                     Deco[S.DoorWall] = WallID.Shadewood;
 
-                    Deco[S.DoorPlat] = 28; // Tile ID 19 (Plattforms) -> Type 28=Granite
+                    Deco[S.DoorPlat] = 13; // Tile ID 19 (Plattforms) -> Type 13=Obsidian
                     Deco[S.DoorPlatPaint] = PaintID.None;
                     Deco[S.Door] = TileID.TallGateClosed;
-                    Deco[S.DoorPaint] = PaintID.None;
+                    Deco[S.DoorPaint] = PaintID.RedPaint;
                     Deco[S.Chest] = 33;    // Tile ID 21 (Cests) -> Type 33=Boreal
                     Deco[S.Campfire] = 0;  // Tile ID 215 (Campfire) -> Type 0=Normal
                     Deco[S.Table] = 28;    // Tile ID 14 (Tables) -> Type 33=Boreal
@@ -260,6 +263,7 @@ namespace WorldGenMod.Structures.Underworld
                     if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
                     Deco[S.EvilTile] = TileID.Ebonstone;
                     Deco[S.BackWall] = WallID.Shadewood;
+                    Deco[S.BackWallPaint] = PaintID.None;
                     Deco[S.CrookedWall] = WallID.Corruption3Echo;
                     Deco[S.WindowWall] = WallID.BlueStainedGlass;
                     Deco[S.WindowPaint] = PaintID.BluePaint;
@@ -505,7 +509,7 @@ namespace WorldGenMod.Structures.Underworld
                 noBreakPoint2 = true;
                 wallBreakPoint2 = new(room.X1, room.Y0); //create a vecor, just to be safe
             }
-            else // two brea points, one on the left, another one on the right
+            else // two breakpoints, one on the left, another one on the right
             {
                 noBreakPoint1 = Chance.Perc(40);
                 wallBreakPoint1 = new(room.X0 + WorldGen.genRand.Next(room.XTiles) / 2, room.Y0 + WorldGen.genRand.Next(room.YTiles));
@@ -528,7 +532,11 @@ namespace WorldGenMod.Structures.Underworld
                     else               awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreakPoint2) > WorldGen.genRand.NextFloat(3f, 12f);
 
 
-                    if ( awayEnough1 && awayEnough2 ) WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
+                    if (awayEnough1 && awayEnough2)
+                    {
+                        WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
+                        if(Deco[S.BackWallPaint] > 0) WorldGen.paintWall(i, j, (byte)Deco[S.BackWallPaint]);
+                    } 
                     else WorldGen.PlaceWall(i, j, Deco[S.CrookedWall]);
                 }
             }
@@ -979,6 +987,7 @@ namespace WorldGenMod.Structures.Underworld
         public const String Floor = "Floor";
         public const String EvilTile = "EvilTile";
         public const String BackWall = "BackWall";
+        public const String BackWallPaint = "BackWallPaint";
         public const String CrookedWall = "CrookedWall";
         public const String WindowWall = "WindowWall";
         public const String WindowPaint = "WindowPaint";
