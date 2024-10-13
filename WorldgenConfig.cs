@@ -39,7 +39,7 @@ namespace WorldGenMod
 
         [Increment(1)]
         [Range(0, 100)]
-        [DefaultValue(25)]
+        [DefaultValue(4)]
         [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
         public int configChastisedChurchCobwebFilling;
 

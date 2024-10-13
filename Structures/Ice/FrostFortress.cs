@@ -1002,7 +1002,7 @@ namespace WorldGenMod.Structures.Ice
 
             } while (!valid);
 
-            //roomDeco = 2;
+            //roomDeco = 6;
 
             switch (roomDeco)
             {

@@ -433,44 +433,6 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
 
-            #region window rectangles
-            List<Rectangle2P> windows = new();
-            int windowXTiles = 4;
-            
-            int windowYMargin = 2; // how many Tiles the window shall be away from the ceiling / floor
-            int windowY0 = freeR.Y0 + windowYMargin; // height where the window starts
-            int windowYTiles = freeR.YTiles - (2 * windowYMargin); // the YTiles height of a window
-
-            if (freeR.YTiles > 8 && freeR.XTiles > 8)
-            {
-                if (freeR.XTiles <= 12) // narrow room, place window in the middle
-                {
-                    int windowCenterOffset = (windowXTiles / 2) - 1 + (windowXTiles % 2); // to center the window at a specified x position
-
-                    windows.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
-                }
-                
-                else // symmetrical window pairs with spaces in between
-                {
-                    int windowXMargin = 2; // how many tiles the outer windows-pair shall be away from the left / right wall
-                    int windowDistanceXTiles = 4; // XTiles between two windows
-
-                    int windowLeftX0 = freeR.X0 + windowXMargin; // init
-                    int windowRightX0 = freeR.X1 - windowXMargin - (windowXTiles - 1); // init
-
-                    while (windowLeftX0 + windowXTiles < freeR.XCenter)
-                    {
-                        windows.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles));
-                        windows.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles));
-
-                        windowLeftX0 += windowXTiles + windowDistanceXTiles;
-                        windowRightX0 -= (windowXTiles + windowDistanceXTiles);
-                    }
-                }
-            }
-            #endregion
-
-
             #region carve out room and place bricks
             for (x = room.X0; x <= room.X1; x++)
             {
@@ -501,6 +463,7 @@ namespace WorldGenMod.Structures.Underworld
             bool noBreakPoint1, noBreakPoint2;
             Vector2 wallBreakPoint1, wallBreakPoint2;
             bool awayEnough1, awayEnough2;
+            Dictionary<int, (bool exist, Vector2 point)> wallBreak = []; // for later sending it to DecorateRoom()
 
             if (room.XTiles < 30) // just one breakpoint
             {
@@ -508,7 +471,7 @@ namespace WorldGenMod.Structures.Underworld
                 wallBreakPoint1 = new(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y0 + WorldGen.genRand.Next(room.YTiles));
 
                 noBreakPoint2 = true;
-                wallBreakPoint2 = new(room.X1, room.Y0); //create a vecor, just to be safe
+                wallBreakPoint2 = new(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y0 + WorldGen.genRand.Next(room.YTiles)); //create a vecor, just to be safe
             }
             else // two breakpoints, one on the left, another one on the right
             {
@@ -518,8 +481,11 @@ namespace WorldGenMod.Structures.Underworld
                 noBreakPoint2 = Chance.Perc(40);
                 wallBreakPoint2 = new(room.X1 - WorldGen.genRand.Next(room.XTiles) / 2, room.Y0 + WorldGen.genRand.Next(room.YTiles));
             }
-            
-            
+
+            wallBreak.Add(BP.Left,  (!noBreakPoint1, wallBreakPoint1));
+            wallBreak.Add(BP.Right, (!noBreakPoint2, wallBreakPoint2));
+
+
             int outdoFreeR = 1; // how many tiles outside of freeR the backwall shall be placed (so the edge of the backwall won't be visible at the border of freeR)
             
             for (int i = freeR.X0 - outdoFreeR; i <= freeR.X1 + outdoFreeR; i++)
@@ -718,36 +684,6 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
 
-            #region put windows
-            if (windows.Count > 0 && belowCount == 0)
-            {
-                foreach (Rectangle2P windowRect in windows)
-                {
-                    for (int i = windowRect.X0; i <= windowRect.X1; i++)
-                    {
-                        for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
-                        {
-                            WorldGen.KillWall(i, j);
-
-                            if (noBreakPoint1) awayEnough1 = true;
-                            else awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreakPoint1) > WorldGen.genRand.NextFloat(4f, 12f);
-
-                            if (noBreakPoint2) awayEnough2 = true;
-                            else awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreakPoint2) > WorldGen.genRand.NextFloat(4f, 12f);
-
-
-                            if (awayEnough1 && awayEnough2)
-                            {
-                                WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
-                                WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);
-                            }
-                        }
-                    }
-                }
-            }
-            #endregion
-
-
             #region put roof
             if (belowCount == 0) //only the main line rooms have a roof
             {
@@ -812,51 +748,50 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
 
-            if (WorldGen.genRand.NextBool() && room.YTiles >= 12)
-            {
-                int j = room.Y0 + WorldGen.genRand.Next(4, room.YTiles - 6);
-                for (int i = 0; i < WorldGen.genRand.Next(3, 7); i++)
-                {
-                    WorldGen.PlaceTile(i + room.X0 + 2, j, TileID.Platforms, true, false, style: 13); // Obsidian Platform
-                    WorldGen.PlaceTile(i + room.X0 + 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
-                }
-            }
-
-            if (WorldGen.genRand.NextBool() && room.YTiles >= 12)
-            {
-                int j = room.Y0 + WorldGen.genRand.Next(4, room.YTiles - 6);
-                for (int i = 0; i < WorldGen.genRand.Next(3, 7); i++)
-                {
-                    WorldGen.PlaceTile(-i + room.X0 + room.XTiles - 2, j, TileID.Platforms, true, false, style: 13); // Obsidian Platform
-                    WorldGen.PlaceTile(-i + room.X0 + room.XTiles - 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
-                }
-            }
-
-            for (int i = room.X0; i <= room.X1; i++)
-            {
-                int j = room.Y0 + 2;
-                WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 13); // Obsidian Platform
-            }
-
-
-
             if (downRoomExist)
             {
                 GenerateRoom(belowRoom, Rectangle2P.Empty, belowCount: belowCount + 1);
             }
 
-
-
+            //TODO:
+            #region "don't know if it stays" stuff
             // Patches of tiles
-            if (belowCount > 0 && Chance.Perc(33) || Chance.Perc(16))
-            {
-                WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Obsidian, true);
-            }
-            else if (Chance.Perc(25))
-            {
-                WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(3f, 7f), 3, Deco[S.EvilTile], true);
-            }
+            //if (belowCount > 0 && Chance.Perc(33) || Chance.Perc(16))
+            //{
+            //    WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(6f, 10f), 3, TileID.Obsidian, true);
+            //}
+            //else if (Chance.Perc(25))
+            //{
+            //    WorldGen.TileRunner(room.X0 + WorldGen.genRand.Next(room.XTiles), room.Y1 - 1, WorldGen.genRand.NextFloat(3f, 7f), 3, Deco[S.EvilTile], true);
+            //}
 
+            // Obsidian platforms
+            //if (WorldGen.genRand.NextBool() && room.YTiles >= 12)
+            //{
+            //    int j = room.Y0 + WorldGen.genRand.Next(4, room.YTiles - 6);
+            //    for (int i = 0; i < WorldGen.genRand.Next(3, 7); i++)
+            //    {
+            //        WorldGen.PlaceTile(i + room.X0 + 2, j, TileID.Platforms, true, false, style: 13); // Obsidian Platform
+            //        WorldGen.PlaceTile(i + room.X0 + 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
+            //    }
+            //}
+
+            //if (WorldGen.genRand.NextBool() && room.YTiles >= 12)
+            //{
+            //    int j = room.Y0 + WorldGen.genRand.Next(4, room.YTiles - 6);
+            //    for (int i = 0; i < WorldGen.genRand.Next(3, 7); i++)
+            //    {
+            //        WorldGen.PlaceTile(-i + room.X0 + room.XTiles - 2, j, TileID.Platforms, true, false, style: 13); // Obsidian Platform
+            //        WorldGen.PlaceTile(-i + room.X0 + room.XTiles - 2, j - 1, TileID.Books, true, false, style: WorldGen.genRand.Next(6));
+            //    }
+            //}
+
+            //for (int i = room.X0; i <= room.X1; i++)
+            //{
+            //    int j = room.Y0 + 2;
+            //    WorldGen.PlaceTile(i, j, TileID.Platforms, true, false, style: 13); // Obsidian Platform
+            //}
+            #endregion
 
 
             //TODO: chest style
@@ -881,12 +816,187 @@ namespace WorldGenMod.Structures.Underworld
                 }
             }
 
+            DecorateRoom(room, doors, wallBreak, belowCount);
+
             return room;
         }
 
 
-        //TODO: put and fill chest
+        /// <summary>
+        /// The main method for choosing and running the a rooms decoration
+        /// </summary>
+        /// <param name="room">The rectangular area of the room, including the outer walls</param>
+        /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
+        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        /// <param name="belowCount">Stating how many rooms below the main line this particular room is. 0 = main line</param>
+        public void DecorateRoom(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak, int belowCount = 0)
+        {
+            // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
+            Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
 
+
+            // init variables
+            bool placed, placed2;
+            (bool success, int x, int y) placeResult, placeResult2;
+            Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
+            List<(int x, int y)> rememberPos = []; // for remembering positions
+            List<(ushort TileID, int style, byte chance)> randomItems = [], randomItems2 = []; // for random item placement
+            int x, y, chestID, unusedXTiles, num;
+
+
+            // for window placement
+            List<Rectangle2P> windows = new();
+            int windowXTiles = 4;
+
+            int windowYMargin = 2; // how many Tiles the window shall be away from the ceiling / floor
+            int windowY0 = freeR.Y0 + windowYMargin; // height where the window starts
+            int windowYTiles = freeR.YTiles - (2 * windowYMargin); // the YTiles height of a window
+
+            bool awayEnough1, awayEnough2;
+
+
+            //choose room decoration at random
+            int roomDeco = WorldGen.genRand.Next(1); //TODO: don't forget to put the correct values in the end!
+
+            roomDeco = 0;
+
+            switch (roomDeco)
+            {
+                case 0: //
+                    #region windows
+                    windows.Clear();
+
+                    // create window rectangles
+                    if (freeR.YTiles > 8 && freeR.XTiles > 8)
+                    {
+                        if (freeR.XTiles <= 12) // narrow room, place window in the middle
+                        {
+                            int windowCenterOffset = (windowXTiles / 2) - 1 + (windowXTiles % 2); // to center the window at a specified x position
+
+                            windows.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
+                        }
+
+                        else // symmetrical window pairs with spaces in between
+                        {
+                            int windowXMargin = 2; // how many tiles the outer windows-pair shall be away from the left / right wall
+                            int windowDistanceXTiles = 4; // XTiles between two windows
+
+                            int windowLeftX0 = freeR.X0 + windowXMargin; // init
+                            int windowRightX0 = freeR.X1 - windowXMargin - (windowXTiles - 1); // init
+
+                            while (windowLeftX0 + windowXTiles < freeR.XCenter)
+                            {
+                                windows.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
+                                windows.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
+
+                                windowLeftX0  += (windowXTiles + windowDistanceXTiles);
+                                windowRightX0 -= (windowXTiles + windowDistanceXTiles);
+                            }
+                        }
+                    }
+
+                    // put windows
+                    if (windows.Count > 0 && belowCount == 0)
+                    {
+                        foreach (Rectangle2P windowRect in windows)
+                        {
+                            for (int i = windowRect.X0; i <= windowRect.X1; i++)
+                            {
+                                for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
+                                {
+                                    WorldGen.KillWall(i, j);
+
+                                    if (!wallBreak[BP.Left].exist) awayEnough1 = true;
+                                    else awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Left].point) > WorldGen.genRand.NextFloat(4f, 12f);
+
+                                    if (!wallBreak[BP.Right].exist) awayEnough2 = true;
+                                    else awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Right].point) > WorldGen.genRand.NextFloat(4f, 12f);
+
+
+                                    if (awayEnough1 && awayEnough2)
+                                    {
+                                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
+                                        WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #endregion
+
+                    break;
+                case 100: // empty room for display
+                    //windows blueprint for copying
+                    #region windows
+                    windows.Clear();
+
+                    // create window rectangles
+                    if (freeR.YTiles > 8 && freeR.XTiles > 8)
+                    {
+                        if (freeR.XTiles <= 12) // narrow room, place window in the middle
+                        {
+                            int windowCenterOffset = (windowXTiles / 2) - 1 + (windowXTiles % 2); // to center the window at a specified x position
+
+                            windows.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
+                        }
+
+                        else // symmetrical window pairs with spaces in between
+                        {
+                            int windowXMargin = 2; // how many tiles the outer windows-pair shall be away from the left / right wall
+                            int windowDistanceXTiles = 4; // XTiles between two windows
+
+                            int windowLeftX0 = freeR.X0 + windowXMargin; // init
+                            int windowRightX0 = freeR.X1 - windowXMargin - (windowXTiles - 1); // init
+
+                            while (windowLeftX0 + windowXTiles < freeR.XCenter)
+                            {
+                                windows.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
+                                windows.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
+
+                                windowLeftX0 += (windowXTiles + windowDistanceXTiles);
+                                windowRightX0 -= (windowXTiles + windowDistanceXTiles);
+                            }
+                        }
+                    }
+
+                    // put windows
+                    if (windows.Count > 0 && belowCount == 0)
+                    {
+                        foreach (Rectangle2P windowRect in windows)
+                        {
+                            for (int i = windowRect.X0; i <= windowRect.X1; i++)
+                            {
+                                for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
+                                {
+                                    WorldGen.KillWall(i, j);
+
+                                    if (!wallBreak[BP.Left].exist) awayEnough1 = true;
+                                    else awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Left].point) > WorldGen.genRand.NextFloat(4f, 12f);
+
+                                    if (!wallBreak[BP.Right].exist) awayEnough2 = true;
+                                    else awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Right].point) > WorldGen.genRand.NextFloat(4f, 12f);
+
+
+                                    if (awayEnough1 && awayEnough2)
+                                    {
+                                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
+                                        WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    #endregion
+
+                    break;
+
+            }
+
+            Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
+        }
+
+
+        //TODO: put and fill chest
         public void FillChest(Chest chest, int style)
         {
             List<int> mainItem = [];
@@ -1023,5 +1133,11 @@ namespace WorldGenMod.Structures.Underworld
         public const short Right = 1;
         public const short Up = 2;
         public const short Down = 3;
+    }
+
+    internal class BP //Breaking Point
+    {
+        public const short Left = 0; // the left or the only backwall breaking point in the room
+        public const short Right = 1; // the right backwall breaking point in the room
     }
 }
