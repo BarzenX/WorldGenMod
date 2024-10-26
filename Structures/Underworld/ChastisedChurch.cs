@@ -125,7 +125,7 @@ namespace WorldGenMod.Structures.Underworld
         {
             Deco.Clear(); // init
 
-            // create dictionary entries
+            #region create dictionary entries
             Deco.Add(S.StyleSave, (0,0));
             Deco.Add(S.Brick, (0, 0));
             Deco.Add(S.RoofBrick, (0, 0));
@@ -164,6 +164,7 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.BedWallpaper, (0, 0));
             Deco.Add(S.PaintingWallpaper, (0, 0));
             Deco.Add(S.Dresser, (0, 0));
+            #endregion
 
             //choose a random style and define it's types
             int chooseStyle = WorldGen.genRand.Next(3);
@@ -191,23 +192,23 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.DoorPlatPaint] = (PaintID.RedPaint, 0);
                     Deco[S.Door] = (TileID.TallGateClosed, 0);
                     Deco[S.DoorPaint] = (PaintID.RedPaint, 0);
-                    Deco[S.Chest] = (TileID.Containers, 11); //* Frozen
+                    Deco[S.Chest] = (TileID.Containers, 14); // Shadewood
                     Deco[S.Campfire] = (TileID.Campfire, 3);  //* Frozen
                     Deco[S.Table] = (TileID.Tables2, 11);  //Ash Wood
                     Deco[S.Workbench] = (TileID.WorkBenches, 20); //* Frozen
-                    Deco[S.Chair] = (TileID.Chairs, 28); //* Frozen
+                    Deco[S.Chair] = (TileID.Chairs, 11); // Shadewood
                     Deco[S.MainPainting] = (TileID.Painting3X3, 26); //* "Discover"
                     Deco[S.Chandelier] = (TileID.Chandeliers, 19); // Shadewood
                     Deco[S.Candelabra] = (TileID.Candelabras, 9); //* Frozen
                     Deco[S.Candle] = (TileID.Candles, 8); //* Frozen
-                    Deco[S.Lamp] = (TileID.Lamps, 5); //* Frozen
+                    Deco[S.Lamp] = (TileID.Lamps, 14); // Shadewood
                     Deco[S.Torch] = (TileID.Torches, 9); //* Ice
                     Deco[S.Lantern] = (TileID.HangingLanterns, 18); //* Frozen
                     Deco[S.Banner] = (TileID.Banners, 2); //* Blue
                     Deco[S.DecoPlat] = (TileID.Platforms, 19); //* Boreal
-                    Deco[S.StylePaint] = (PaintID.WhitePaint, 0); //*
+                    Deco[S.StylePaint] = (PaintID.RedPaint, 0);
                     Deco[S.HangingPot] = (TileID.PotsSuspended, 4); //* Shiverthorn
-                    Deco[S.Bookcase] = (TileID.Bookcases, 17); //* Frozen
+                    Deco[S.Bookcase] = (TileID.Bookcases, 43); // Ash Wood
                     Deco[S.Sofa] = (TileID.Benches, 27); //* Frozen
                     if (subStyle) Deco[S.Sofa] = (TileID.Benches, 5); // Shade Wood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 11); //* Frozen
@@ -286,24 +287,24 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.DoorPlatPaint] = (PaintID.DeepBluePaint, 0);
                     Deco[S.Door] = (TileID.TallGateClosed, 0);
                     Deco[S.DoorPaint] = (PaintID.RedPaint, 0);
-                    Deco[S.Chest] = (TileID.Containers, 3); //* Shadow
+                    Deco[S.Chest] = (TileID.Containers, 3); // Shadow
                     Deco[S.Campfire] = (TileID.Campfire, 7); //* Bone
-                    Deco[S.Table] = (TileID.Tables, 1); //* Ebonwood
+                    Deco[S.Table] = (TileID.Tables, 1); // Ebonwood
                     Deco[S.Workbench] = (TileID.WorkBenches, 1); //* Ebonwood
-                    Deco[S.Chair] = (TileID.Chairs, 2); //* Ebonwood
+                    Deco[S.Chair] = (TileID.Chairs, 2); // Ebonwood
                     Deco[S.MainPainting] = (TileID.Painting3X3, 35); //* "Rare Enchantment"
-                    Deco[S.Chandelier] = (TileID.Chandeliers, 32); //* Obsidian
+                    Deco[S.Chandelier] = (TileID.Chandeliers, 32); // Obsidian
                     Deco[S.Candelabra] = (TileID.Candelabras, 2); //* Ebonwood
                     Deco[S.Candle] = (TileID.Candles, 5); //* Ebonwood
-                    Deco[S.Lamp] = (TileID.Lamps, 23); //* Obsidian
+                    Deco[S.Lamp] = (TileID.Lamps, 23); // Obsidian
                     Deco[S.Torch] = (TileID.Torches, 7); //* Demon
                     Deco[S.Lantern] = (TileID.HangingLanterns, 2); //* Caged Lantern
                     Deco[S.Banner] = (TileID.Banners, 0); //* Red
                     Deco[S.DecoPlat] = (TileID.Platforms, 19); //* Boreal
-                    Deco[S.StylePaint] = (PaintID.GrayPaint, 0); //*
+                    Deco[S.StylePaint] = (PaintID.GrayPaint, 0);
                     Deco[S.HangingPot] = (TileID.PotsSuspended, 6); //* Corrupt Deathweed
-                    Deco[S.Bookcase] = (TileID.Bookcases, 7); //* Ebonwood
-                    Deco[S.Sofa] = (TileID.Benches, 2); //* Ebonwood
+                    Deco[S.Bookcase] = (TileID.Bookcases, 7); // Ebonwood
+                    Deco[S.Sofa] = (TileID.Benches, 2); // Ebonwood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 10); //* Ebonwood
                     Deco[S.Bed] = (TileID.Beds, 1); //* Ebonwood
                     Deco[S.BedWallpaper] = (WallID.StarlitHeavenWallpaper, 0); //*
@@ -811,18 +812,9 @@ namespace WorldGenMod.Structures.Underworld
             //TODO: chest style
             if (Chance.Perc(20))
             {
-                int chestStyle;
-                if (!WorldGen.crimson) chestStyle = 43;
-                else chestStyle = 46;
-                //if (WorldGen.genRand.NextBool(3))
-                //{
-                //    chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: chestStyle);
-                //    if (chest != -1) FillChest(Main.chest[chest], chestStyle);
-                //}
-
                 (bool success, int x, int y) placeResult;
                 Rectangle2P area1 = new Rectangle2P(freeR.X0, freeR.Y1, freeR.X1 - 1, freeR.Y1, "dummyString");
-                placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.Containers, style: chestStyle, chance: 75); // Chest...
+                placeResult = Func.TryPlaceTile(area1, Rectangle2P.Empty, TileID.Containers, style: Deco[S.Chest].style, chance: 75); // Chest...
                 if (placeResult.success)
                 {
                     int chestID = Chest.FindChest(placeResult.x, placeResult.y - 1);
@@ -1088,7 +1080,7 @@ namespace WorldGenMod.Structures.Underworld
                                         break;
 
                                     case 4:
-                                        Func.PlaceWeaponRack(windowRect.XCenter, freeR.Y1 - 4);
+                                        Func.PlaceWeaponRack(windowRect.XCenter, freeR.Y1 - 4, paint: Deco[S.StylePaint].id);
                                         break;
 
                                     default:
