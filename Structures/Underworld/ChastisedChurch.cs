@@ -11,6 +11,7 @@ using Terraria.DataStructures;
 using System;
 using WorldGenMod.Structures.Ice;
 using Terraria.UI;
+using System.Drawing;
 
 namespace WorldGenMod.Structures.Underworld
 {
@@ -24,7 +25,7 @@ namespace WorldGenMod.Structures.Underworld
         readonly (int xmin, int xmax, int ymin, int ymax) maxRoom = (12, 80, 12, 30); // possible room dimensions
 
 
-        Dictionary<string, int> Deco = []; // the dictionary where the styles of tiles are stored
+        Dictionary<string, (int id, int style)> Deco = []; // the dictionary where the styles of tiles are stored
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
@@ -94,18 +95,18 @@ namespace WorldGenMod.Structures.Underworld
 
                     if (y == previousRoom.Y1 - (wThick - 1)) //doesn't matter if previousRoom or actualRoom, because the floor is at the same height
                     {
-                        WorldGen.PlaceTile(x, y, Deco[S.Floor], true, true);
-                        WorldGen.PlaceWall(x, y, Deco[S.BackWall]); //put the designated background wall
+                        WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
+                        WorldGen.PlaceWall(x, y, Deco[S.BackWall].id); //put the designated background wall
                     }
                     else if (y >= previousRoom.Y1 - (wThick - 1) - doorHeight && y <= previousRoom.Y1 - wThick) // the door between the rooms
                     {
                         // don't put bricks, leave the door "free"
-                        WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); //put the designated background wall
+                        WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); //put the designated background wall
                     }
                     else
                     {
-                        WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true); // fill gap with bricks
-                        WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // put the designated background wall
+                        WorldGen.PlaceTile(x, y, Deco[S.Brick].id, true, true); // fill gap with bricks
+                        WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // put the designated background wall
                     }
                 }
             }
@@ -115,8 +116,8 @@ namespace WorldGenMod.Structures.Underworld
             {
                 if (y >= previousRoom.Y1 - (wThick - 1) - doorHeight && y <= previousRoom.Y1 - wThick) continue; // doors already have that wall
 
-                WorldGen.PlaceWall(gap.X0 - 1, y, Deco[S.BackWall]); //put the designated background wall
-                WorldGen.PlaceWall(gap.X1 + 1, y, Deco[S.BackWall]); //put the designated background wall
+                WorldGen.PlaceWall(gap.X0 - 1, y, Deco[S.BackWall].id); //put the designated background wall
+                WorldGen.PlaceWall(gap.X1 + 1, y, Deco[S.BackWall].id); //put the designated background wall
             }
         }
 
@@ -125,179 +126,190 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Clear(); // init
 
             // create dictionary entries
-            Deco.Add(S.StyleSave, 0);
-            Deco.Add(S.Brick, 0);
-            Deco.Add(S.RoofBrick, 0);
-            Deco.Add(S.Floor, 0);
-            Deco.Add(S.EvilTile, 0);
-            Deco.Add(S.BackWall, 0);
-            Deco.Add(S.BackWallPaint, 0);
-            Deco.Add(S.CrookedWall, 0);
-            Deco.Add(S.WindowWall, 0);
-            Deco.Add(S.WindowPaint, 0);
-            Deco.Add(S.DoorWall, 0);
-            Deco.Add(S.DoorPlat, 0);
-            Deco.Add(S.DoorPlatPaint, 0);
-            Deco.Add(S.Door, 0);
-            Deco.Add(S.DoorPaint, 0);
-            Deco.Add(S.Chest, 0);
-            Deco.Add(S.Campfire, 0);
-            Deco.Add(S.Table, 0);
-            Deco.Add(S.Workbench, 0);
-            Deco.Add(S.Chair, 0);
-            Deco.Add(S.MainPainting, 0);
-            Deco.Add(S.Chandelier, 0);
-            Deco.Add(S.Candelabra, 0);
-            Deco.Add(S.Candle, 0);
-            Deco.Add(S.Lamp, 0);
-            Deco.Add(S.Torch, 0);
-            Deco.Add(S.Lantern, 0);
-            Deco.Add(S.Banner, 0);
-            Deco.Add(S.DecoPlat, 0);
-            Deco.Add(S.StylePaint, 0);
-            Deco.Add(S.HangingPot, 0);
-            Deco.Add(S.Bookcase, 0);
-            Deco.Add(S.Sofa, 0);
-            Deco.Add(S.Clock, 0);
-            Deco.Add(S.Bed, 0);
-            Deco.Add(S.BedWallpaper, 0);
-            Deco.Add(S.PaintingWallpaper, 0);
-            Deco.Add(S.Dresser, 0);
+            Deco.Add(S.StyleSave, (0,0));
+            Deco.Add(S.Brick, (0, 0));
+            Deco.Add(S.RoofBrick, (0, 0));
+            Deco.Add(S.Floor, (0, 0));
+            Deco.Add(S.EvilTile, (0, 0));
+            Deco.Add(S.BackWall, (0, 0));
+            Deco.Add(S.BackWallPaint, (0, 0));
+            Deco.Add(S.CrookedWall, (0, 0));
+            Deco.Add(S.WindowWall, (0, 0));
+            Deco.Add(S.WindowPaint, (0, 0));
+            Deco.Add(S.DoorWall, (0, 0));
+            Deco.Add(S.DoorPlat, (0, 0));
+            Deco.Add(S.DoorPlatPaint, (0, 0));
+            Deco.Add(S.Door, (0, 0));
+            Deco.Add(S.DoorPaint, (0, 0));
+            Deco.Add(S.Chest, (0, 0));
+            Deco.Add(S.Campfire, (0, 0));
+            Deco.Add(S.Table, (0, 0));
+            Deco.Add(S.Workbench, (0, 0));
+            Deco.Add(S.Chair, (0, 0));
+            Deco.Add(S.MainPainting, (0, 0));
+            Deco.Add(S.Chandelier, (0, 0));
+            Deco.Add(S.Candelabra, (0, 0));
+            Deco.Add(S.Candle, (0, 0));
+            Deco.Add(S.Lamp, (0, 0));
+            Deco.Add(S.Torch, (0, 0));
+            Deco.Add(S.Lantern, (0, 0));
+            Deco.Add(S.Banner, (0, 0));
+            Deco.Add(S.DecoPlat, (0, 0));
+            Deco.Add(S.StylePaint, (0, 0));
+            Deco.Add(S.HangingPot, (0, 0));
+            Deco.Add(S.Bookcase, (0, 0));
+            Deco.Add(S.Sofa, (0, 0));
+            Deco.Add(S.Clock, (0, 0));
+            Deco.Add(S.Bed, (0, 0));
+            Deco.Add(S.BedWallpaper, (0, 0));
+            Deco.Add(S.PaintingWallpaper, (0, 0));
+            Deco.Add(S.Dresser, (0, 0));
 
             //choose a random style and define it's types
             int chooseStyle = WorldGen.genRand.Next(3);
+            bool subStyle = false;
             switch (chooseStyle)
             {
                 case S.StyleHellstone: // Hellstone
-                    Deco[S.StyleSave] = S.StyleHellstone;
-                    Deco[S.Brick] = TileID.AncientHellstoneBrick;
-                    Deco[S.RoofBrick] = TileID.AncientHellstoneBrick;
-                    Deco[S.Floor] = TileID.ObsidianBrick;
-                    if (Chance.Simple()) Deco[S.Floor] = TileID.CrimtaneBrick;
-                    Deco[S.EvilTile] = TileID.Crimstone;
-                    Deco[S.BackWall] = WallID.HellstoneBrickUnsafe;
-                    Deco[S.BackWallPaint] = PaintID.None;
-                    Deco[S.CrookedWall] = WallID.Crimson4Echo;
-                    Deco[S.WindowWall] = WallID.RedStainedGlass;
-                    Deco[S.WindowPaint] = PaintID.DeepRedPaint;
-                    Deco[S.DoorWall] = WallID.CrimtaneBrick;
 
-                    Deco[S.DoorPlat] = 10; // Tile ID 19 (Plattforms) -> Type 10=Brass Shelf
-                    Deco[S.DoorPlatPaint] = PaintID.RedPaint;
-                    Deco[S.Door] = TileID.TallGateClosed;
-                    Deco[S.DoorPaint] = PaintID.RedPaint;
-                    Deco[S.Chest] = 11;    // Tile ID 21 (Cests) -> Type 11=Frozen
-                    Deco[S.Campfire] = 3;  // Tile ID 215 (Campfire) -> Type 3=Frozen
-                    Deco[S.Table] = 24;    // Tile ID 14 (Tables) -> Type 24=Frozen
-                    Deco[S.Workbench] = 20;// Tile ID 18 (Workbenches) -> Type 20=Frozen
-                    Deco[S.Chair] = 28;    // Tile ID 15 (Chairs) -> Type 28=Frozen
-                    Deco[S.MainPainting] = 26;// Tile ID 240 (Painting3X3) -> Type 26=Discover
-                    Deco[S.Chandelier] = 11;// Tile ID 34 (Chandeliers) -> Type 11=Frozen
-                    Deco[S.Candelabra] = 9;// Tile ID 100 (Candelabras) -> Type 9=Frozen
-                    Deco[S.Candle] = 8;    // Tile ID 33 (Candles) -> Type 8=Frozen
-                    Deco[S.Lamp] = 5;      // Tile ID 93 (Lamps) -> Type 5=Frozen
-                    Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
-                    Deco[S.Lantern] = 18;  // Tile ID 42 (Lanterns) -> Type 18=Frozen
-                    Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
-                    Deco[S.DecoPlat] = 19; // Tile ID 19 (Plattforms) -> Type 19=Boreal
-                    Deco[S.StylePaint] = PaintID.WhitePaint;
-                    Deco[S.HangingPot] = 4;// Tile ID 591 (PotsSuspended) -> Type 4=Shiverthorn
-                    Deco[S.Bookcase] = 17; // Tile ID 101 (Bookcases) -> Type 17=Frozen
-                    Deco[S.Sofa] = 27; // Tile ID 89 (Sofas) -> Type 27=Frozen
-                    Deco[S.Clock] = 11;    // Tile ID 104 (GrandfatherClocks) -> Type 11=Frozen
-                    Deco[S.Bed] = 15;      // Tile ID 79 (Beds) -> Type 15=Frozen
-                    Deco[S.BedWallpaper] = WallID.StarsWallpaper;
-                    Deco[S.PaintingWallpaper] = WallID.SparkleStoneWallpaper;
-                    Deco[S.Dresser] = 30;  // Tile ID 88 (Dressers) -> Type 30=Frozen
-                    Deco[S.Piano] = 7;     // Tile ID 87 (Pianos) -> Type 7=Frozen
+                    subStyle = Chance.Simple();
+
+                    Deco[S.StyleSave] = (0, S.StyleHellstone);
+                    Deco[S.Brick] = (TileID.AncientHellstoneBrick, 0);
+                    Deco[S.RoofBrick] = (TileID.AncientHellstoneBrick, 0);
+                    Deco[S.Floor] = (TileID.ObsidianBrick, 0);
+                    if (subStyle) Deco[S.Floor] = (TileID.CrimtaneBrick, 0);
+                    Deco[S.EvilTile] = (TileID.Crimstone, 0);
+                    Deco[S.BackWall] = (WallID.HellstoneBrickUnsafe, 0);
+                    Deco[S.BackWallPaint] = (PaintID.None, 0);
+                    Deco[S.CrookedWall] = (WallID.Crimson4Echo, 0);
+                    Deco[S.WindowWall] = (WallID.RedStainedGlass, 0);
+                    Deco[S.WindowPaint] = (PaintID.DeepRedPaint, 0);
+                    Deco[S.DoorWall] = (WallID.CrimtaneBrick, 0);
+
+                    Deco[S.DoorPlat] = (TileID.Platforms, 10); //Brass Shelf
+                    Deco[S.DoorPlatPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.Door] = (TileID.TallGateClosed, 0);
+                    Deco[S.DoorPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.Chest] = (TileID.Containers, 11); //* Frozen
+                    Deco[S.Campfire] = (TileID.Campfire, 3);  //* Frozen
+                    Deco[S.Table] = (TileID.Tables2, 11);  //Ash Wood
+                    Deco[S.Workbench] = (TileID.WorkBenches, 20); //* Frozen
+                    Deco[S.Chair] = (TileID.Chairs, 28); //* Frozen
+                    Deco[S.MainPainting] = (TileID.Painting3X3, 26); //* "Discover"
+                    Deco[S.Chandelier] = (TileID.Chandeliers, 19); // Shadewood
+                    Deco[S.Candelabra] = (TileID.Candelabras, 9); //* Frozen
+                    Deco[S.Candle] = (TileID.Candles, 8); //* Frozen
+                    Deco[S.Lamp] = (TileID.Lamps, 5); //* Frozen
+                    Deco[S.Torch] = (TileID.Torches, 9); //* Ice
+                    Deco[S.Lantern] = (TileID.HangingLanterns, 18); //* Frozen
+                    Deco[S.Banner] = (TileID.Banners, 2); //* Blue
+                    Deco[S.DecoPlat] = (TileID.Platforms, 19); //* Boreal
+                    Deco[S.StylePaint] = (PaintID.WhitePaint, 0); //*
+                    Deco[S.HangingPot] = (TileID.PotsSuspended, 4); //* Shiverthorn
+                    Deco[S.Bookcase] = (TileID.Bookcases, 17); //* Frozen
+                    Deco[S.Sofa] = (TileID.Benches, 27); //* Frozen
+                    if (subStyle) Deco[S.Sofa] = (TileID.Benches, 5); // Shade Wood
+                    Deco[S.Clock] = (TileID.GrandfatherClocks, 11); //* Frozen
+                    Deco[S.Bed] = (TileID.Beds, 15); //* Frozen
+                    Deco[S.BedWallpaper] = (WallID.StarsWallpaper, 0); //*
+                    Deco[S.PaintingWallpaper] = (WallID.SparkleStoneWallpaper, 0); //*
+                    Deco[S.Dresser] = (TileID.Dressers, 30); //* Frozen
+                    Deco[S.Piano] = (TileID.Pianos, 7); //* Frozen
                     break;
 
                 case S.StyleTitanstone: // Titanstone
-                    Deco[S.StyleSave] = S.StyleTitanstone;
-                    Deco[S.Brick] = TileID.Titanstone;
-                    Deco[S.RoofBrick] = TileID.Titanstone;
-                    Deco[S.Floor] = TileID.CrimtaneBrick;
-                    if (Chance.Simple()) Deco[S.Floor] = TileID.GrayBrick;
-                    Deco[S.EvilTile] = TileID.Ebonstone;
-                    Deco[S.BackWall] = WallID.GraniteBlock;
-                    Deco[S.BackWallPaint] = PaintID.GrayPaint;
-                    Deco[S.CrookedWall] = WallID.Lava3Echo;
-                    Deco[S.WindowWall] = WallID.RedStainedGlass;
-                    Deco[S.WindowPaint] = PaintID.DeepRedPaint;
-                    Deco[S.DoorWall] = WallID.Shadewood;
 
-                    Deco[S.DoorPlat] = 13; // Tile ID 19 (Plattforms) -> Type 13=Obsidian
-                    Deco[S.DoorPlatPaint] = PaintID.None;
-                    Deco[S.Door] = TileID.TallGateClosed;
-                    Deco[S.DoorPaint] = PaintID.RedPaint;
-                    Deco[S.Chest] = 33;    // Tile ID 21 (Cests) -> Type 33=Boreal
-                    Deco[S.Campfire] = 0;  // Tile ID 215 (Campfire) -> Type 0=Normal
-                    Deco[S.Table] = 28;    // Tile ID 14 (Tables) -> Type 33=Boreal
-                    Deco[S.Workbench] = 23;// Tile ID 18 (Workbenches) -> Type 23=Boreal
-                    Deco[S.Chair] = 30;    // Tile ID 15 (Chairs) -> Type 30=Boreal
-                    Deco[S.MainPainting] = 34;// Tile ID 240 (Painting3X3) -> Type 34=Crowno Devours His Lunch
-                    Deco[S.Chandelier] = 25;// Tile ID 34 (Chandeliers) -> Type 25=Boreal
-                    Deco[S.Candelabra] = 20;// Tile ID 100 (Candelabras) -> Type 20=Boreal
-                    Deco[S.Candle] = 20;   // Tile ID 33 (Candles) -> Type 20=Boreal
-                    Deco[S.Lamp] = 20;     // Tile ID 93 (Lamps) -> Type 20=Boreal
-                    Deco[S.Torch] = 9;     // Tile ID 93 (Torches) -> Type 9=Ice
-                    Deco[S.Lantern] = 29;  // Tile ID 42 (Lanterns) -> Type 29=Boreal
-                    Deco[S.Banner] = 2;    // Tile ID 91 (Banners) -> Type 2=Blue
-                    Deco[S.DecoPlat] = 19; // Tile ID 19 (Plattforms) -> Type 19=Boreal
-                    Deco[S.StylePaint] = 0;// no paint, leave boreal brown
-                    Deco[S.HangingPot] = 5;// Tile ID 591 (PotsSuspended) -> Type 5=Blinkrot
-                    Deco[S.Bookcase] = 25; // Tile ID 101 (Bookcases) -> Type 25=Boreal
-                    Deco[S.Sofa] = 24;     // Tile ID 89 (Sofas) -> Type 24=Boreal
-                    Deco[S.Clock] = 6;     // Tile ID 104 (GrandfatherClocks) -> Type 6=Boreal
-                    Deco[S.Bed] = 24;      // Tile ID 79 (Beds) -> Type 24=Boreal
-                    Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
-                    Deco[S.PaintingWallpaper] = WallID.LivingWood;
-                    Deco[S.Dresser] = 18;  // Tile ID 88 (Dressers) -> Type 18=Boreal
-                    Deco[S.Piano] = 23;    // Tile ID 87 (Pianos) -> Type 23=Boreal
+                    subStyle = Chance.Simple();
+
+                    Deco[S.StyleSave] = (S.StyleTitanstone, 0);
+                    Deco[S.Brick] = (TileID.Titanstone, 0);
+                    Deco[S.RoofBrick] = (TileID.Titanstone, 0);
+                    Deco[S.Floor] = (TileID.CrimtaneBrick, 0);
+                    if (subStyle) Deco[S.Floor] = (TileID.GrayBrick, 0);
+                    Deco[S.EvilTile] = (TileID.Ebonstone, 0);
+                    Deco[S.BackWall] = (WallID.GraniteBlock, 0);
+                    Deco[S.BackWallPaint] = (PaintID.GrayPaint, 0);
+                    Deco[S.CrookedWall] = (WallID.Lava3Echo, 0);
+                    Deco[S.WindowWall] = (WallID.RedStainedGlass, 0);
+                    Deco[S.WindowPaint] = (PaintID.DeepRedPaint, 0);
+                    Deco[S.DoorWall] = (WallID.Shadewood, 0);
+
+                    Deco[S.DoorPlat] = (TileID.Platforms, 13); // Obsidian
+                    Deco[S.DoorPlatPaint] = (PaintID.None, 0);
+                    Deco[S.Door] = (TileID.TallGateClosed, 0);
+                    Deco[S.DoorPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.Chest] = (TileID.Containers, 33); //* Boreal
+                    Deco[S.Campfire] = (TileID.Campfire, 0); //* Normal
+                    Deco[S.Table] = (TileID.Tables, 28); //* Boreal
+                    Deco[S.Workbench] = (TileID.WorkBenches, 23); //* Boreal
+                    Deco[S.Chair] = (TileID.Chairs, 30); //* Boreal
+                    Deco[S.MainPainting] = (TileID.Painting3X3, 34); //* "Crowno Devours His Lunch"
+                    Deco[S.Chandelier] = (TileID.Chandeliers, 25); //* Boreal
+                    Deco[S.Candelabra] = (TileID.Candelabras, 20); //* Boreal
+                    Deco[S.Candle] = (TileID.Candles, 20); //* Boreal
+                    Deco[S.Lamp] = (TileID.Lamps, 20); //* Boreal
+                    Deco[S.Torch] = (TileID.Torches, 9); //* Ice
+                    Deco[S.Lantern] = (TileID.HangingLanterns, 29); //* Boreal
+                    Deco[S.Banner] = (TileID.Banners, 2); //* Blue
+                    Deco[S.DecoPlat] = (TileID.Platforms, 19); //* Boreal
+                    Deco[S.StylePaint] = (0,0); //* no paint, leave boreal brown
+                    Deco[S.HangingPot] = (TileID.PotsSuspended, 5); //* Blinkrot
+                    Deco[S.Bookcase] = (TileID.Bookcases, 25); //* Boreal
+                    Deco[S.Sofa] = (TileID.Benches, 24); //* Boreal
+                    Deco[S.Clock] = (TileID.GrandfatherClocks, 6); //* Boreal
+                    Deco[S.Bed] = (TileID.Beds, 24); //* Boreal
+                    Deco[S.BedWallpaper] = (WallID.StarlitHeavenWallpaper, 0); //*
+                    Deco[S.PaintingWallpaper] = (WallID.LivingWood, 0); //*
+                    Deco[S.Dresser] = (TileID.Dressers, 18); //* Boreal
+                    Deco[S.Piano] = (TileID.Pianos, 23); //* Boreal
                     break;
 
                 case S.StyleBlueBrick: //TODO: look for another type of brick. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
-                    Deco[S.StyleSave] = S.StyleBlueBrick;
-                    Deco[S.Brick] = TileID.BlueDungeonBrick;
-                    Deco[S.RoofBrick] = TileID.BlueDungeonBrick;
-                    Deco[S.Floor] = TileID.EbonstoneBrick;
-                    if (Chance.Simple()) Deco[S.Floor] = TileID.MeteoriteBrick;
-                    Deco[S.EvilTile] = TileID.Ebonstone;
-                    Deco[S.BackWall] = WallID.Shadewood;
-                    Deco[S.BackWallPaint] = PaintID.None;
-                    Deco[S.CrookedWall] = WallID.Corruption3Echo;
-                    Deco[S.WindowWall] = WallID.BlueStainedGlass;
-                    Deco[S.WindowPaint] = PaintID.BluePaint;
-                    Deco[S.DoorWall] = WallID.SpookyWood;
 
-                    Deco[S.DoorPlat] = 16; // Tile ID 19 (Plattforms) -> Type 16=Spooky
-                    Deco[S.DoorPlatPaint] = PaintID.DeepBluePaint;
-                    Deco[S.Door] = TileID.TallGateClosed;
-                    Deco[S.DoorPaint] = PaintID.RedPaint;
-                    Deco[S.Chest] = 3;     // Tile ID 21 (Cests) -> Type 33=Shadow
-                    Deco[S.Campfire] = 7;  // Tile ID 215 (Campfire) -> Type 0=Bone
-                    Deco[S.Table] = 1;     // Tile ID 14 (Tables) -> Type 33=Ebonwood
-                    Deco[S.Workbench] = 1; // Tile ID 18 (Workbenches) -> Type 1=Ebonwood
-                    Deco[S.Chair] = 2;     // Tile ID 15 (Chairs) -> Type 2=Ebonwood
-                    Deco[S.MainPainting] = 35;// Tile ID 240 (Painting3X3) -> Type 35=Rare Enchantment
-                    Deco[S.Chandelier] = 32;// Tile ID 34 (Chandeliers) -> Type 32=Obsidian
-                    Deco[S.Candelabra] = 2;// Tile ID 100 (Candelabras) -> Type 2=Ebonwood
-                    Deco[S.Candle] = 5;    // Tile ID 33 (Candles) -> Type 5=Ebonwood
-                    Deco[S.Lamp] = 23;     // Tile ID 93 (Lamps) -> Type 23=Obsidian
-                    Deco[S.Torch] = 7;     // Tile ID 93 (Torches) -> Type 7=Demon
-                    Deco[S.Lantern] = 2;   // Tile ID 42 (Lanterns) -> Type 2=Caged Lantern
-                    Deco[S.Banner] = 0;    // Tile ID 91 (Banners) -> Type 0=Red
-                    Deco[S.DecoPlat] = 19; // Tile ID 19 (Plattforms) -> Type 19=Boreal
-                    Deco[S.StylePaint] = PaintID.GrayPaint;
-                    Deco[S.HangingPot] = 6; // Tile ID 591 (PotsSuspended) -> Type 6=Corrupt Deathweed
-                    Deco[S.Bookcase] = 7;  // Tile ID 101 (Bookcases) -> Type 7=Ebonwood
-                    Deco[S.Sofa] = 2;      // Tile ID 89 (Sofas) -> Type 2=Ebonwood
-                    Deco[S.Clock] = 10;    // Tile ID 104 (GrandfatherClocks) -> Type 10=Ebonwood
-                    Deco[S.Bed] = 1;      // Tile ID 79 (Beds) -> Type 1=Ebonwood
-                    Deco[S.BedWallpaper] = WallID.StarlitHeavenWallpaper;
-                    Deco[S.PaintingWallpaper] = WallID.BluegreenWallpaper;
-                    Deco[S.Dresser] = 1;  // Tile ID 88 (Dressers) -> Type 1=Ebonwood
-                    Deco[S.Piano] = 1;    // Tile ID 87 (Pianos) -> Type 1=Ebonwood
+                    subStyle = Chance.Simple();
+
+                    Deco[S.StyleSave] = (S.StyleBlueBrick, 0);
+                    Deco[S.Brick] = (TileID.BlueDungeonBrick, 0);
+                    Deco[S.RoofBrick] = (TileID.BlueDungeonBrick, 0);
+                    Deco[S.Floor] = (TileID.EbonstoneBrick, 0);
+                    if (subStyle) Deco[S.Floor] = (TileID.MeteoriteBrick, 0);
+                    Deco[S.EvilTile] = (TileID.Ebonstone, 0);
+                    Deco[S.BackWall] = (WallID.Shadewood, 0);
+                    Deco[S.BackWallPaint] = (PaintID.None, 0);
+                    Deco[S.CrookedWall] = (WallID.Corruption3Echo, 0);
+                    Deco[S.WindowWall] = (WallID.BlueStainedGlass, 0);
+                    Deco[S.WindowPaint] = (PaintID.BluePaint, 0);
+                    Deco[S.DoorWall] = (WallID.SpookyWood, 0);
+
+                    Deco[S.DoorPlat] = (TileID.Platforms, 16); // Spooky
+                    Deco[S.DoorPlatPaint] = (PaintID.DeepBluePaint, 0);
+                    Deco[S.Door] = (TileID.TallGateClosed, 0);
+                    Deco[S.DoorPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.Chest] = (TileID.Containers, 3); //* Shadow
+                    Deco[S.Campfire] = (TileID.Campfire, 7); //* Bone
+                    Deco[S.Table] = (TileID.Tables, 1); //* Ebonwood
+                    Deco[S.Workbench] = (TileID.WorkBenches, 1); //* Ebonwood
+                    Deco[S.Chair] = (TileID.Chairs, 2); //* Ebonwood
+                    Deco[S.MainPainting] = (TileID.Painting3X3, 35); //* "Rare Enchantment"
+                    Deco[S.Chandelier] = (TileID.Chandeliers, 32); //* Obsidian
+                    Deco[S.Candelabra] = (TileID.Candelabras, 2); //* Ebonwood
+                    Deco[S.Candle] = (TileID.Candles, 5); //* Ebonwood
+                    Deco[S.Lamp] = (TileID.Lamps, 23); //* Obsidian
+                    Deco[S.Torch] = (TileID.Torches, 7); //* Demon
+                    Deco[S.Lantern] = (TileID.HangingLanterns, 2); //* Caged Lantern
+                    Deco[S.Banner] = (TileID.Banners, 0); //* Red
+                    Deco[S.DecoPlat] = (TileID.Platforms, 19); //* Boreal
+                    Deco[S.StylePaint] = (PaintID.GrayPaint, 0); //*
+                    Deco[S.HangingPot] = (TileID.PotsSuspended, 6); //* Corrupt Deathweed
+                    Deco[S.Bookcase] = (TileID.Bookcases, 7); //* Ebonwood
+                    Deco[S.Sofa] = (TileID.Benches, 2); //* Ebonwood
+                    Deco[S.Clock] = (TileID.GrandfatherClocks, 10); //* Ebonwood
+                    Deco[S.Bed] = (TileID.Beds, 1); //* Ebonwood
+                    Deco[S.BedWallpaper] = (WallID.StarlitHeavenWallpaper, 0); //*
+                    Deco[S.PaintingWallpaper] = (WallID.BluegreenWallpaper, 0); //*
+                    Deco[S.Dresser] = (TileID.Dressers, 1); //* Ebonwood
+                    Deco[S.Piano] = (TileID.Pianos, 1); //* Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
                     break;
             }
@@ -446,13 +458,13 @@ namespace WorldGenMod.Structures.Underworld
 
                     if (y == freeR.Y1 + 1) // the floor height of this room
                     {
-                        if      ((!doors[Door.Left].doorExist && x < freeR.X0))   WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true);
-                        else if ((!doors[Door.Right].doorExist && x > freeR.X1))  WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true);
-                        else                                                      WorldGen.PlaceTile(x, y, Deco[S.Floor], true, true);
+                        if      ((!doors[Door.Left].doorExist && x < freeR.X0))   WorldGen.PlaceTile(x, y, Deco[S.Brick].id, true, true);
+                        else if ((!doors[Door.Right].doorExist && x > freeR.X1))  WorldGen.PlaceTile(x, y, Deco[S.Brick].id, true, true);
+                        else                                                      WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
                     }
                     else if (!freeR.Contains(x, y)) // x,y  are not in the free room? -> put outer wall bricks!
                     {
-                        WorldGen.PlaceTile(x, y, Deco[S.Brick], true, true);
+                        WorldGen.PlaceTile(x, y, Deco[S.Brick].id, true, true);
                     }
                 }
             }
@@ -501,10 +513,10 @@ namespace WorldGenMod.Structures.Underworld
 
                     if (awayEnough1 && awayEnough2)
                     {
-                        WorldGen.PlaceWall(i, j, Deco[S.BackWall]);
-                        if(Deco[S.BackWallPaint] > 0) WorldGen.paintWall(i, j, (byte)Deco[S.BackWallPaint]);
+                        WorldGen.PlaceWall(i, j, Deco[S.BackWall].id);
+                        if(Deco[S.BackWallPaint].id > 0) WorldGen.paintWall(i, j, (byte)Deco[S.BackWallPaint].id);
                     } 
-                    else WorldGen.PlaceWall(i, j, Deco[S.CrookedWall]);
+                    else WorldGen.PlaceWall(i, j, Deco[S.CrookedWall].id);
                 }
             }
             #endregion
@@ -546,7 +558,7 @@ namespace WorldGenMod.Structures.Underworld
                             else               awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreakPoint2) > WorldGen.genRand.NextFloat(1f, 7f);
 
 
-                            if ( awayEnough1 && awayEnough2) WorldGen.PlaceWall(i, j, Deco[S.DoorWall]);
+                            if ( awayEnough1 && awayEnough2) WorldGen.PlaceWall(i, j, Deco[S.DoorWall].id);
                         }
                     }
                 }
@@ -559,12 +571,12 @@ namespace WorldGenMod.Structures.Underworld
                 x = leftDoorRect.X1;
                 y = leftDoorRect.Y0 - 1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will later get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will later get a slope. Put the doorWallType there so it looks nicer
 
                 x = leftDoorRect.X0;
                 y = leftDoorRect.Y1 + 1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // There is a one background wall tile missing here as this coordinates used to be on the border of the room. Adding this tile is not a big deal in the end, but little things matter!
+                WorldGen.PlaceWall(x, y, Deco[S.BackWall].id); // There is a one background wall tile missing here as this coordinates used to be on the border of the room. Adding this tile is not a big deal in the end, but little things matter!
             }
 
             if (rightDoor)
@@ -572,12 +584,12 @@ namespace WorldGenMod.Structures.Underworld
                 x = rightDoorRect.X0;
                 y = rightDoorRect.Y0 - 1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will later get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will later get a slope. Put the doorWallType there so it looks nicer
 
                 x = rightDoorRect.X1;
                 y = rightDoorRect.Y1 + 1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.BackWall]); // There is a one background wall tile missing here as this coordinates used to be on the border of the room. Adding this tile is not a big deal in the end, but little things matter!
+                WorldGen.PlaceWall(x, y, Deco[S.BackWall].id); // There is a one background wall tile missing here as this coordinates used to be on the border of the room. Adding this tile is not a big deal in the end, but little things matter!
             }
 
             if (doors[Door.Down].doorExist)
@@ -585,18 +597,18 @@ namespace WorldGenMod.Structures.Underworld
                 int j = downDoorRect.Y0;
                 for (int i = downDoorRect.X0; i <= downDoorRect.X1; i++)
                 {
-                    WorldGen.PlaceTile(i, j, TileID.Platforms, mute: true, forced: true, style: Deco[S.DoorPlat]);
+                    WorldGen.PlaceTile(i, j, TileID.Platforms, mute: true, forced: true, style: Deco[S.DoorPlat].id);
                 }
 
                 x = downDoorRect.X0 - 1;
                 y = downDoorRect.Y1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
 
                 x = downDoorRect.X1 + 1;
                 y = downDoorRect.Y1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
             }
 
             if (doors[Door.Up].doorExist)
@@ -611,12 +623,12 @@ namespace WorldGenMod.Structures.Underworld
                 x = upDoorRect.X0 - 1;
                 y = upDoorRect.Y1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
 
                 x = upDoorRect.X1 + 1;
                 y = upDoorRect.Y1;
                 WorldGen.KillWall(x, y);
-                WorldGen.PlaceWall(x, y, Deco[S.DoorWall]); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
+                WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
             }
 
             // put actual doors
@@ -635,7 +647,7 @@ namespace WorldGenMod.Structures.Underworld
                         Func.GateTurn(x, y);
                         for (int i = 0; i < doorHeight; i++)
                         {
-                            WorldGen.paintTile(x, y - i, (byte)Deco[S.DoorPaint]);
+                            WorldGen.paintTile(x, y - i, (byte)Deco[S.DoorPaint].id);
                         }
                     }
 
@@ -646,9 +658,9 @@ namespace WorldGenMod.Structures.Underworld
                         x = room.X1;
                         placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
 
-                        if (placed && Deco[S.DoorPaint] > PaintID.None)
+                        if (placed && Deco[S.DoorPaint].id > PaintID.None)
                         {
-                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint]);
+                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
                         }
                     }
                 }
@@ -661,9 +673,9 @@ namespace WorldGenMod.Structures.Underworld
                     y = freeR.Y1 - (doorHeight - 1);
                     placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // right gate
 
-                    if (placed && Deco[S.DoorPaint] > PaintID.None)
+                    if (placed && Deco[S.DoorPaint].id > PaintID.None)
                     {
-                        for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint]);
+                        for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
                     }
 
 
@@ -673,10 +685,10 @@ namespace WorldGenMod.Structures.Underworld
                         x = room.X0;
                         placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
 
-                        if (placed && Deco[S.DoorPaint] > PaintID.None)
+                        if (placed && Deco[S.DoorPaint].id > PaintID.None)
                         {
                             Func.GateTurn(x, y);
-                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint]);
+                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
                         }
                     }
                 }
@@ -714,14 +726,14 @@ namespace WorldGenMod.Structures.Underworld
                     for (int j1 = 0; j1 < (int)(roofHeight * currentMultiplier); j1++)
                     {
                         int j = room.Y0 - 1 - j1;
-                        WorldGen.PlaceTile(left, j, Deco[S.RoofBrick], true, true);
+                        WorldGen.PlaceTile(left, j, Deco[S.RoofBrick].id, true, true);
                     }
 
                     currentMultiplier = 1f - ((float)Math.Abs(right - rightHighest) / (float)rightDiff);
                     for (int j1 = 0; j1 < (int)(roofHeight * currentMultiplier); j1++)
                     {
                         int j = room.Y0 - 1 - j1;
-                        WorldGen.PlaceTile(right, j, Deco[S.RoofBrick], true, true);
+                        WorldGen.PlaceTile(right, j, Deco[S.RoofBrick].id, true, true);
                     }
 
                     left++;
@@ -794,12 +806,14 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
 
+            DecorateRoom(room, doors, wallBreak, belowCount);
+
             //TODO: chest style
             if (Chance.Perc(20))
             {
                 int chestStyle;
                 if (!WorldGen.crimson) chestStyle = 43;
-                else                   chestStyle = 46;
+                else chestStyle = 46;
                 //if (WorldGen.genRand.NextBool(3))
                 //{
                 //    chest = WorldGen.PlaceChest(room.X + WorldGen.genRand.Next(room.Width), room.Y + room.Height - 3, style: chestStyle);
@@ -815,8 +829,6 @@ namespace WorldGenMod.Structures.Underworld
                     if (chestID != -1) FillChest(Main.chest[chestID], WorldGen.genRand.Next(2)); // ...with loot
                 }
             }
-
-            DecorateRoom(room, doors, wallBreak, belowCount);
 
             return room;
         }
@@ -841,82 +853,128 @@ namespace WorldGenMod.Structures.Underworld
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = []; // for remembering positions
             List<(ushort TileID, int style, byte chance)> randomItems = [], randomItems2 = []; // for random item placement
+            (ushort TileID, int style, byte chance) randomItem, randomItem2; // for random item placement
             int x, y, chestID, unusedXTiles, num;
 
 
             // for window placement
-            List<Rectangle2P> windows = new();
+            List<Rectangle2P> windowsPairs = []; // ascending indexes refer to windows in the room like this: 6 windows (0 2 4 5 3 1), 8 windows (0 2 4 6 7 5 3 1) etc.
+            List<Rectangle2P> windowsOrder = []; // ascending indexes refer to windows in the room like this: 6 windows (0 1 2 3 4 5), 8 windows (0 1 2 3 4 5 6 7) etc.
+            List<Rectangle2P> spacesOrder = []; // ascending indexes refer to the spaces between windows in the room like this: 2 spaces (4 windows) (W 0 W | W 1 W), 4 spaces (6 windows) (W 0 W 1 W | W 2 W 3 W) etc.
+            Rectangle2P middleSpace; // the middle space if the room has pairs of windows
+            
             int windowXTiles = 4;
 
             int windowYMargin = 2; // how many Tiles the window shall be away from the ceiling / floor
             int windowY0 = freeR.Y0 + windowYMargin; // height where the window starts
             int windowYTiles = freeR.YTiles - (2 * windowYMargin); // the YTiles height of a window
 
-            bool awayEnough1, awayEnough2;
+            bool awayEnough1, awayEnough2, windowsExist, middleSpaceExist = false, windowDistanceXTilesOdd = false;
 
+            int roomDeco;
+            if (belowCount == 0)
+            {
+                //choose the upper room decoration at random
+                roomDeco = WorldGen.genRand.Next(1); //TODO: don't forget to put the correct values in the end!
+            }
+            else
+            {
+                //choose the below room decoration at random
+                roomDeco = WorldGen.genRand.Next(50,50); //TODO: don't forget to put the correct values in the end!
 
-            //choose room decoration at random
-            int roomDeco = WorldGen.genRand.Next(1); //TODO: don't forget to put the correct values in the end!
+            }
 
             roomDeco = 0;
 
+
             switch (roomDeco)
             {
-                case 0: //
+                case 0: // Statues in front of Windows
                     #region windows
-                    windows.Clear();
+                    windowsPairs.Clear();
 
                     // create window rectangles
-                    if (freeR.YTiles > 8 && freeR.XTiles > 8)
+                    if ( freeR.YTiles > (windowXTiles + 2*windowYMargin) && freeR.XTiles >= (windowXTiles + 2*2)) //minimal window size: windowXTiles * windowXTiles
                     {
-                        if (freeR.XTiles <= 12) // narrow room, place window in the middle
+                        if (freeR.XTiles <= 14) // narrow room, place window in the middle
                         {
                             int windowCenterOffset = (windowXTiles / 2) - 1 + (windowXTiles % 2); // to center the window at a specified x position
 
-                            windows.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
+                            windowsPairs.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
                         }
 
                         else // symmetrical window pairs with spaces in between
                         {
+                            #region create pairs
                             int windowXMargin = 2; // how many tiles the outer windows-pair shall be away from the left / right wall
                             int windowDistanceXTiles = 4; // XTiles between two windows
+                            windowDistanceXTilesOdd = Chance.Simple();
+                            if (windowDistanceXTilesOdd)  windowDistanceXTiles++;
 
                             int windowLeftX0 = freeR.X0 + windowXMargin; // init
                             int windowRightX0 = freeR.X1 - windowXMargin - (windowXTiles - 1); // init
 
                             while (windowLeftX0 + windowXTiles < freeR.XCenter)
                             {
-                                windows.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
-                                windows.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
+                                windowsPairs.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
+                                windowsPairs.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
 
-                                windowLeftX0  += (windowXTiles + windowDistanceXTiles);
+                                windowLeftX0 += (windowXTiles + windowDistanceXTiles);
                                 windowRightX0 -= (windowXTiles + windowDistanceXTiles);
                             }
+                            #endregion
+
+                            #region get array into room order
+                            // from (0 2 4 5 3 1) to (0 1 2 3 4 5)
+                            for (int i = 0; i < windowsPairs.Count; i+=2) // left room sided windows
+                            {
+                                windowsOrder.Add(windowsPairs[i]);
+                            }
+                            for (int i = windowsPairs.Count - 1; i > 0; i -= 2) // left room sided windows
+                            {
+                                windowsOrder.Add(windowsPairs[i]);
+                            }
+                            #endregion
+
+                            #region gather spaces between windows
+                            
+                            middleSpace = new Rectangle2P(xTopLeft:     windowsPairs[windowsPairs.Count - 2].X1 + 1,
+                                                          xBottomRight: windowsPairs[windowsPairs.Count - 1].X0 - 1,
+                                                          yTopLeft:     windowsPairs[windowsPairs.Count - 2].Y0,
+                                                          yBottomRight: windowsPairs[windowsPairs.Count - 1].Y1,
+                                                          dummy: "dummyString");
+                            middleSpaceExist = middleSpace.XTiles > 0;
+
+
+                            for (int i = 1; i < windowsOrder.Count; i++)
+                            {
+                                if (i == (windowsOrder.Count / 2)) continue; // exclude middle space
+
+                                spacesOrder.Add(new Rectangle2P(xTopLeft:     windowsOrder[i - 1].X1 + 1,
+                                                                xBottomRight: windowsOrder[i    ].X0 - 1,
+                                                                yTopLeft:     windowsOrder[i - 1].Y0,
+                                                                yBottomRight: windowsOrder[i    ].Y1,
+                                                                dummy: "dummyString"));
+                            }
+                            #endregion
                         }
                     }
 
                     // put windows
-                    if (windows.Count > 0 && belowCount == 0)
+                    windowsExist = windowsPairs.Count > 0;
+                    if (windowsExist)
                     {
-                        foreach (Rectangle2P windowRect in windows)
+                        foreach (Rectangle2P windowRect in windowsPairs)
                         {
                             for (int i = windowRect.X0; i <= windowRect.X1; i++)
                             {
                                 for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
                                 {
-                                    WorldGen.KillWall(i, j);
-
-                                    if (!wallBreak[BP.Left].exist) awayEnough1 = true;
-                                    else awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Left].point) > WorldGen.genRand.NextFloat(4f, 12f);
-
-                                    if (!wallBreak[BP.Right].exist) awayEnough2 = true;
-                                    else awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Right].point) > WorldGen.genRand.NextFloat(4f, 12f);
-
-
-                                    if (awayEnough1 && awayEnough2)
+                                    if (Main.tile[i,j].WallType != Deco[S.CrookedWall].id)
                                     {
-                                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
-                                        WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);
+                                        WorldGen.KillWall(i,j);
+                                        WorldGen.PlaceWall(i,j, Deco[S.WindowWall].id);
+                                        if (Deco[S.WindowPaint].id > 0) WorldGen.paintWall(i,j, (byte)Deco[S.WindowPaint].id);
                                     }
                                 }
                             }
@@ -924,20 +982,157 @@ namespace WorldGenMod.Structures.Underworld
                     }
                     #endregion
 
+                    #region modify windows shape
+                    if (windowsExist)
+                    {
+                        bool alternativeShape = Chance.Simple();
+
+                        List<System.Drawing.Point> windowPoints = [];
+                        Tile windowTile;
+                        foreach (Rectangle2P windowRect in windowsPairs)
+                        {
+                            windowPoints.Clear();
+                            windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0)); // upper left corner
+                            windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0)); // upper right corner
+
+                            if (alternativeShape && (( freeR.YTiles - 2*windowYMargin ) >= 6) ) //window higher than 6 tiles
+                            {
+                                windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0 + 3)); // point for cross shaped form
+                                windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0 + 3)); // point for cross shaped form
+                            }
+
+                            foreach (System.Drawing.Point windowPoint in windowPoints)
+                            {
+                                windowTile = Main.tile[windowPoint.X, windowPoint.Y];
+                                if (windowTile.WallType == Deco[S.WindowWall].id)
+                                {
+                                    // put normal backwall
+                                    WorldGen.KillWall(windowPoint.X, windowPoint.Y);
+                                    WorldGen.PlaceWall(windowPoint.X, windowPoint.Y, Deco[S.BackWall].id);
+                                    if (Deco[S.BackWallPaint].id > 0) WorldGen.paintWall(windowPoint.X, windowPoint.Y, (byte)Deco[S.BackWallPaint].id);
+                                }
+                            }
+                        }
+                    }
+                    #endregion
+
+                    #region statues in front of windows
+
+                    randomItems.Clear();
+                    randomItems.Add((TileID.Statues, 0,  95));//Armor
+                    randomItems.Add((TileID.Statues, 1,  95));//Angel
+                    randomItems.Add((TileID.Statues, 11, 95));//Reaper
+                    randomItems.Add((TileID.Statues, 13, 95));//Imp
+                    randomItems.Add((TileID.Statues, 14, 95));//Gargoyle
+                    randomItems.Add((TileID.Statues, 15, 95));//Gloom
+                    randomItems.Add((TileID.Statues, 22, 95));//Cross
+                    randomItems.Add((TileID.Statues, 30, 95));//Corrupt
+                    randomItems.Add((TileID.Statues, 35, 95));//Eyeball
+                    randomItems.Add((TileID.Statues, 63, 95));//Wall Creeper
+                    randomItems.Add((TileID.Statues, 65, 95));//Drippler
+                    randomItems.Add((TileID.Statues, 71, 95));//Pigron
+                    randomItems.Add((TileID.Statues, 74, 95));//Armed Zombie
+                    randomItems.Add((TileID.Statues, 75, 95));//Blood Zombie
+
+                    if (windowsExist)
+                    {
+                        foreach (Rectangle2P windowRect in windowsPairs)
+                        {
+                            y = freeR.Y1;
+
+                            // put pedestral
+                            WorldGen.PlaceTile(windowRect.XCenter    , y, Deco[S.Floor].id, true, true);
+                            WorldGen.PlaceTile(windowRect.XCenter + 1, y, Deco[S.Floor].id, true, true);
+
+                            // put statue
+                            randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count));
+                            if (Chance.Perc(randomItem.chance))    WorldGen.PlaceTile(windowRect.XCenter, y - 1, randomItem.TileID, style: randomItem.style);
+                        }
+                    }
+                    #endregion
+
+                    #region fill spaces between windows
+                    if (spacesOrder.Count > 0)
+                    {
+                        foreach (Rectangle2P windowRect in spacesOrder)
+                        {
+                            if (windowDistanceXTilesOdd) // preferably place odd-x-tiles-object so they come out centered
+                            {
+                                switch (WorldGen.genRand.Next(5))
+                                {
+                                    case 0: // Lamp with up to 2 chairs next to it
+
+                                        WorldGen.PlaceTile(windowRect.XCenter, freeR.Y1, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
+
+
+                                        if (Chance.Perc(85)) WorldGen.PlaceTile(windowRect.XCenter - 1, freeR.Y1, Deco[S.Chair].id, style: Deco[S.Chair].style);
+                                        if (Chance.Perc(85))
+                                        {
+                                            WorldGen.PlaceTile(windowRect.XCenter + 1, freeR.Y1, Deco[S.Chair].id, style: Deco[S.Chair].style);
+                                            Func.ChairTurnRight(windowRect.XCenter + 1, freeR.Y1);
+                                        }
+    
+                                    break;
+
+                                    case 1:
+                                        WorldGen.PlaceTile(windowRect.XCenter, freeR.Y1, Deco[S.Bookcase].id, style: Deco[S.Bookcase].style);
+                                        break;
+
+                                    case 2:
+                                        WorldGen.PlaceTile(windowRect.XCenter, freeR.Y1, Deco[S.Table].id, style: Deco[S.Table].style);
+                                        //TODO: stuff on table
+                                        break;
+
+                                    case 3:
+                                        WorldGen.PlaceTile(windowRect.XCenter, freeR.Y1, Deco[S.Sofa].id, style: Deco[S.Sofa].style);
+                                        break;
+
+                                    case 4:
+                                        Func.PlaceWeaponRack(windowRect.XCenter, freeR.Y1 - 4);
+                                        break;
+
+                                    default:
+                                        break;
+                                }
+
+                            }
+                            else // preferably place even-x-tiles-object so they come out centered
+                            {
+                                randomItems.Clear();
+                                randomItems.Add((TileID.Candelabras, 0, 95)); // candelabra on a platform
+                                randomItems.Add((TileID.GrandfatherClocks, 0, 95));
+                                randomItems.Add((TileID.PottedLavaPlants, 0, 95));
+                                randomItems.Add((TileID.PottedLavaPlantTendrils, 0, 95));
+                                randomItems.Add((TileID.PottedPlants2, 0, 95));
+                                randomItems.Add((TileID.ItemFrame, 0, 95));
+                                randomItems.Add((TileID.Tombstones, 0, 95)); //golden Tombstones
+                                randomItems.Add((TileID.WorkBenches, 0, 95)); //workbench with stuff on it
+
+                            }
+                        }
+                    }
+                    
+                    #endregion
+
                     break;
+
+                case 50: // Below room #1
+
+                    break;
+
                 case 100: // empty room for display
-                    //windows blueprint for copying
+                          //windows blueprint for copying
                     #region windows
-                    windows.Clear();
+                    windowsPairs.Clear();
 
                     // create window rectangles
-                    if (freeR.YTiles > 8 && freeR.XTiles > 8)
+                    if (freeR.YTiles > (windowXTiles + 2 * windowYMargin) && freeR.XTiles >= (windowXTiles + 2 * 2)) //minimal window size: windowXTiles * windowXTiles
                     {
                         if (freeR.XTiles <= 12) // narrow room, place window in the middle
                         {
                             int windowCenterOffset = (windowXTiles / 2) - 1 + (windowXTiles % 2); // to center the window at a specified x position
 
-                            windows.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
+                            windowsPairs.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
                         }
 
                         else // symmetrical window pairs with spaces in between
@@ -950,8 +1145,8 @@ namespace WorldGenMod.Structures.Underworld
 
                             while (windowLeftX0 + windowXTiles < freeR.XCenter)
                             {
-                                windows.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
-                                windows.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
+                                windowsPairs.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
+                                windowsPairs.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
 
                                 windowLeftX0 += (windowXTiles + windowDistanceXTiles);
                                 windowRightX0 -= (windowXTiles + windowDistanceXTiles);
@@ -960,9 +1155,10 @@ namespace WorldGenMod.Structures.Underworld
                     }
 
                     // put windows
-                    if (windows.Count > 0 && belowCount == 0)
+                    windowsExist = windowsPairs.Count > 0;
+                    if (windowsExist)
                     {
-                        foreach (Rectangle2P windowRect in windows)
+                        foreach (Rectangle2P windowRect in windowsPairs)
                         {
                             for (int i = windowRect.X0; i <= windowRect.X1; i++)
                             {
@@ -979,8 +1175,8 @@ namespace WorldGenMod.Structures.Underworld
 
                                     if (awayEnough1 && awayEnough2)
                                     {
-                                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall]);
-                                        WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint]);
+                                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall].id);
+                                        WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint].id);
                                     }
                                 }
                             }
@@ -991,6 +1187,7 @@ namespace WorldGenMod.Structures.Underworld
                     break;
 
             }
+
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
         }
