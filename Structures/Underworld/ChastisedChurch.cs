@@ -22,7 +22,9 @@ namespace WorldGenMod.Structures.Underworld
         readonly int doorHeight = 5; // the height of a connection between two
         readonly int forceEvenRoom = 1; // 1 = force all rooms to have an even XTiles count; 0 = force all side rooms to have an odd XTiles count
         readonly int maxChurchLength = 500; // maximum tile length of the ChastisedChurch
-        readonly (int xmin, int xmax, int ymin, int ymax) maxRoom = (12, 80, 12, 30); // possible room dimensions
+        readonly (int xMin, int xMax, int yMin, int yMax) roomSizes = (12, 80, 12, 30); // possible room dimensions
+        readonly (int xMin, int xMax, int yMin, int yMax) belowRoomSizes = (35, 60, 14, 16); // possible below room dimensions
+        List<Rectangle2P> belowRoomsAndStairs; // list of all created below rooms and staircases to check and prevent overlappings
 
 
         Dictionary<string, (int id, int style)> Deco = []; // the dictionary where the styles of tiles are stored
@@ -368,15 +370,21 @@ namespace WorldGenMod.Structures.Underworld
 
             FillAndChooseStyle();
 
+            // set start positions for the ChastisedChurch
             int startPosX, startPosY;
 
             if      (generationSide == -1) startPosX =                  WorldGen.genRand.Next(50, 100); // left world side
             else if (generationSide ==  1) startPosX = Main.maxTilesX - WorldGen.genRand.Next(50, 100); // right world side
             else                           startPosX = 0;
 
-            if (generationSide == -1 && startX > 0) startPosX = startX + 10;
+            if (generationSide == -1 && startX > 0) startPosX = startX + 10; //TODO: delete debug
 
             startPosY = Main.maxTilesY - 100;
+
+            // add borders for below room creation
+            belowRoomsAndStairs = [];
+            belowRoomsAndStairs.Add(new Rectangle2P(50                 , startPosY, 1, 1));
+            belowRoomsAndStairs.Add(new Rectangle2P(Main.maxTilesX - 50, startPosY, 1, 1));
 
 
             int totalTiles = 0;
@@ -388,11 +396,11 @@ namespace WorldGenMod.Structures.Underworld
 
             while (totalTiles < maxTiles)
             {
-                roomWidth = WorldGen.genRand.Next(maxRoom.xmin, maxRoom.xmax + 1);
+                roomWidth = WorldGen.genRand.Next(roomSizes.xMin, roomSizes.xMax + 1);
                 if      (forceEvenRoom == 1) roomWidth -= (roomWidth % 2); //make room always even
                 else if (forceEvenRoom == 0) roomWidth -= (roomWidth % 2) + 1; //make room always uneven
 
-                roomHeight = WorldGen.genRand.Next(maxRoom.ymin, maxRoom.ymax + 1);
+                roomHeight = WorldGen.genRand.Next(roomSizes.yMin, roomSizes.yMax + 1);
 
                 float ratio = roomHeight / roomWidth;
                 int roofHeight;
@@ -441,10 +449,11 @@ namespace WorldGenMod.Structures.Underworld
         /// <param name="roofHeight">Tile height of the roof on top of a room</param>
         /// <param name="leftDoor">States if the room has a left door (e.g. if there is another room on the left)</param>
         /// <param name="rightDoor">States if the room has a right door (e.g. if there is another room on the right)</param>
-        /// <param name="belowCount">Stating how many rooms below the main line this particular room is. 0 = main line</param>
+        /// <param name="isStairCase">Stating if this room is a staircase, leading to below rooms</param>
+        /// <param name="isBelowRoom">Stating if this room is a below room (below the main line)</param>
         /// 
         /// <returns>Hands back the room dimensions input or an empty room if the creation failed</returns>
-        public Rectangle2P GenerateRoom(Rectangle2P room, Rectangle2P previousRoom, int roofHeight = 0, bool leftDoor = false, bool rightDoor = false, int belowCount = 0)
+        public Rectangle2P GenerateRoom(Rectangle2P room, Rectangle2P previousRoom, int roofHeight = 0, bool leftDoor = false, bool rightDoor = false, bool isStairCase = false, bool isBelowRoom = false)
         {
             // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
             Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
@@ -454,22 +463,65 @@ namespace WorldGenMod.Structures.Underworld
             if (room.Y1 >= Main.maxTilesY || room.X1 >= Main.maxTilesX || room.X0 <= 0) return Rectangle2P.Empty;
 
 
+
             // calculate if this room will have a "cellar".... is needed now for creating this rooms doors properly
             #region cellar calculation
-            int nextCellarYTiles = (int)(room.YTiles * WorldGen.genRand.NextFloat(0.8f, 1.0f));
-            bool downRoomPossible = WorldGen.genRand.NextBool(2 + belowCount) && belowCount <= 3 && room.Y1 + nextCellarYTiles < Main.maxTilesY - wThick - 2;
+            (bool left, bool right) checkBelowRoomDistanceResult = Func.CheckBelowRoomDistance(belowRoomsAndStairs, room, belowRoomSizes);
+            bool belowRoomLeftPossible = checkBelowRoomDistanceResult.left;
+            bool belowRoomRightPossible = checkBelowRoomDistanceResult.right;
 
-            bool downRoomExist = false;
-            Rectangle2P belowRoom = Rectangle2P.Empty;
-            if (downRoomPossible)
+            bool downStairsPossible = (belowRoomLeftPossible || belowRoomRightPossible) && !isStairCase && !isBelowRoom;
+
+            bool belowRoomLeftExist = false, belowRoomRightExist = false, downStairsExist = false;
+            int staircaseWidth = 8;
+            int staircaseHeight = 31 + gap; // each round of the spiral staircase is 8 Tiles
+            int staircaseXTiles, staircaseYTiles;
+
+            Rectangle2P belowRoomStaircase = Rectangle2P.Empty;
+            if (downStairsPossible)
             {
-                int cellarWidth = (int)(room.XTiles * WorldGen.genRand.NextFloat(0.5f, 1f));
-                if (forceEvenRoom == 1) cellarWidth -= (cellarWidth % 2); //make room always even
-                else if (forceEvenRoom == 0) cellarWidth -= (cellarWidth % 2) + 1; //make room always uneven
+                // define staircase size
+                if (forceEvenRoom == 1) // even room
+                {
+                    staircaseXTiles = staircaseWidth + wThick * 2;
+                    staircaseYTiles = staircaseHeight + wThick * 2;
 
-                belowRoom = new(room.X0 + (room.XTiles - cellarWidth) / 2, freeR.Y1 + 1, cellarWidth, nextCellarYTiles);
+                    belowRoomStaircase = new(room.XCenter - (((staircaseXTiles) / 2) - 1), freeR.Y1 + 1, staircaseXTiles, staircaseYTiles);
+                }
+                else if (forceEvenRoom == 0) // uneven room
+                {
+                    staircaseXTiles = 9 + wThick * 2;
+                    staircaseYTiles = 33 + wThick * 2; // each round of the spiral staircase is 11 Tiles
 
-                downRoomExist = belowRoom.XTiles >= maxRoom.xmin && belowRoom.YTiles >= maxRoom.ymin;
+                    belowRoomStaircase = new(room.XCenter - ((staircaseXTiles) / 2), freeR.Y1 + 1, staircaseXTiles, staircaseYTiles);
+                }
+                else belowRoomStaircase = Rectangle2P.Empty; // nothing because...who knows?
+
+
+                // define which below rooms to generate
+                
+                int highChance = 100, lowChance = 100;
+                if (belowRoomLeftPossible && belowRoomRightPossible)
+                {
+                    // decide randomly which room has a high spawn chance
+                    if (Chance.Simple())
+                    {
+                        belowRoomLeftExist = Chance.Perc(highChance);
+                        if (belowRoomLeftExist) belowRoomRightExist = Chance.Perc(lowChance);
+                        else belowRoomRightExist = Chance.Perc(highChance);
+                    }
+                    else
+                    {
+                        belowRoomRightExist = Chance.Perc(highChance);
+                        if (belowRoomRightExist) belowRoomLeftExist = Chance.Perc(lowChance);
+                        else belowRoomLeftExist = Chance.Perc(highChance);
+                    }
+                }
+                else if (belowRoomLeftPossible) belowRoomLeftExist = Chance.Perc(highChance);
+                else if (belowRoomRightPossible) belowRoomRightExist = Chance.Perc(highChance);
+
+
+                downStairsExist = (room.XTiles <= 25) && !belowRoomStaircase.IsEmpty() && (belowRoomLeftExist || belowRoomRightExist);
             }
             #endregion
 
@@ -482,7 +534,7 @@ namespace WorldGenMod.Structures.Underworld
             Rectangle2P leftDoorRect  = new(room.X0     , y, wThick, leftRightDoorsYTiles);
             Rectangle2P rightDoorRect = new(freeR.X1 + 1, y, wThick, leftRightDoorsYTiles);
 
-            int upDownDoorXTiles = 6; // how many tiles the up and down doors are wide
+            int upDownDoorXTiles = staircaseWidth; // how many tiles the up and down doors are wide
             int adjustX = 0; // init
             if (freeR.XTiles % 2 == 1 && upDownDoorXTiles % 2 == 0) upDownDoorXTiles++; // an odd number of x-tiles in the room also requires an odd number of platforms so the door is symmetrical
             else adjustX = -1; //in even XTile rooms there is a 2-tile-center and XCenter will be the left tile of the two. To center an even-numberd door in this room, you have to subtract 1. Odd XTile rooms are fine
@@ -492,8 +544,8 @@ namespace WorldGenMod.Structures.Underworld
 
             doors.Add(Door.Left, (leftDoor, leftDoorRect));
             doors.Add(Door.Right, (rightDoor, rightDoorRect));
-            doors.Add(Door.Up, (belowCount > 0, upDoorRect));
-            doors.Add(Door.Down, (downRoomExist, downDoorRect));
+            doors.Add(Door.Up, (isStairCase, upDoorRect));
+            doors.Add(Door.Down, (downStairsExist, downDoorRect));
             #endregion
 
 
@@ -502,7 +554,7 @@ namespace WorldGenMod.Structures.Underworld
             {
                 for (y = room.Y0; y <= room.Y1; y++)
                 {
-                    if (belowCount > 0 && y < freeR.Y0) continue; // cellars overlap with the above laying room (they share the same floor / ceiling), don't touch that!
+                    if (isStairCase && y < freeR.Y0) continue; // cellars overlap with the above laying room (they share the same floor / ceiling), don't touch that!
 
                     WorldGen.KillWall(x, y);
                     WorldGen.KillTile(x, y);
@@ -579,7 +631,7 @@ namespace WorldGenMod.Structures.Underworld
             //carve out doors
             for (int doorNum = 0; doorNum < doors.Count; doorNum++)
             {
-                if (belowCount > 0 && doorNum == Door.Up) continue; // this door was already created by the previous room, no need to do it again
+                if (isStairCase && doorNum == Door.Up) continue; // this door was already created by the previous room, no need to do it again
 
                 if (doors[doorNum].doorExist)
                 {
@@ -687,73 +739,71 @@ namespace WorldGenMod.Structures.Underworld
                 WorldGen.PlaceWall(x, y, Deco[S.DoorWall].id); // the corner of the door will get a slope. Put the doorWallType there so it looks nicer
             }
 
-            // put actual doors
-            if (belowCount == 0) // only the main line has left/right doors
+            #region put actual doors
+            if ((previousRoom.X0 < room.X0) || (isStairCase && leftDoor)) // rooms advancing from left to right: put left door
             {
-                if (previousRoom.X0 < room.X0 ) // rooms advancing from left to right: put left door
+                bool placed;
+
+                x = room.X0; // right side rooms always have a left door
+                y = freeR.Y1;//;
+                placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // left gate
+
+                if (placed )//&& Deco[S.DoorPaint] > PaintID.None)
                 {
-                    bool placed;
-
-                    x = room.X0; // right side rooms always have a left door
-                    y = freeR.Y1;//;
-                    placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // left gate
-
-                    if (placed )//&& Deco[S.DoorPaint] > PaintID.None)
+                    Func.GateTurn(x, y);
+                    for (int i = 0; i < doorHeight; i++)
                     {
-                        Func.GateTurn(x, y);
-                        for (int i = 0; i < doorHeight; i++)
-                        {
-                            WorldGen.paintTile(x, y - i, (byte)Deco[S.DoorPaint].id);
-                        }
-                    }
-
-
-
-                    if (gap > 0 && doors[Door.Right].doorExist) // in case there is a gap between side rooms and this right side room also has a right door
-                    {
-                        x = room.X1;
-                        placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
-
-                        if (placed && Deco[S.DoorPaint].id > PaintID.None)
-                        {
-                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
-                        }
+                        WorldGen.paintTile(x, y - i, (byte)Deco[S.DoorPaint].id);
                     }
                 }
 
-                else // rooms advancing from right to left: put right door
-                {
-                    bool placed;
 
-                    x = room.X1; // left side rooms always have a right door
-                    y = freeR.Y1 - (doorHeight - 1);
-                    placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // right gate
+
+                if (gap > 0 && doors[Door.Right].doorExist) // in case there is a gap between side rooms and this right side room also has a right door
+                {
+                    x = room.X1;
+                    placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
 
                     if (placed && Deco[S.DoorPaint].id > PaintID.None)
                     {
                         for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
                     }
+                }
+            }
+
+            else if ((previousRoom.X0 > room.X0) || (isStairCase && rightDoor))// rooms advancing from right to left: put right door
+            {
+                bool placed;
+
+                x = room.X1; // left side rooms always have a right door
+                y = freeR.Y1 - (doorHeight - 1);
+                placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // right gate
+
+                if (placed && Deco[S.DoorPaint].id > PaintID.None)
+                {
+                    for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
+                }
 
 
 
-                    if (gap > 0 && doors[Door.Left].doorExist) // in case there is a gap between side rooms and this left side room also has a left door
+                if (gap > 0 && doors[Door.Left].doorExist) // in case there is a gap between side rooms and this left side room also has a left door
+                {
+                    x = room.X0;
+                    placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
+
+                    if (placed && Deco[S.DoorPaint].id > PaintID.None)
                     {
-                        x = room.X0;
-                        placed = WorldGen.PlaceObject(x, y, TileID.TallGateClosed); // put another door (resulting in double doors)
-
-                        if (placed && Deco[S.DoorPaint].id > PaintID.None)
-                        {
-                            Func.GateTurn(x, y);
-                            for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
-                        }
+                        Func.GateTurn(x, y);
+                        for (int i = 0; i < doorHeight; i++) WorldGen.paintTile(x, y + i, (byte)Deco[S.DoorPaint].id);
                     }
                 }
             }
             #endregion
+            #endregion
 
 
             #region put roof
-            if (belowCount == 0) //only the main line rooms have a roof
+            if (!isStairCase && !isBelowRoom) //only the main line rooms have a roof
             {
                 int left = room.X0;
                 int right = room.X1;
@@ -800,6 +850,7 @@ namespace WorldGenMod.Structures.Underworld
             }
             #endregion
 
+
             #region slopes
             // if one would form a rhombus: 0 is no slope, 1 is up-right corner, 2 is up-left corner, 3 is down-right corner, 4 is down-left corner.
             if (leftDoor)
@@ -810,18 +861,52 @@ namespace WorldGenMod.Structures.Underworld
             {
                 WorldGen.SlopeTile(rightDoorRect.X0, rightDoorRect.Y0 - 1, (int)Func.SlopeVal.BotLeft); // door left corner
             }
-            if (belowCount > 0)
-            {
-                WorldGen.SlopeTile(upDoorRect.X0 - 1, upDoorRect.Y1, (int)Func.SlopeVal.BotRight); // updoor left corner
-                WorldGen.SlopeTile(upDoorRect.X1 + 1, upDoorRect.Y1, (int)Func.SlopeVal.BotLeft); // updoor right corner
-            }
+            //if (belowCount > 0) --> staircase without slope
+            //{
+            //    WorldGen.SlopeTile(upDoorRect.X0 - 1, upDoorRect.Y1, (int)Func.SlopeVal.BotRight); // updoor left corner
+            //    WorldGen.SlopeTile(upDoorRect.X1 + 1, upDoorRect.Y1, (int)Func.SlopeVal.BotLeft); // updoor right corner
+            //}
             #endregion
 
 
-            if (downRoomExist)
+            #region create below rooms
+            Rectangle2P resultStaircase = Rectangle2P.Empty;
+            Rectangle2P resultBelowLeft = Rectangle2P.Empty;
+            Rectangle2P resultBelowRight = Rectangle2P.Empty;
+            if (downStairsExist)
             {
-                GenerateRoom(belowRoom, Rectangle2P.Empty, belowCount: belowCount + 1);
+                resultStaircase = GenerateRoom(belowRoomStaircase, Rectangle2P.Empty, leftDoor: belowRoomLeftExist, rightDoor: belowRoomRightExist, isStairCase: true);
             }
+            if (isStairCase && leftDoor)
+            {
+                int belowRoomWidth = WorldGen.genRand.Next(belowRoomSizes.xMin, belowRoomSizes.xMax + 1);
+                if (forceEvenRoom == 1) belowRoomWidth -= (belowRoomWidth % 2); //make room always even
+                else if (forceEvenRoom == 0) belowRoomWidth -= (belowRoomWidth % 2) + 1; //make room always uneven
+
+                int belowRoomHeight = WorldGen.genRand.Next(belowRoomSizes.yMin, belowRoomSizes.yMax + 1);
+
+                Rectangle2P belowRoomLeft = new(room.X0 - (belowRoomWidth + gap), room.Y1 - (belowRoomHeight + gap), belowRoomWidth, belowRoomHeight);
+
+                resultBelowLeft = GenerateRoom(belowRoomLeft, room, rightDoor: true, isBelowRoom: true);
+            }
+            if (isStairCase && rightDoor)
+            {
+                int belowRoomWidth = WorldGen.genRand.Next(belowRoomSizes.xMin, belowRoomSizes.xMax + 1);
+                if (forceEvenRoom == 1) belowRoomWidth -= (belowRoomWidth % 2); //make room always even
+                else if (forceEvenRoom == 0) belowRoomWidth -= (belowRoomWidth % 2) + 1; //make room always uneven
+
+                int belowRoomHeight = WorldGen.genRand.Next(belowRoomSizes.yMin, belowRoomSizes.yMax + 1);
+
+                Rectangle2P belowRoomRight = new(room.X1 + 1 + gap, room.Y1 - (belowRoomHeight + gap), belowRoomWidth, belowRoomHeight);
+
+                resultBelowRight = GenerateRoom(belowRoomRight, room, leftDoor: true, isBelowRoom: true);
+            }
+
+            // add created rooms to the list of existing ones
+            if (isStairCase && !resultBelowLeft.IsEmpty())  belowRoomsAndStairs.Add(resultBelowLeft);
+            if (isStairCase && !resultBelowRight.IsEmpty()) belowRoomsAndStairs.Add(resultBelowRight);
+            if (isStairCase)                                belowRoomsAndStairs.Add(room);
+            #endregion
 
             //TODO:
             #region "don't know if it stays" stuff
@@ -864,20 +949,22 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
 
-            DecorateRoom(room, doors, wallBreak, belowCount);
+            if (!isStairCase && !isBelowRoom) DecorateRoom(room, doors, wallBreak);
+            if (isStairCase) DecorateStairCase(room, doors, wallBreak);
+            if (isBelowRoom) DecorateBelowRoom(room, doors, wallBreak);
+
 
             return room;
         }
 
 
         /// <summary>
-        /// The main method for choosing and running the a rooms decoration
+        /// The main method for choosing and running a rooms decoration
         /// </summary>
         /// <param name="room">The rectangular area of the room, including the outer walls</param>
         /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
         /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
-        /// <param name="belowCount">Stating how many rooms below the main line this particular room is. 0 = main line</param>
-        public void DecorateRoom(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak, int belowCount = 0)
+        public void DecorateRoom(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak)
         {
             // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
             Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
@@ -905,20 +992,10 @@ namespace WorldGenMod.Structures.Underworld
             int windowY0 = freeR.Y0 + windowYMargin; // height where the window starts
             int windowYTiles = freeR.YTiles - (2 * windowYMargin); // the YTiles height of a window
 
-            bool awayEnough1, awayEnough2, windowsExist, middleSpaceExist = false, windowDistanceXTilesOdd = false;
+            bool awayEnough1, awayEnough2, windowsExist, windowPairsExist, middleSpaceExist = false, windowDistanceXTilesOdd = false;
 
-            int roomDeco;
-            if (belowCount == 0)
-            {
-                //choose the upper room decoration at random
-                roomDeco = WorldGen.genRand.Next(1); //TODO: don't forget to put the correct values in the end!
-            }
-            else
-            {
-                //choose the below room decoration at random
-                roomDeco = WorldGen.genRand.Next(50,50); //TODO: don't forget to put the correct values in the end!
-
-            }
+            //choose the upper room decoration at random
+            int roomDeco = WorldGen.genRand.Next(1); //TODO: don't forget to put the correct values in the end!
 
             roomDeco = 0;
 
@@ -997,7 +1074,8 @@ namespace WorldGenMod.Structures.Underworld
                     }
 
                     // put windows
-                    windowsExist = windowsPairs.Count > 1;
+                    windowsExist = windowsPairs.Count > 0;
+                    windowPairsExist = windowsPairs.Count > 1;
                     if (windowsExist)
                     {
                         foreach (Rectangle2P windowRect in windowsPairs)
@@ -1070,7 +1148,7 @@ namespace WorldGenMod.Structures.Underworld
                     randomItems.Add((TileID.Statues, 74, 95));//Armed Zombie
                     randomItems.Add((TileID.Statues, 75, 95));//Blood Zombie
 
-                    if (windowsExist)
+                    if (windowsExist && !doors[Door.Down].doorExist)
                     {
                         foreach (Rectangle2P windowRect in windowsPairs)
                         {
@@ -1305,10 +1383,6 @@ namespace WorldGenMod.Structures.Underworld
 
                     break;
 
-                case 50: // Below room #1
-
-                    break;
-
                 case 100: // empty room for display
                           //windows blueprint for copying
                     #region windows
@@ -1344,8 +1418,8 @@ namespace WorldGenMod.Structures.Underworld
                     }
 
                     // put windows
-                    windowsExist = windowsPairs.Count > 0;
-                    if (windowsExist)
+                    windowPairsExist = windowsPairs.Count > 0;
+                    if (windowPairsExist)
                     {
                         foreach (Rectangle2P windowRect in windowsPairs)
                         {
@@ -1376,6 +1450,107 @@ namespace WorldGenMod.Structures.Underworld
                     break;
 
             }
+
+
+            Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
+        }
+
+        /// <summary>
+        /// The main method for decorating a staircase
+        /// </summary>
+        /// <param name="room">The rectangular area of the room, including the outer walls</param>
+        /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
+        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        public void DecorateStairCase(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak)
+        {
+            // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
+            Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
+
+
+            // init variables
+            bool placed, placed2;
+            (bool success, int x, int y) placeResult, placeResult2;
+            Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
+            List<(int x, int y)> rememberPos = []; // for remembering positions
+            int x, y, unusedXTiles, num, numOld;
+            Tile tile;
+
+
+            #region put middle beam ("pole")
+
+            int startY = doors[Door.Up].doorRect.Y1 + 1;
+            int startX = freeR.XCenter; // 2 tiles middle beam
+            if (!freeR.XEven) startX--; // 3 tiles middle beam
+
+            for (int j = startY; j <= freeR.Y1; j++)
+            {
+                for (int i = startX; i <= (freeR.XCenter + 1); i++)
+                {
+                    if (Main.tile[i, j].WallType == Deco[S.CrookedWall].id) continue;
+                    WorldGen.KillWall(i, j);
+                    WorldGen.PlaceWall(i, j, Deco[S.DoorWall].id);
+                }
+            }
+
+            List<int> onPole = [];
+            for (int i = startX; i <= (freeR.XCenter + 1); i++) onPole.Add(i);
+
+            #endregion
+
+            #region put stairs
+
+            startY = doors[Door.Up].doorRect.Y0 + 1;
+            startX = freeR.XCenter - 1;
+            if (!freeR.XEven) startX--;
+
+            int creationDir = Func.RandPlus1Minus1(); // 1 = from left to right; -1 = from right to left
+            int behindPole = creationDir * (-1);
+
+
+
+            #endregion
+
+
+            Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
+        }
+
+        /// <summary>
+        /// The main method for choosing and running a below rooms decoration
+        /// </summary>
+        /// <param name="room">The rectangular area of the room, including the outer walls</param>
+        /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
+        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        public void DecorateBelowRoom(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak)
+        {
+            // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
+            Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
+
+
+            // init variables
+            bool placed, placed2;
+            (bool success, int x, int y) placeResult, placeResult2;
+            Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
+            List<(int x, int y)> rememberPos = []; // for remembering positions
+            List<(ushort TileID, int style, byte chance)> randomItems = [], randomItems2 = []; // for random item placement
+            (ushort id, int style, byte chance) randomItem, randomItem2; // for random item placement
+            int x, y, chestID, unusedXTiles, num, numOld;
+
+
+            // for window placement
+            List<Rectangle2P> windowsPairs = []; // ascending indexes refer to windows in the room like this: 6 windows (0 2 4 5 3 1), 8 windows (0 2 4 6 7 5 3 1) etc.
+            List<Rectangle2P> windowsOrder = []; // ascending indexes refer to windows in the room like this: 6 windows (0 1 2 3 4 5), 8 windows (0 1 2 3 4 5 6 7) etc.
+            List<Rectangle2P> spacesOrder = []; // ascending indexes refer to the spaces between windows in the room like this: 2 spaces (4 windows) (W 0 W | W 1 W), 4 spaces (6 windows) (W 0 W 1 W | W 2 W 3 W) etc.
+            Rectangle2P middleSpace; // the middle space if the room has pairs of windows
+
+            int windowXTiles = 4;
+
+            int windowYMargin = 2; // how many Tiles the window shall be away from the ceiling / floor
+            int windowY0 = freeR.Y0 + windowYMargin; // height where the window starts
+            int windowYTiles = freeR.YTiles - (2 * windowYMargin); // the YTiles height of a window
+
+            bool awayEnough1, awayEnough2, windowsExist, windowPairsExist, middleSpaceExist = false, windowDistanceXTilesOdd = false;
+
+
 
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);

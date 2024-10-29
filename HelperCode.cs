@@ -1331,6 +1331,47 @@ namespace WorldGenMod
             }
         }
 
+        /// <summary>
+        /// Checks if the handed over main line room is far away enough of previous below rooms in the ChastisedChurch.
+        /// <br/>The two result bools state if a below room to the left / right is possible.
+        /// <br/>(Built on the idea, that the staircase, leading down from the mainline room, is never bigger than the mainline room.)
+        /// </summary>
+        /// <param name="belowRoomAndStaircases">List of already existing belowRooms and staircases in the ChastisedChurch</param>
+        /// <param name="mainLineRoom">The mainline-room of the ChastisedChurch, where a staircase leads down to the belowRooms</param>
+        /// <param name="belowRoomSizes">The allowed dimensions of a belowRoom</param>
+        public static (bool leftPossible, bool rightPossible) CheckBelowRoomDistance(List <Rectangle2P> belowRoomAndStaircases, Rectangle2P mainLineRoom, (int xMin, int xMax, int yMin, int yMax) belowRoomSizes)
+        {
+            if (belowRoomAndStaircases.Count == 0) return (true, true);
+            if (mainLineRoom.IsEmpty()) return (false, false);
+
+            Rectangle2P existingBelowRoomOrStairs;
+            bool leftPossible = true, rightPossible = true;
+
+            for (int i = 0; i < belowRoomAndStaircases.Count; i++)
+            {
+                existingBelowRoomOrStairs = belowRoomAndStaircases[i];
+
+                leftPossible &= (existingBelowRoomOrStairs.X1 < (mainLineRoom.X0 - belowRoomSizes.xMax)) || existingBelowRoomOrStairs.X0 > mainLineRoom.X1;
+                rightPossible &= ((mainLineRoom.X1 + belowRoomSizes.xMax) < existingBelowRoomOrStairs.X0) || existingBelowRoomOrStairs.X1 < mainLineRoom.X0; ;
+            }
+
+            return (leftPossible, rightPossible);
+        }
+
+        /// <summary>
+        /// Returns randomly a -1 or a +1
+        /// </summary>
+        public static int RandPlus1Minus1()
+        {
+            return (WorldGen.genRand.Next(2) * 2) - 1;
+        }
+
+
+
+
+
+
+
         /// <summary> Possible Slope-Form codes used by SlopeTile() 
         /// <br/>Seen as if one would form a rhombus: 0 = no slope, 1 = up-right corner, 2 = up-left corner, 3 = down-right corner, 4 = down-left corner </summary>
         public enum SlopeVal : int
