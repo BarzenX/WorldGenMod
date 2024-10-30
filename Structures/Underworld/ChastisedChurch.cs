@@ -12,6 +12,7 @@ using System;
 using WorldGenMod.Structures.Ice;
 using Terraria.UI;
 using System.Drawing;
+using System.Linq;
 
 namespace WorldGenMod.Structures.Underworld
 {
@@ -984,7 +985,7 @@ namespace WorldGenMod.Structures.Underworld
             List<Rectangle2P> windowsPairs = []; // ascending indexes refer to windows in the room like this: 6 windows (0 2 4 5 3 1), 8 windows (0 2 4 6 7 5 3 1) etc.
             List<Rectangle2P> windowsOrder = []; // ascending indexes refer to windows in the room like this: 6 windows (0 1 2 3 4 5), 8 windows (0 1 2 3 4 5 6 7) etc.
             List<Rectangle2P> spacesOrder = []; // ascending indexes refer to the spaces between windows in the room like this: 2 spaces (4 windows) (W 0 W | W 1 W), 4 spaces (6 windows) (W 0 W 1 W | W 2 W 3 W) etc.
-            Rectangle2P middleSpace; // the middle space if the room has pairs of windows
+            Rectangle2P middleSpace = Rectangle2P.Empty; // the middle space if the room has pairs of windows
             
             int windowXTiles = 4;
 
@@ -1148,13 +1149,32 @@ namespace WorldGenMod.Structures.Underworld
                     randomItems.Add((TileID.Statues, 74, 95));//Armed Zombie
                     randomItems.Add((TileID.Statues, 75, 95));//Blood Zombie
 
-                    if (windowsExist && !doors[Door.Down].doorExist)
+                    if (windowsExist)
                     {
                         foreach (Rectangle2P windowRect in windowsPairs)
                         {
+                            // prevent statue placement on down door
+                            x = windowRect.XCenter;
+                            y = freeR.Y1 + 1;
+                            if ((Main.tile[x , y].TileType == Deco[S.DoorPlat].id) || (Main.tile[x + 1, y].TileType == Deco[S.DoorPlat].id)) continue;
+
+
+                            // check if the pedestral can be big
+                            bool bigPedestral = ((windowRect.XCenter - 1 >= windowRect.X0) && (Main.tile[windowRect.XCenter - 1, y].TileType != Deco[S.DoorPlat].id)) &&
+                                                ((windowRect.XCenter + 2 <= windowRect.X1) && (Main.tile[windowRect.XCenter + 2, y].TileType != Deco[S.DoorPlat].id));
+
+
+                            // put pedestral in the middle of the window (XCenter and XCenter++)
                             y = freeR.Y1;
 
-                            // put pedestral
+                            
+                            x = windowRect.XCenter - 1;
+                            if (bigPedestral)
+                            {
+                                WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
+                            }
+
                             x = windowRect.XCenter;
                             WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
                             WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
@@ -1162,6 +1182,14 @@ namespace WorldGenMod.Structures.Underworld
                             x = windowRect.XCenter + 1;
                             WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
                             WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
+
+                            x = windowRect.XCenter + 2;
+                            if (bigPedestral)
+                            {
+                                WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
+                                WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
+                            }
+
 
                             // put statue
                             randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count));
@@ -1379,6 +1407,20 @@ namespace WorldGenMod.Structures.Underworld
                     // Stuff on ceiling: HangingPots, Chandelier, 
                     #endregion
 
+                    #region fill middle space
+                    if(middleSpaceExist)
+                    {
+                        if (middleSpace.XTiles <= windowXTiles) { } // do nothing
+
+                        else if (!doors[Door.Down].doorExist) // middle space not on a door
+                        {
+                            #region create altar
+
+                            #endregion
+                        }
+                    }
+                    #endregion
+
                     Func.PlaceStinkbug(freeR);
 
                     break;
@@ -1486,7 +1528,7 @@ namespace WorldGenMod.Structures.Underworld
             {
                 for (int i = startX; i <= (freeR.XCenter + 1); i++)
                 {
-                    if (Main.tile[i, j].WallType == Deco[S.CrookedWall].id) continue;
+                    //if (Main.tile[i, j].WallType == Deco[S.CrookedWall].id) continue;
                     WorldGen.KillWall(i, j);
                     WorldGen.PlaceWall(i, j, Deco[S.DoorWall].id);
                 }
@@ -1499,14 +1541,90 @@ namespace WorldGenMod.Structures.Underworld
 
             #region put stairs
 
-            startY = doors[Door.Up].doorRect.Y0 + 1;
-            startX = freeR.XCenter - 1;
-            if (!freeR.XEven) startX--;
-
             int creationDir = Func.RandPlus1Minus1(); // 1 = from left to right; -1 = from right to left
-            int behindPole = creationDir * (-1);
+            int behindPole = creationDir * (-1); // first line is always in front of the middle beam
+
+            y = startY = doors[Door.Up].doorRect.Y0 + 1;
+            if (creationDir == 1)  x = startX = onPole.Min();
+            if (creationDir == -1) x = startX = onPole.Max();
+            else x = freeR.XCenter; // just so the compiler doesn't complain
+
+            int rightTurninPoint = onPole.Max() + 1;
+            int leftTurninPoint  = onPole.Min() - 1;
+
+            List<int> poundRange = []; // each position in this field needs a hammer pound to actually have the platform look like stairs
+            for (int i = onPole.Min() - 1; i <= (onPole.Max() + 1); i++) poundRange.Add(i);
 
 
+            // pound platform tile of already existing down door
+            (int x, int y) stairsStart = (startX - creationDir, startY - 1);
+            WorldGen.PoundPlatform(stairsStart.x, stairsStart.y);
+            if (creationDir == -1) WorldGen.PoundPlatform(startX - creationDir, startY - 1);
+
+            // for refreshing textures later because just pounding it doesn't put the correct texture! -.-
+            List<(int x, int y)> safeForRefresh = [];
+            safeForRefresh.Add(stairsStart);
+            safeForRefresh.Add((startX, startY));
+
+            bool first = true;
+            while (y <= freeR.Y1)
+            {
+                WorldGen.PlaceTile(x, y, Deco[S.DoorPlat].id, style: Deco[S.DoorPlat].style);
+                WorldGen.paintTile(x, y, (byte)Deco[S.DoorPlatPaint].id);
+                if (poundRange.Contains(x)) WorldGen.PoundPlatform(x, y);
+                if (first && creationDir == 1) WorldGen.PoundPlatform(x, y); //don't know why this piece of shit doesn't does need an additional pound!
+                first = false;
+
+                if (y + 1 > freeR.Y1) safeForRefresh.Add((x, y));
+
+                if (onPole.Contains(x) && creationDir == behindPole) WorldGen.paintCoatTile(x, y, PaintCoatingID.Echo);
+
+                if (x == rightTurninPoint)
+                {
+                    creationDir *= (-1);
+                    y++;
+                    if (y > freeR.Y1) continue;
+
+                    for (int i = x; i <= freeR.X1; i++)
+                    {
+                        WorldGen.PlaceTile(i, y, Deco[S.DoorPlat].id, style: Deco[S.DoorPlat].style);
+                        WorldGen.paintTile(i, y, (byte)Deco[S.DoorPlatPaint].id);
+                        if (poundRange.Contains(i))
+                        {
+                            WorldGen.PoundPlatform(i, y);
+                            WorldGen.PoundPlatform(i, y);
+                        }
+                    }
+                }
+                else if (x == leftTurninPoint)
+                {
+                    creationDir *= (-1);
+                    y++;
+                    if (y > freeR.Y1) continue;
+
+                    for (int i = x; i >= freeR.X0; i--)
+                    {
+                        WorldGen.PlaceTile(i, y, Deco[S.DoorPlat].id, style: Deco[S.DoorPlat].style);
+                        WorldGen.paintTile(i, y, (byte)Deco[S.DoorPlatPaint].id);
+                        if (poundRange.Contains(i))
+                        {
+                            WorldGen.PoundPlatform(i, y);
+                        }
+                    }
+                }
+
+
+
+                x += creationDir;
+                y++;
+            }
+
+            // actualize textures of problematic staircase tiles
+            foreach ((int x, int y) point in safeForRefresh)
+            {
+                WorldGen.ReplaceTile(point.x, point.y, (ushort)Deco[S.DoorPlat].id, Deco[S.DoorPlat].style);
+                WorldGen.paintTile(point.x, point.y, (byte)Deco[S.DoorPlatPaint].id);
+            }
 
             #endregion
 
