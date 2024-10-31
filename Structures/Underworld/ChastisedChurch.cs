@@ -25,8 +25,9 @@ namespace WorldGenMod.Structures.Underworld
         readonly int maxChurchLength = 500; // maximum tile length of the ChastisedChurch
         readonly (int xMin, int xMax, int yMin, int yMax) roomSizes = (12, 80, 12, 30); // possible room dimensions
         readonly (int xMin, int xMax, int yMin, int yMax) belowRoomSizes = (35, 60, 14, 16); // possible below room dimensions
-        List<Rectangle2P> belowRoomsAndStairs; // list of all created below rooms and staircases to check and prevent overlappings
-
+        List<Rectangle2P> belowRoomsAndStairs = []; // list of all created below rooms and staircases to check and prevent overlappings
+        List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> PoundAfterSmoothWorld = []; // as the worldgen step "Smooth World" destroys the stairs of below rooms, they get stored here to create the stairs after that step
+        
 
         Dictionary<string, (int id, int style)> Deco = []; // the dictionary where the styles of tiles are stored
 
@@ -38,6 +39,9 @@ namespace WorldGenMod.Structures.Underworld
                 tasks.Insert(genIndex + 1, new PassLegacy("#WGM: Chastised Church", delegate (GenerationProgress progress, GameConfiguration config)
                 {
                     progress.Message = "Chastising the crooked church...";
+
+                    PoundAfterSmoothWorld.Clear(); //init for each world generation
+                    belowRoomsAndStairs.Clear(); //init for each world generation
 
                     int side; //init
                     if (WorldGenMod.chastisedChurchGenerationSide == "Left") side = -1;
@@ -61,6 +65,14 @@ namespace WorldGenMod.Structures.Underworld
                         GenerateChastisedChurch(1); // do the right side
                     }
 
+                }));
+
+                genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Smooth World"));
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: repair CC stairs", delegate (GenerationProgress progress, GameConfiguration config)
+                {
+                    progress.Message = "Repairing the stairs that got deleted during the previous worldgen step...";
+
+                    CreateStairsFromData();
                 }));
             }
         }
@@ -383,7 +395,6 @@ namespace WorldGenMod.Structures.Underworld
             startPosY = Main.maxTilesY - 100;
 
             // add borders for below room creation
-            belowRoomsAndStairs = [];
             belowRoomsAndStairs.Add(new Rectangle2P(50                 , startPosY, 1, 1));
             belowRoomsAndStairs.Add(new Rectangle2P(Main.maxTilesX - 50, startPosY, 1, 1));
 
@@ -1498,7 +1509,9 @@ namespace WorldGenMod.Structures.Underworld
         }
 
         /// <summary>
-        /// The main method for decorating a staircase
+        /// The main method for decorating a staircase.
+        /// <br/> As the world generation step "Smooth World" destroys the stairs (sloped platforms), in this function only the tiles for the staircase get computed and
+        /// for putting the staircase in the world, the function "CreateStairsFromData" is used.
         /// </summary>
         /// <param name="room">The rectangular area of the room, including the outer walls</param>
         /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
@@ -1510,14 +1523,8 @@ namespace WorldGenMod.Structures.Underworld
 
 
             // init variables
-            bool placed, placed2;
-            (bool success, int x, int y) placeResult, placeResult2;
-            Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
-            List<(int x, int y)> rememberPos = []; // for remembering positions
-            int x, y, unusedXTiles, num, numOld;
-            Tile tile;
-
-
+            int x, y;
+            
             #region put middle beam ("pole")
 
             int startY = doors[Door.Up].doorRect.Y1 + 1;
@@ -1540,96 +1547,136 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
             #region put stairs
+            Dictionary<(int x, int y), (int pounds, bool echoCoat)> stairs = [];// local variant of the global "PoundAfterSmoothWorld" that is easier to alter
 
             int creationDir = Func.RandPlus1Minus1(); // 1 = from left to right; -1 = from right to left
             int behindPole = creationDir * (-1); // first line is always in front of the middle beam
 
             y = startY = doors[Door.Up].doorRect.Y0 + 1;
-            if (creationDir == 1)  x = startX = onPole.Min();
-            if (creationDir == -1) x = startX = onPole.Max();
+            if      (creationDir == 1)  x = startX = onPole.Min();
+            else if (creationDir == -1) x = startX = onPole.Max();
             else x = freeR.XCenter; // just so the compiler doesn't complain
 
-            int rightTurninPoint = onPole.Max() + 1;
-            int leftTurninPoint  = onPole.Min() - 1;
+            int rightTurningPoint = onPole.Max() + 1;
+            int leftTurningPoint  = onPole.Min() - 1;
 
             List<int> poundRange = []; // each position in this field needs a hammer pound to actually have the platform look like stairs
             for (int i = onPole.Min() - 1; i <= (onPole.Max() + 1); i++) poundRange.Add(i);
 
 
-            // pound platform tile of already existing down door
-            (int x, int y) stairsStart = (startX - creationDir, startY - 1);
-            WorldGen.PoundPlatform(stairsStart.x, stairsStart.y);
-            if (creationDir == -1) WorldGen.PoundPlatform(startX - creationDir, startY - 1);
 
-            // for refreshing textures later because just pounding it doesn't put the correct texture! -.-
-            List<(int x, int y)> safeForRefresh = [];
-            safeForRefresh.Add(stairsStart);
-            safeForRefresh.Add((startX, startY));
+
+            // pound platform tile of the already existing down door
+            (int x, int y) stairsStart = (startX - creationDir, startY - 1);
+            stairs.Add((stairsStart.x, stairsStart.y), (1, false));
 
             bool first = true;
             while (y <= freeR.Y1)
             {
-                WorldGen.PlaceTile(x, y, Deco[S.DoorPlat].id, style: Deco[S.DoorPlat].style);
-                WorldGen.paintTile(x, y, (byte)Deco[S.DoorPlatPaint].id);
-                if (poundRange.Contains(x)) WorldGen.PoundPlatform(x, y);
-                if (first && creationDir == 1) WorldGen.PoundPlatform(x, y); //don't know why this piece of shit doesn't does need an additional pound!
+                stairs.Add((x, y), (0, false)); // "place tile"
+                if (poundRange.Contains(x))    Func.AddPoundToStairTile(stairs, (x, y), 1);
+                if (first && creationDir == 1) Func.AddPoundToStairTile(stairs, (x, y), 1); //don't know why this tile of shit does need an additional pound!
                 first = false;
 
-                if (y + 1 > freeR.Y1) safeForRefresh.Add((x, y));
+                if (onPole.Contains(x) && creationDir == behindPole) Func.AddCoatingToStairTile(stairs, (x, y));
 
-                if (onPole.Contains(x) && creationDir == behindPole) WorldGen.paintCoatTile(x, y, PaintCoatingID.Echo);
-
-                if (x == rightTurninPoint)
+                if (x == rightTurningPoint)
                 {
                     creationDir *= (-1);
                     y++;
-                    if (y > freeR.Y1) continue;
+                    if (y > freeR.Y1) continue; // last tile was already at the bottom
 
                     for (int i = x; i <= freeR.X1; i++)
                     {
-                        WorldGen.PlaceTile(i, y, Deco[S.DoorPlat].id, style: Deco[S.DoorPlat].style);
-                        WorldGen.paintTile(i, y, (byte)Deco[S.DoorPlatPaint].id);
-                        if (poundRange.Contains(i))
-                        {
-                            WorldGen.PoundPlatform(i, y);
-                            WorldGen.PoundPlatform(i, y);
-                        }
+                        stairs.Add((i, y), (0, false)); // "place tile"
+
+                        if (poundRange.Contains(i)) Func.AddPoundToStairTile(stairs, (i, y), 1);
                     }
                 }
-                else if (x == leftTurninPoint)
+                else if (x == leftTurningPoint)
                 {
                     creationDir *= (-1);
                     y++;
-                    if (y > freeR.Y1) continue;
+                    if (y > freeR.Y1) continue; // last tile was already at the bottom
 
                     for (int i = x; i >= freeR.X0; i--)
                     {
-                        WorldGen.PlaceTile(i, y, Deco[S.DoorPlat].id, style: Deco[S.DoorPlat].style);
-                        WorldGen.paintTile(i, y, (byte)Deco[S.DoorPlatPaint].id);
-                        if (poundRange.Contains(i))
-                        {
-                            WorldGen.PoundPlatform(i, y);
-                        }
+                        stairs.Add((i, y), (0, false)); // "place tile"
+
+                        if (poundRange.Contains(i)) Func.AddPoundToStairTile(stairs, (i, y), 1);
                     }
                 }
-
-
 
                 x += creationDir;
                 y++;
             }
-
-            // actualize textures of problematic staircase tiles
-            foreach ((int x, int y) point in safeForRefresh)
-            {
-                WorldGen.ReplaceTile(point.x, point.y, (ushort)Deco[S.DoorPlat].id, Deco[S.DoorPlat].style);
-                WorldGen.paintTile(point.x, point.y, (byte)Deco[S.DoorPlatPaint].id);
-            }
-
             #endregion
 
+            #region transform local data into global form
+            List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> poundList = [];
+            (int pounds, bool echoCoat) values;
+            int platType = Deco[S.DoorPlat].id;
+            int platStyle = Deco[S.DoorPlat].style;
+            byte platPaint = (byte)Deco[S.DoorPlatPaint].id;
+
+            List<Tile> test;
+
+            foreach ((int x, int y) point in stairs.Keys.ToArray())
+            {
+                values = stairs[point];
+
+                poundList.Add((point.x, point.y, values.pounds, platType, platStyle, platPaint, values.echoCoat));
+            }
+
+            PoundAfterSmoothWorld.AddRange(poundList);
+            #endregion
+
+            CreateStairsFromData(poundList);
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
+        }
+
+        /// <summary>
+        /// Creating the stairs with the data from DecorateStairCase()
+        /// </summary>
+        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        public void CreateStairsFromData(List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> localList = null)
+        {
+            List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> workList = [];
+            bool doTileTypeCheck = true;
+
+            if (localList is not null)
+            {
+                workList = localList;
+                doTileTypeCheck = false; // local mode means first time placing the stairs. The check is only for "reconstructing" the stairs
+            }
+            else workList = PoundAfterSmoothWorld;
+
+
+            foreach ((int x, int y, int pounds, int type, int style, byte paint, bool echoCoating) point in workList)
+            {
+                if (doTileTypeCheck && Main.tile[point.x, point.y].TileType != point.type) continue; // in case any other mod overwrote my structure
+
+                WorldGen.KillTile(point.x, point.y);
+                WorldGen.PlaceTile(point.x, point.y, point.type, style: point.style);
+            }
+
+            foreach ((int x, int y, int pounds, int type, int style, byte paint, bool echoCoating) point in workList)
+            {
+                if (doTileTypeCheck && Main.tile[point.x, point.y].TileType != point.type) continue; // in case any other mod overwrote my structure
+
+                for (int i = 1; i <= point.pounds; i++)
+                {
+                    WorldGen.PoundPlatform(point.x, point.y);
+                }
+                
+                // refresh texture
+                WorldGen.ReplaceTile(point.x, point.y, (ushort)point.type, point.style);
+                WorldGen.paintTile(point.x, point.y, point.paint);
+
+                //apply echo coating
+                if (point.echoCoating) WorldGen.paintCoatTile(point.x, point.y, PaintCoatingID.Echo);
+            }
         }
 
         /// <summary>

@@ -1366,7 +1366,27 @@ namespace WorldGenMod
             return (WorldGen.genRand.Next(2) * 2) - 1;
         }
 
+        /// <summary>
+        /// Adds pounds to the given tile of the local stairs dictionary of DecorateStairCase
+        /// </summary>
+        public static void AddPoundToStairTile(Dictionary<(int x, int y), (int pounds, bool echoCoat)> stairs, (int x, int y) point, int pounds)
+        {
+            (int pounds, bool echoCoat) temp = stairs[(point.x, point.y)];
+            temp.pounds += pounds;
 
+            stairs[(point.x, point.y)] = temp;
+        }
+
+        /// <summary>
+        /// Adds echo coating to the given tile of local stairs dictionary of DecorateStairCase
+        /// </summary>
+        public static void AddCoatingToStairTile(Dictionary<(int x, int y), (int pounds, bool echoCoat)> stairs, (int x, int y) point)
+        {
+            (int pounds, bool echoCoat) temp = stairs[(point.x, point.y)];
+            temp.echoCoat = true;
+
+            stairs[(point.x, point.y)] = temp;
+        }
 
 
 
