@@ -1388,6 +1388,17 @@ namespace WorldGenMod
             stairs[(point.x, point.y)] = temp;
         }
 
+        /// <summary>
+        /// Same as "AddPoundToStairTile()" but with the complete structure of "stairs"
+        /// </summary>
+        public static void AddPoundToStairTileFull(Dictionary<(int x, int y), (int pounds, int type, int style, byte paint, bool echoCoat)> stairs, (int x, int y) point, int pounds)
+        {
+            (int pounds, int type, int style, byte paint, bool echoCoat) temp = stairs[(point.x, point.y)];
+            temp.pounds += pounds;
+
+            stairs[(point.x, point.y)] = temp;
+        }
+
 
 
 

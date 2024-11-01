@@ -188,14 +188,22 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.Bookcase, (0, 0));
             Deco.Add(S.Sofa, (0, 0));
             Deco.Add(S.Clock, (0, 0));
-            Deco.Add(S.Bed, (0, 0));
-            Deco.Add(S.BedWallpaper, (0, 0));
             Deco.Add(S.PaintingWallpaper, (0, 0));
             Deco.Add(S.Dresser, (0, 0));
-            #endregion
 
-            //choose a random style and define it's types
-            int chooseStyle = WorldGen.genRand.Next(3);
+            //altar
+            Deco.Add(S.MiddleWall, (0, 0));
+            Deco.Add(S.MiddleWallPaint, (0, 0));
+            Deco.Add(S.AltarSteps, (0, 0));
+            Deco.Add(S.AltarStepsPaint, (0, 0));
+            Deco.Add(S.AltarDeco, (0, 0));
+            Deco.Add(S.AltarDecoPaint, (0, 0));
+            Deco.Add(S.AltarWall, (0, 0));
+            Deco.Add(S.AltarWallPaint, (0, 0));
+        #endregion
+
+        //choose a random style and define it's types
+        int chooseStyle = WorldGen.genRand.Next(3);
             bool subStyle = false;
             switch (chooseStyle)
             {
@@ -255,11 +263,19 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Sofa] = (TileID.Benches, 5); // Shade Wood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 21); // Shadewood
                     if (Chance.Simple()) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
-                    Deco[S.Bed] = (TileID.Beds, 15); //* Frozen
-                    Deco[S.BedWallpaper] = (WallID.StarsWallpaper, 0); //*
                     Deco[S.PaintingWallpaper] = (WallID.SparkleStoneWallpaper, 0); //*
                     Deco[S.Dresser] = (TileID.Dressers, 30); //* Frozen
                     Deco[S.Piano] = (TileID.Pianos, 7); //* Frozen
+
+                    //altar
+                    Deco[S.MiddleWall] = (WallID.Lavafall, 0);
+                    Deco[S.MiddleWallPaint] = (0, 0);
+                    Deco[S.AltarSteps] = (TileID.Platforms, 10); //Brass Shelf
+                    Deco[S.AltarStepsPaint] = (0, 0);
+                    Deco[S.AltarDeco] = (TileID.Platforms, 12); //Dungeon Shelf
+                    Deco[S.AltarDecoPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.AltarWall] = (WallID.Lava3Echo, 0);
+                    Deco[S.AltarWallPaint] = (0, 0);
                     break;
 
                 case S.StyleTitanstone: // Titanstone
@@ -312,11 +328,19 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Sofa] = (TileID.Benches, 5); // Shadewood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 21); // Shadewood
                     if (subStyle) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
-                    Deco[S.Bed] = (TileID.Beds, 24); //* Boreal
-                    Deco[S.BedWallpaper] = (WallID.StarlitHeavenWallpaper, 0); //*
                     Deco[S.PaintingWallpaper] = (WallID.LivingWood, 0); //*
                     Deco[S.Dresser] = (TileID.Dressers, 18); //* Boreal
                     Deco[S.Piano] = (TileID.Pianos, 23); //* Boreal
+
+                    //altar
+                    Deco[S.MiddleWall] = (WallID.Lavafall, 0);
+                    Deco[S.MiddleWallPaint] = (0, 0);
+                    Deco[S.AltarSteps] = (TileID.Platforms, 10); //Brass Shelf
+                    Deco[S.AltarStepsPaint] = (0, 0);
+                    Deco[S.AltarDeco] = (TileID.Platforms, 12); //Dungeon Shelf
+                    Deco[S.AltarDecoPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.AltarWall] = (WallID.BambooBlockWall, 0);
+                    Deco[S.AltarWallPaint] = (0, 0);
                     break;
 
                 case S.StyleBlueBrick: //TODO: look for another third design. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
@@ -367,12 +391,20 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Bookcase] = (TileID.Bookcases, 7); // Ebonwood
                     Deco[S.Sofa] = (TileID.Benches, 2); // Ebonwood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 10); //* Ebonwood
-                    Deco[S.Bed] = (TileID.Beds, 1); //* Ebonwood
-                    Deco[S.BedWallpaper] = (WallID.StarlitHeavenWallpaper, 0); //*
                     Deco[S.PaintingWallpaper] = (WallID.BluegreenWallpaper, 0); //*
                     Deco[S.Dresser] = (TileID.Dressers, 1); //* Ebonwood
                     Deco[S.Piano] = (TileID.Pianos, 1); //* Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
+
+                    //altar
+                    Deco[S.MiddleWall] = (WallID.Bone, 0);
+                    Deco[S.MiddleWallPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.AltarSteps] = (TileID.Platforms, 10); //Brass Shelf
+                    Deco[S.AltarStepsPaint] = (0, 0);
+                    Deco[S.AltarDeco] = (TileID.Platforms, 12); //Dungeon Shelf
+                    Deco[S.AltarDecoPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.AltarWall] = (WallID.DemoniteBrick, 0);
+                    Deco[S.AltarWallPaint] = (0, 0);
                     break;
             }
         }
@@ -1425,9 +1457,48 @@ namespace WorldGenMod.Structures.Underworld
 
                         else if (!doors[Door.Down].doorExist) // middle space not on a door
                         {
-                            #region create altar
+                            if (middleSpace.XTiles <= 8)
+                            {
+                                # region create cascade with S.MiddleWall
+                                int xStart = middleSpace.X0; //init value
+                                int xEnd   = middleSpace.X1; //init value
+                                for (int j = freeR.Y0; j <= freeR.Y1 + 1; j++)
+                                {
+                                    for (int i = xStart; i <= xEnd; i++)
+                                    {
+                                        if (Main.tile[i, j].WallType != Deco[S.CrookedWall].id)
+                                        {
+                                            WorldGen.KillWall(i, j);
+                                            WorldGen.PlaceWall(i, j, Deco[S.MiddleWall].id);
+                                            WorldGen.paintWall(i, j, (byte)Deco[S.MiddleWallPaint].id);
+                                        }
+                                    }
 
-                            #endregion
+                                    if ((xEnd - xStart) > 2) { xStart++; xEnd--; } // start with 6, then 4, then 2 tiles wide
+                                    if (j == freeR.Y1) // for the spot in the ground...
+                                    {
+                                        if (middleSpace.XTiles <= 6)  { xStart--; xEnd++; } // again 4 tiles wide, if there is no space for an altar
+                                    }
+                                }
+                                #endregion
+
+                                #region do something with the cascade
+                                if (Chance.Perc(50)) // rip open the floor so the cascade can flow into a basin
+                                {
+                                    y = freeR.Y1 + 1;
+                                    for (int i = middleSpace.XCenter - 1; i <= middleSpace.XCenter + 2; i++)
+                                    {
+                                        WorldGen.KillTile(i, y);
+                                        if (Deco[S.MiddleWall].id != WallID.Bone) WorldGen.PlaceLiquid(i, y, (byte)LiquidID.Lava, 255); //255 means tile is full of liquid
+                                    }
+                                }
+                                else if (Chance.Perc(50) && middleSpace.XTiles > 6) // small altar
+                                {
+                                    CreateAltar(new(middleSpace.X0 + 1, middleSpace.Y1 - 1 + windowYMargin, middleSpace.X1 - 1, middleSpace.Y1 + windowYMargin, "dummyString"));
+                                }
+                                else { } //nothing, just leave the cascade "on the ground" / in the background
+                                #endregion
+                            }
                         }
                     }
                     #endregion
@@ -1619,8 +1690,6 @@ namespace WorldGenMod.Structures.Underworld
             int platStyle = Deco[S.DoorPlat].style;
             byte platPaint = (byte)Deco[S.DoorPlatPaint].id;
 
-            List<Tile> test;
-
             foreach ((int x, int y) point in stairs.Keys.ToArray())
             {
                 values = stairs[point];
@@ -1634,49 +1703,6 @@ namespace WorldGenMod.Structures.Underworld
             CreateStairsFromData(poundList);
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
-        }
-
-        /// <summary>
-        /// Creating the stairs with the data from DecorateStairCase()
-        /// </summary>
-        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
-        public void CreateStairsFromData(List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> localList = null)
-        {
-            List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> workList = [];
-            bool doTileTypeCheck = true;
-
-            if (localList is not null)
-            {
-                workList = localList;
-                doTileTypeCheck = false; // local mode means first time placing the stairs. The check is only for "reconstructing" the stairs
-            }
-            else workList = PoundAfterSmoothWorld;
-
-
-            foreach ((int x, int y, int pounds, int type, int style, byte paint, bool echoCoating) point in workList)
-            {
-                if (doTileTypeCheck && Main.tile[point.x, point.y].TileType != point.type) continue; // in case any other mod overwrote my structure
-
-                WorldGen.KillTile(point.x, point.y);
-                WorldGen.PlaceTile(point.x, point.y, point.type, style: point.style);
-            }
-
-            foreach ((int x, int y, int pounds, int type, int style, byte paint, bool echoCoating) point in workList)
-            {
-                if (doTileTypeCheck && Main.tile[point.x, point.y].TileType != point.type) continue; // in case any other mod overwrote my structure
-
-                for (int i = 1; i <= point.pounds; i++)
-                {
-                    WorldGen.PoundPlatform(point.x, point.y);
-                }
-                
-                // refresh texture
-                WorldGen.ReplaceTile(point.x, point.y, (ushort)point.type, point.style);
-                WorldGen.paintTile(point.x, point.y, point.paint);
-
-                //apply echo coating
-                if (point.echoCoating) WorldGen.paintCoatTile(point.x, point.y, PaintCoatingID.Echo);
-            }
         }
 
         /// <summary>
@@ -1719,6 +1745,137 @@ namespace WorldGenMod.Structures.Underworld
 
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
+        }
+
+
+        /// <summary>
+        /// Creating the stairs with the data from DecorateStairCase()
+        /// </summary>
+        /// <param name="localList">Same structure as the global "PoundAfterSmoothWorld". Handing it over, uses this data instead of the global data to create the staircase</param>
+        public void CreateStairsFromData(List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> localList = null)
+        {
+            List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> workList = [];
+            bool doTileTypeCheck = true;
+
+            if (localList is not null)
+            {
+                workList = localList;
+                doTileTypeCheck = false; // local mode means first time placing the stairs. The check is only for "reconstructing" the stairs
+            }
+            else workList = PoundAfterSmoothWorld;
+
+
+            foreach ((int x, int y, int pounds, int type, int style, byte paint, bool echoCoating) point in workList)
+            {
+                if (doTileTypeCheck && Main.tile[point.x, point.y].TileType != point.type) continue; // in case any other mod overwrote my structure
+
+                WorldGen.KillTile(point.x, point.y);
+                WorldGen.PlaceTile(point.x, point.y, point.type, style: point.style);
+            }
+
+            foreach ((int x, int y, int pounds, int type, int style, byte paint, bool echoCoating) point in workList)
+            {
+                if (doTileTypeCheck && Main.tile[point.x, point.y].TileType != point.type) continue; // in case any other mod overwrote my structure
+
+                for (int i = 1; i <= point.pounds; i++)
+                {
+                    WorldGen.PoundPlatform(point.x, point.y);
+                }
+
+                // refresh texture
+                WorldGen.ReplaceTile(point.x, point.y, (ushort)point.type, point.style);
+                WorldGen.paintTile(point.x, point.y, point.paint);
+
+                //apply echo coating
+                if (point.echoCoating) WorldGen.paintCoatTile(point.x, point.y, PaintCoatingID.Echo);
+            }
+        }
+
+
+        /// <summary>
+        /// Creates an altar in the given space and with the defined deco elements.
+        /// <br/>All unpounded platforms get created directly, the pounded ones get packed into data like in "DecorateStaircase".
+        /// </summary>
+        /// <param name="altar">The rectangular area where the altar gets created (XTiles ist the altars width and YTiles is the altars height)</param>
+        public void CreateAltar(Rectangle2P altar)
+        {
+            Dictionary<(int x, int y), (int pounds, int type, int style, byte paint, bool echoCoat)> stairs = [];// local variant of the global "PoundAfterSmoothWorld" that is easier to alter
+
+            #region background
+            int backwallStart = altar.X0 + 1;
+            int backwallEnd = altar.X1 - 1;
+
+            for (int j = altar.Y1; j >= altar.Y0; j--)
+            {
+                for (int i = backwallStart; i <= backwallEnd; i++)
+                {
+                    WorldGen.KillWall(i, j);
+                    WorldGen.PlaceWall(i, j, Deco[S.AltarWall].id);
+                    WorldGen.paintWall(i, j, (byte)Deco[S.AltarWallPaint].id);
+                }
+                backwallStart++;
+                backwallEnd--;
+            }
+            #endregion
+
+            #region outer altar platforms
+            int platStart = altar.X0;
+            int platEnd = altar.X1;
+
+            for (int j = altar.Y1; j >= altar.Y0; j--)
+            {
+                stairs.Add((platStart, j), (1, Deco[S.AltarSteps].id, Deco[S.AltarSteps].style, (byte)Deco[S.AltarStepsPaint].id, false));
+                stairs.Add((platEnd, j),   (1, Deco[S.AltarSteps].id, Deco[S.AltarSteps].style, (byte)Deco[S.AltarStepsPaint].id, false));
+
+                if (j == altar.Y0)
+                {
+                    Func.AddPoundToStairTileFull(stairs, (platEnd, j), 1); // this needs a second pound or the pounding gets confused with the below "inner platform"
+                    for (int i = (platStart + 1); i <= (platEnd - 1); i++)
+                    {
+                        WorldGen.PlaceTile(i, j, Deco[S.AltarSteps].id, style: Deco[S.AltarSteps].style); //place the unpounded tiles at once, as they are not affecty by the "Smooth World" worldgen step
+                        WorldGen.paintTile(i, j, (byte)Deco[S.AltarStepsPaint].id);
+                    }
+                }
+                
+                platStart++;
+                platEnd--;
+            }
+            #endregion
+
+            #region inner (deco) altar platforms
+            platStart = altar.X0 + 2;
+            platEnd = altar.X1 - 2;
+
+            for (int j = altar.Y1; j >= altar.Y0; j--)
+            {
+                for (int i = platStart; i <= platEnd; i++)
+                {
+                    WorldGen.PlaceTile(i, j, Deco[S.AltarDeco].id, style: Deco[S.AltarDeco].style); //place the unpounded tiles at once, as they are not affecty by the "Smooth World" worldgen step
+                    WorldGen.paintTile(i, j, (byte)Deco[S.AltarDecoPaint].id);
+                }
+
+                platStart++;
+                platEnd--;
+            }
+            #endregion
+
+
+            #region transform local data into global form
+            List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> poundList = [];
+                               (int pounds, int type, int style, byte paint, bool echoCoat) values;
+
+            foreach ((int x, int y) point in stairs.Keys.ToArray())
+            {
+                values = stairs[point];
+
+                poundList.Add((point.x, point.y, values.pounds, values.type, values.style, values.paint, values.echoCoat));
+            }
+
+            PoundAfterSmoothWorld.AddRange(poundList);
+            #endregion
+
+            CreateStairsFromData(poundList);
+
         }
 
 
@@ -1836,11 +1993,19 @@ namespace WorldGenMod.Structures.Underworld
         public const String Bookcase = "Bookcase";
         public const String Sofa = "Sofa";
         public const String Clock = "Clock";
-        public const String Bed = "Bed";
-        public const String BedWallpaper = "BedWallpaper";
         public const String PaintingWallpaper = "PaintingWallpaper";
         public const String Dresser = "Dresser";
         public const String Piano = "Piano";
+
+        // altar
+        public const String MiddleWall = "MiddleWall";
+        public const String MiddleWallPaint = "MiddleWallPaint";
+        public const String AltarSteps = "AltarSteps";
+        public const String AltarStepsPaint = "AltarStepsPaint";
+        public const String AltarDeco = "AltarDeco";
+        public const String AltarDecoPaint = "AltarDecoPaint";
+        public const String AltarWall = "AltarWall";
+        public const String AltarWallPaint = "AltarWallPaint";
 
         public const int StyleHellstone = 0;
         public const int StyleTitanstone = 1;
