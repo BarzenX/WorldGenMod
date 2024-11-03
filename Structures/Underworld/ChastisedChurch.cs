@@ -200,6 +200,7 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.AltarDecoPaint, (0, 0));
             Deco.Add(S.AltarWall, (0, 0));
             Deco.Add(S.AltarWallPaint, (0, 0));
+            Deco.Add(S.RunicWallPaint, (0, 0));
         #endregion
 
         //choose a random style and define it's types
@@ -276,6 +277,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.AltarDecoPaint] = (0, 0);
                     Deco[S.AltarWall] = (WallID.Lava3Echo, 0);
                     Deco[S.AltarWallPaint] = (0, 0);
+                    Deco[S.RunicWallPaint] = (PaintID.RedPaint, 0);
                     break;
 
                 case S.StyleTitanstone: // Titanstone
@@ -341,6 +343,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.AltarDecoPaint] = (0, 0);
                     Deco[S.AltarWall] = (WallID.GoldBrick, 0);
                     Deco[S.AltarWallPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.RunicWallPaint] = (PaintID.RedPaint, 0);
                     break;
 
                 case S.StyleBlueBrick: //TODO: look for another third design. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
@@ -400,12 +403,14 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.MiddleWall] = (WallID.Bone, 0);
                     Deco[S.MiddleWallPaint] = (PaintID.RedPaint, 0);
                     Deco[S.AltarSteps] = (TileID.Platforms, 10); //Brass Shelf
+                    if (subStyle) Deco[S.AltarSteps] = (TileID.Platforms, 22); //Skyware
                     Deco[S.AltarStepsPaint] = (0, 0);
                     Deco[S.AltarDeco] = (TileID.Platforms, 10); //Brass Shelf
-                    if (subStyle) Deco[S.AltarSteps] = (TileID.Platforms, 22); //Skyware
+                    if (subStyle) Deco[S.AltarDeco] = (TileID.Platforms, 22); //Skyware
                     Deco[S.AltarDecoPaint] = (0, 0);
                     Deco[S.AltarWall] = (WallID.DemoniteBrick, 0);
                     Deco[S.AltarWallPaint] = (0, 0);
+                    Deco[S.RunicWallPaint] = (0, 0);
                     break;
             }
         }
@@ -1038,6 +1043,7 @@ namespace WorldGenMod.Structures.Underworld
             // init variables
             bool placed, placed2;
             (bool success, int x, int y) placeResult, placeResult2;
+            (bool success, Rectangle2P altar) altarResult;
             Rectangle2P area1, area2, area3, noBlock = Rectangle2P.Empty; // for creating areas for random placement
             List<(int x, int y)> rememberPos = []; // for remembering positions
             List<(ushort TileID, int style, byte chance)> randomItems = [], randomItems2 = []; // for random item placement
@@ -1200,6 +1206,7 @@ namespace WorldGenMod.Structures.Underworld
                     randomItems.Clear();
                     randomItems.Add((TileID.Statues, 0,  95));//Armor
                     randomItems.Add((TileID.Statues, 1,  95));//Angel
+                    randomItems.Add((TileID.Statues, 10, 95));//Skeleton
                     randomItems.Add((TileID.Statues, 11, 95));//Reaper
                     randomItems.Add((TileID.Statues, 13, 95));//Imp
                     randomItems.Add((TileID.Statues, 14, 95));//Gargoyle
@@ -1209,6 +1216,7 @@ namespace WorldGenMod.Structures.Underworld
                     randomItems.Add((TileID.Statues, 35, 95));//Eyeball
                     randomItems.Add((TileID.Statues, 63, 95));//Wall Creeper
                     randomItems.Add((TileID.Statues, 65, 95));//Drippler
+                    randomItems.Add((TileID.Statues, 67, 95));//Bone Skeleton
                     randomItems.Add((TileID.Statues, 71, 95));//Pigron
                     randomItems.Add((TileID.Statues, 74, 95));//Armed Zombie
                     randomItems.Add((TileID.Statues, 75, 95));//Blood Zombie
@@ -1516,7 +1524,7 @@ namespace WorldGenMod.Structures.Underworld
                                 }
                                 else if (Chance.Perc(60) && middleSpace.XTiles > 6) // small altar
                                 {
-                                    CreateAltar(new(middleSpace.X0 + 1, freeR.Y1 - 1, middleSpace.X1 - 1, freeR.Y1, "dummyString"));
+                                    altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 2);
 
                                     randomItems.Clear();
                                     randomItems.Add((TileID.WaterFountain, 4, 100)); //Corrupt Water Fountain
@@ -1524,18 +1532,83 @@ namespace WorldGenMod.Structures.Underworld
                                     randomItems.Add((TileID.WaterFountain, 7, 100)); //Blood Water Fountain
                                     randomItem = randomItems[WorldGen.genRand.Next(randomItems.Count)];
 
-                                    WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 2, randomItem.id, style: randomItem.style);
+                                    if (altarResult.success) WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 2, randomItem.id, style: randomItem.style);
                                 }
                                 else { } //nothing, just leave the cascade "on the ground" / in the background
                                 #endregion
                             }
                             #endregion
 
+                            #region middleSpace.XTiles <= 10
+                            else if (middleSpace.XTiles <= 10)
+                            {
+                                altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 4);
+
+                                if (altarResult.success)
+                                {
+                                    if (Chance.Perc(70)) // place statues
+                                    {
+                                        randomItems.Clear();
+                                        switch (WorldGen.genRand.Next(3)) // create pairs
+                                        {
+                                            case 0:
+                                                randomItems.Add((TileID.Statues, 40, 100)); //King
+                                                randomItems.Add((TileID.Statues, 41, 100)); //Queen
+                                                break;
+
+                                            case 1:
+                                                randomItems.Add((TileID.Statues, 66, 100)); //Wraith --> statue needs to be turned
+                                                randomItems.Add((TileID.Statues, 69, 100)); //Medusa
+                                                break;
+
+                                            case 2:
+                                                randomItems.Add((TileID.Statues, 73, 100)); //Golem --> statue needs to be turned
+                                                randomItems.Add((TileID.Statues, 12, 100)); //Woman
+                                                break;
+                                        }
+
+                                        randomItem = randomItems[0];
+                                        placed = WorldGen.PlaceTile(middleSpace.XCenter - 1, altarResult.altar.Y0 - 1, randomItem.id, style: randomItem.style);
+                                        if (placed && (randomItem.style == 66 || randomItem.style == 73)) Func.StatueTurn(middleSpace.XCenter - 1, altarResult.altar.Y0 - 1);
+
+                                        randomItem = randomItems[1];
+                                        WorldGen.PlaceTile(middleSpace.XCenter + 1, altarResult.altar.Y0 - 1, randomItem.id, style: randomItem.style);
+                                    }
+                                    else // or paintings
+                                    {
+                                        randomItems.Clear();
+                                        randomItems.Add((TileID.Painting2X3, 2, 100)); //Dark Soul Reaper
+                                        randomItems.Add((TileID.Painting2X3, 4, 100)); //Trapped Ghost
+                                        randomItems.Add((TileID.Painting2X3, 11, 100)); //Wicked Undead
+                                        randomItems.Add((TileID.Painting2X3, 20, 100)); //Strange Dead Fellows
+                                        randomItems.Add((TileID.Painting2X3, 21, 100)); //Secrets
+                                        randomItems.Add((TileID.Painting2X3, 24, 100)); //The Werewolf
+                                        randomItems.Add((TileID.Painting2X3, 25, 100)); //Blessing from the Heavens
+
+                                        randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count));
+                                        WorldGen.PlaceTile(middleSpace.XCenter - 1, altarResult.altar.Y0 - 2, randomItem.id, style: randomItem.style);
+
+                                        randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count));
+                                        WorldGen.PlaceTile(middleSpace.XCenter + 1, altarResult.altar.Y0 - 2, randomItem.id, style: randomItem.style);
+                                    }
+                                    
+                                }
+
+                                //place runic wall
+                                Func.ReplaceWallArea(new(middleSpace.X0 + 2, freeR.Y1 - 3, 1, 2), WallID.ArcaneRunes, (byte)Deco[S.RunicWallPaint].id, true, 50, Deco[S.CrookedWall].id);
+                                Func.ReplaceWallArea(new(middleSpace.X1 - 2, freeR.Y1 - 3, 1, 2), WallID.ArcaneRunes, (byte)Deco[S.RunicWallPaint].id, true, 50, Deco[S.CrookedWall].id);
+
+                                for (int j = freeR.Y1 - 5; j >= middleSpace.Y0; j -= 2)
+                                {
+                                    Func.ReplaceWallArea(new(middleSpace.X0 + 2, j, 6, 1), WallID.ArcaneRunes, (byte)Deco[S.RunicWallPaint].id, true, 50, Deco[S.CrookedWall].id);
+                                }
+                            }
+                            #endregion
+
                             #region middleSpace.XTiles <= 18
                             if (middleSpace.XTiles <= 18)
                             {
-                                int height = ((middleSpace.X1 - 1) - (middleSpace.X0 + 1) - 4) / 2;
-                                if (height > 1) CreateAltar(new(middleSpace.X0 + 1, freeR.Y1 - height, middleSpace.X1 - 1, freeR.Y1, "dummyString"));
+                                //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
                             }
                             #endregion
                         }
@@ -1832,13 +1905,21 @@ namespace WorldGenMod.Structures.Underworld
 
 
         /// <summary>
-        /// Creates an altar in the given space and with the defined deco elements.
+        /// Creates an altar made out of platforms in the given space and with the defined deco elements in the global "Deco" field.
         /// <br/>All unpounded platforms get created directly, the pounded ones get packed into data like in "DecorateStaircase".
         /// </summary>
-        /// <param name="altar">The rectangular area where the altar gets created (XTiles ist the altars width and YTiles is the altars height)</param>
-        public void CreateAltar(Rectangle2P altar)
+        /// <param name="xAltarStart">The x-coordinate where the altar shall start</param>
+        /// <param name="xAltarEnd">The x-coordinate where the altar shall end</param>
+        /// <param name="topWidth">The width of the altars flat surface (where items can be placed); 2 = 2 flat tiles and 1 "stairs" tile on each end....so technically 4 Tiles</param>
+        public (bool success, Rectangle2P altar) CreateAltar(int xAltarStart, int xAltarEnd, int yAltarFloor, int topWidth)
         {
             Dictionary<(int x, int y), (int pounds, int type, int style, byte paint, bool echoCoat)> stairs = [];// local variant of the global "PoundAfterSmoothWorld" that is easier to alter
+
+            int altarXTiles = (xAltarEnd - xAltarStart) + 1;
+            int altarYDiff = (altarXTiles - (topWidth + 2)) / 2;
+            if (altarYDiff < 1) return (false, Rectangle2P.Empty); //request cannot be fulfilled
+
+            Rectangle2P altar = new (xAltarStart, (yAltarFloor - altarYDiff), xAltarEnd, yAltarFloor, "dummyString"); // XTiles is the altars width and YTiles is the altars height
 
             #region background
             int backwallStart = altar.X0 + 1;
@@ -1857,6 +1938,7 @@ namespace WorldGenMod.Structures.Underworld
             }
             #endregion
 
+
             #region outer altar platforms
             int platStart = altar.X0;
             int platEnd = altar.X1;
@@ -1864,11 +1946,12 @@ namespace WorldGenMod.Structures.Underworld
             for (int j = altar.Y1; j >= altar.Y0; j--)
             {
                 stairs.Add((platStart, j), (1, Deco[S.AltarSteps].id, Deco[S.AltarSteps].style, (byte)Deco[S.AltarStepsPaint].id, false));
-                stairs.Add((platEnd, j),   (1, Deco[S.AltarSteps].id, Deco[S.AltarSteps].style, (byte)Deco[S.AltarStepsPaint].id, false));
+                stairs.Add((platEnd, j),   (2, Deco[S.AltarSteps].id, Deco[S.AltarSteps].style, (byte)Deco[S.AltarStepsPaint].id, false));
+
+                if (j == altar.Y1) Func.AddPoundToStairTileFull(stairs, (platEnd, j), -1); // this needs just one pound because there is no "inner platform" in the line below it...pounding is strange
 
                 if (j == altar.Y0)
                 {
-                    Func.AddPoundToStairTileFull(stairs, (platEnd, j), 1); // this needs a second pound or the pounding gets confused with the below "inner platform"
                     for (int i = (platStart + 1); i <= (platEnd - 1); i++)
                     {
                         WorldGen.PlaceTile(i, j, Deco[S.AltarSteps].id, style: Deco[S.AltarSteps].style); //place the unpounded tiles at once, as they are not affecty by the "Smooth World" worldgen step
@@ -1880,6 +1963,7 @@ namespace WorldGenMod.Structures.Underworld
                 platEnd--;
             }
             #endregion
+
 
             #region inner (deco) altar platforms
             platStart = altar.X0 + 1;
@@ -1905,7 +1989,7 @@ namespace WorldGenMod.Structures.Underworld
                     case 13:
                     case 15: // odd widths not implemented, rooms are always even X-tiled
                         break;
-                    case 2: // not needed until now
+                    case 2: // not needed until now because the top of the altar is 2 XTiles wide
                         break;
 
                     case 4:
@@ -1915,47 +1999,26 @@ namespace WorldGenMod.Structures.Underworld
                         break;
 
                     case 6:
-                        if (Chance.Simple())
-                        {
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.MirrorSteps();
-                        }
-                        else
-                        {
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.MirrorSteps();
-                        }
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                        automat.MirrorSteps();
                         break;
 
                     case 8:
-                        if (Chance.Simple())
-                        {
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.MirrorSteps();
-                        }
-                        else
-                        {
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.MirrorSteps();
-                        }
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                        automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                        automat.MirrorSteps();
                         break;
 
                     case 10:
                         if (Chance.Simple())
                         {
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.MirrorSteps();
@@ -1978,7 +2041,7 @@ namespace WorldGenMod.Structures.Underworld
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.MirrorSteps();
                         }
@@ -1988,13 +2051,15 @@ namespace WorldGenMod.Structures.Underworld
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.MirrorSteps();
                         }
                         break;
 
                     case 14:
+                        if (Chance.Simple())
+                        {
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
@@ -2003,18 +2068,45 @@ namespace WorldGenMod.Structures.Underworld
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.MirrorSteps();
+                        }
+                        else
+                        {
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.MirrorSteps();
+                        }
                         break;
 
                     case 16:
+                        if (Chance.Simple())
+                        {
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
-                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
                             automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
                             automat.MirrorSteps();
+                        }
+                        else
+                        {
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Tile, item: Deco[S.AltarDeco].id, Deco[S.AltarDeco].style, size: (1, 1), toAnchor: (0, 0), chance: 100, add: []));
+                            automat.Steps.Add((cmd: (int)LineAutomat.Cmds.Space, 0, 0, (1, 1), (0, 0), 0, []));
+                            automat.MirrorSteps();
+                        }
                         break;
 
 
@@ -2032,7 +2124,7 @@ namespace WorldGenMod.Structures.Underworld
 
             #region transform local data into global form
             List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> poundList = [];
-                               (int pounds, int type, int style, byte paint, bool echoCoat) values;
+            (int pounds, int type, int style, byte paint, bool echoCoat) values;
 
             foreach ((int x, int y) point in stairs.Keys.ToArray())
             {
@@ -2046,6 +2138,7 @@ namespace WorldGenMod.Structures.Underworld
 
             CreateStairsFromData(poundList);
 
+            return (true, altar);
         }
 
 
@@ -2176,6 +2269,8 @@ namespace WorldGenMod.Structures.Underworld
         public const String AltarDecoPaint = "AltarDecoPaint";
         public const String AltarWall = "AltarWall";
         public const String AltarWallPaint = "AltarWallPaint";
+
+        public const String RunicWallPaint = "RunicWallPaint";
 
         public const int StyleHellstone = 0;
         public const int StyleTitanstone = 1;

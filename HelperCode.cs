@@ -1152,17 +1152,34 @@ namespace WorldGenMod
         /// <param name="area">The to be filled area</param>
         /// <param name="wallType">The ID of the to be placed wall</param>
         /// <param name="paint">The ID of the paint that shall be applied to the wall (optional)</param>
-        public static bool ReplaceWallArea(Rectangle2P area, int wallType, byte paint = 0)
+        /// <param name="placeIfNoWall">Option to choose if wall shall be placed on Tiles where there is no wall present (to replace)</param>
+        /// <param name="chance">Option to state a chance roll that has to be passed to replace a wall</param>
+        /// <param name="chanceWithType">Option to state if the chance applies to all types or only to the stated one (0 = chance applies to all wall types)</param>
+        public static bool ReplaceWallArea(Rectangle2P area, int wallType, byte paint = 0, bool placeIfNoWall = false, int chance = 100, int chanceWithType = 0)
         {
             // pre-checks
             if (wallType <= 0) return false;
 
+            bool chanceOk;
             bool paintwall = paint > 0;
             for (int i = area.X0; i <= area.X1; i++)
             {
                 for (int j = area.Y0; j <= area.Y1; j++)
                 {
-                    if (Main.tile[i, j].WallType > 0)
+                    if (chance == 100) chanceOk = true;
+                    else if (chanceWithType == 0)
+                    {
+                        if (Chance.Perc(chance)) chanceOk = true;
+                        else chanceOk = false;
+                    }
+                    else if (chanceWithType > 0)
+                    {
+                        if (Main.tile[i, j].WallType == chanceWithType) chanceOk = Chance.Perc(chance);
+                        else chanceOk = true;
+                    }
+                    else chanceOk = false;
+
+                    if ((Main.tile[i, j].WallType > 0 || placeIfNoWall) && chanceOk)
                     {
                         WorldGen.KillWall(i, j);
                         WorldGen.PlaceWall(i, j, wallType);
