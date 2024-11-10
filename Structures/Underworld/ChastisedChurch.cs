@@ -266,7 +266,7 @@ namespace WorldGenMod.Structures.Underworld
                     if (Chance.Simple()) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
                     Deco[S.PaintingWallpaper] = (WallID.SparkleStoneWallpaper, 0); //*
                     Deco[S.Dresser] = (TileID.Dressers, 30); //* Frozen
-                    Deco[S.Piano] = (TileID.Pianos, 7); //* Frozen
+                    Deco[S.Piano] = (TileID.Pianos, 15); // Obsidian
 
                     //altar
                     Deco[S.MiddleWall] = (WallID.Lavafall, 0);
@@ -332,7 +332,7 @@ namespace WorldGenMod.Structures.Underworld
                     if (subStyle) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
                     Deco[S.PaintingWallpaper] = (WallID.LivingWood, 0); //*
                     Deco[S.Dresser] = (TileID.Dressers, 18); //* Boreal
-                    Deco[S.Piano] = (TileID.Pianos, 23); //* Boreal
+                    Deco[S.Piano] = (TileID.Pianos, 4); // Shadewood
 
                     //altar
                     Deco[S.MiddleWall] = (WallID.Lavafall, 0);
@@ -1486,7 +1486,7 @@ namespace WorldGenMod.Structures.Underworld
 
                         else if (!doors[Door.Down].doorExist) // middle space not on a door
                         {
-                            #region middleSpace.XTiles <= 8
+                            #region XTiles <= 8 -> Altar with middle line and fountain
                             if (middleSpace.XTiles <= 8)
                             {
                                 # region create cascade with S.MiddleWall
@@ -1539,7 +1539,7 @@ namespace WorldGenMod.Structures.Underworld
                             }
                             #endregion
 
-                            #region middleSpace.XTiles <= 10
+                            #region XTiles <= 10 -> Altar with Statues or Paintings and RunicWall
                             else if (middleSpace.XTiles <= 10)
                             {
                                 altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 4);
@@ -1605,8 +1605,62 @@ namespace WorldGenMod.Structures.Underworld
                             }
                             #endregion
 
+                            #region XTiles <= 12 -> Altar with pianos / campfires and big window
+                            else if (middleSpace.XTiles <= 12)
+                            {
+                                if (freeR.YTiles > 15)
+                                {
+                                    if (freeR.YTiles < 18) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3,                     1, true);
+                                    else                   CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 1, true);
+
+                                    // create lavafall on top of the flaming "+"
+                                    x = freeR.XCenter;
+                                    y = freeR.Y0 - 1;
+                                    WorldGen.KillTile(x    , y);
+                                    WorldGen.KillTile(x + 1, y);
+                                    WorldGen.KillTile(x    , y - 1);
+                                    WorldGen.KillTile(x + 1, y - 1);
+
+                                    x = freeR.XCenter - 2;
+                                    y = freeR.Y0 - 2;
+                                    WorldGen.KillTile(x, y);
+                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 255);
+                                    WorldGen.PoundTile(x + 1, y);
+
+                                    x = freeR.XCenter + 3;
+                                    y = freeR.Y0 - 2;
+                                    WorldGen.KillTile(x, y);
+                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 255);
+                                    WorldGen.PoundTile(x - 1, y);
+
+                                    // add some nice "v" spike to the middle
+                                    x = freeR.XCenter;
+                                    y = freeR.Y0 - 3;
+                                    Func.SlopeTile(x, y, (int)Func.SlopeVal.BotLeft);
+
+                                    x = freeR.XCenter + 1;
+                                    y = freeR.Y0 - 3;
+                                    Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
+
+
+                                    altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 6);
+
+                                    if (altarResult.success)
+                                    {
+                                        y = altarResult.altar.Y0 - 1;
+                                        WorldGen.PlaceTile(freeR.XCenter - 1, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
+                                        WorldGen.PlaceTile(freeR.XCenter + 2, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
+                                    }
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                            #endregion
+
                             #region middleSpace.XTiles <= 18
-                            if (middleSpace.XTiles <= 18)
+                            else if (middleSpace.XTiles <= 18)
                             {
                                 //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
                             }
@@ -2139,6 +2193,131 @@ namespace WorldGenMod.Structures.Underworld
             CreateStairsFromData(poundList);
 
             return (true, altar);
+        }
+
+
+        /// <summary>
+        /// Creates a flying "+" shaped background wall, surrounded by spikes. The center is a 2x2 block and the elongation of the "+" is a parameter.
+        /// <br/>Hint: by now only for even-Y-Tiled-rooms
+        /// </summary>
+        /// <param name="xTopLeftCenter">The left x-coordinate of the 2x2 tiles center block</param>
+        /// <param name="yTopLeftCenter">The top y-coordinate of the 2x2 tiles center block</param>
+        /// <param name="plusLength">The tiles that the "+" shaped background wall shall strech away from the 2x2 center block to each side.</param>
+        /// <param name="livingFlames">If the "+" shall be filled with and the upper side of the spikes shall be covered in living flames</param>
+        public (bool success, Rectangle2P spikeRect) CreateFlamingPlus(int xTopLeftCenter, int yTopLeftCenter, int plusLength, bool livingFlames = false)
+        {
+            if (plusLength < 0) return (false, Rectangle2P.Empty); // invalid parameter
+
+            int plusWidth = 2; // the width of the two "plus beams" -> meaning the vertical beam is 2 tiles wide and the horizontal one is 2 tiles high
+
+            Rectangle2P coreRect = new(xTopLeftCenter, yTopLeftCenter, plusWidth, plusWidth);
+
+            Rectangle2P plusRect = new(coreRect.X0 - plusLength, coreRect.Y0 - plusLength, coreRect.X1 + plusLength, coreRect.Y1 + plusLength, "dummyString");
+            
+            Rectangle2P spikeRect = new(plusRect.X0 - 2,         plusRect.Y0 - 2,          plusRect.X1 + 2,          plusRect.Y1 + 2, "dummyString");
+
+            #region create the +
+            for (int i = plusRect.X0; i <= plusRect.X1; i++)
+            {
+                for (int j = coreRect.Y0; j <= coreRect.Y1; j++)
+                {
+                    WorldGen.KillWall(i, j);
+                    WorldGen.PlaceWall(i, j , Deco[S.WindowWall].id);
+
+                    if (livingFlames) WorldGen.PlaceTile(i, j, TileID.LivingFire);
+                }
+            }
+
+            for (int j = plusRect.Y0; j <= plusRect.Y1; j++)
+            {
+                for (int i = coreRect.X0; i <= coreRect.X1; i++)
+                {
+                    if (!coreRect.Contains(i, j))
+                    {
+                        WorldGen.KillWall(i, j);
+                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall].id);
+
+                        if (livingFlames) WorldGen.PlaceTile(i, j, TileID.LivingFire);
+                    }
+                }
+            }
+            #endregion
+
+            #region add the spikes
+
+            // do the outmost spikes first
+            for (int i = spikeRect.X0; i <= spikeRect.X1; i++)
+            {
+                for (int j = coreRect.Y0; j <= coreRect.Y1; j++)
+                {
+                    if (!plusRect.Contains(i, j))
+                    {
+                        WorldGen.PlaceTile(i, j, TileID.Spikes);
+                    }
+                }
+            }
+            for (int j = spikeRect.Y0; j <= spikeRect.Y1; j++)
+            {
+                for (int i = coreRect.X0; i <= coreRect.X1; i++)
+                {
+                    if (!plusRect.Contains(i, j))
+                    {
+                        WorldGen.PlaceTile(i, j, TileID.Spikes);
+                    }
+                }
+            }
+
+            // do the surrounding spikes next
+            for (int i = plusRect.X0 - 1; i <= plusRect.X1 + 1; i++)
+            {
+                for (int j = coreRect.Y0 - 1; j <= coreRect.Y1 + 1; j++)
+                {
+                    if (i < coreRect.X0 || i > coreRect.X1)
+                    {
+                        WorldGen.PlaceTile(i, j, TileID.Spikes);
+                    }
+                }
+            }
+            for (int j = plusRect.Y0 - 1; j <= plusRect.Y1 + 1; j++)
+            {
+                for (int i = coreRect.X0 - 1; i <= coreRect.X1 + 1; i++)
+                {
+                    if (j < coreRect.Y0 || j > coreRect.Y1)
+                    {
+                        WorldGen.PlaceTile(i, j, TileID.Spikes);
+                    }
+                }
+            }
+            #endregion
+
+            #region living flames on top of the spikes
+            if (livingFlames)
+            {
+                int xAct, yAct;
+
+                // flames on the left side of the "+"
+                xAct = spikeRect.X0;
+                yAct = coreRect.Y0 - 1;
+                while (xAct <= coreRect.XCenter)
+                {
+                    WorldGen.PlaceTile(xAct, yAct, TileID.LivingFire);
+                    if (Main.tile[xAct + 1, yAct].TileType == TileID.Spikes) yAct--;
+                    else xAct++;
+                }
+
+                // flames on the right side of the "+"
+                xAct = spikeRect.X1;
+                yAct = coreRect.Y0 - 1;
+                while (xAct >= coreRect.XCenter + 1)
+                {
+                    WorldGen.PlaceTile(xAct, yAct, TileID.LivingFire);
+                    if (Main.tile[xAct - 1, yAct].TileType == TileID.Spikes) yAct--;
+                    else xAct--;
+                }
+            }
+            #endregion
+
+            return (true, spikeRect);
         }
 
 
