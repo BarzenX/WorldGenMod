@@ -264,7 +264,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Sofa] = (TileID.Benches, 5); // Shade Wood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 21); // Shadewood
                     if (Chance.Simple()) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
-                    Deco[S.PaintingWallpaper] = (WallID.SparkleStoneWallpaper, 0); //*
+                    Deco[S.PaintingWallpaper] = (WallID.Spider, 0); // Spider Nest Wall
                     Deco[S.Dresser] = (TileID.Dressers, 30); //* Frozen
                     Deco[S.Piano] = (TileID.Pianos, 15); // Obsidian
 
@@ -330,7 +330,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Sofa] = (TileID.Benches, 5); // Shadewood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 21); // Shadewood
                     if (subStyle) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
-                    Deco[S.PaintingWallpaper] = (WallID.LivingWood, 0); //*
+                    Deco[S.PaintingWallpaper] = (WallID.CrimstoneEcho, 0); // Crimstone Wall
                     Deco[S.Dresser] = (TileID.Dressers, 18); //* Boreal
                     Deco[S.Piano] = (TileID.Pianos, 4); // Shadewood
 
@@ -394,7 +394,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Bookcase] = (TileID.Bookcases, 7); // Ebonwood
                     Deco[S.Sofa] = (TileID.Benches, 2); // Ebonwood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 10); //* Ebonwood
-                    Deco[S.PaintingWallpaper] = (WallID.BluegreenWallpaper, 0); //*
+                    Deco[S.PaintingWallpaper] = (WallID.BluegreenWallpaper, 0);
                     Deco[S.Dresser] = (TileID.Dressers, 1); //* Ebonwood
                     Deco[S.Piano] = (TileID.Pianos, 1); //* Ebonwood
                     //TODO: decide if everything obsidian / demon or ebonwood!
@@ -1608,29 +1608,29 @@ namespace WorldGenMod.Structures.Underworld
                             #region XTiles <= 12 -> Altar with pianos / campfires and big window
                             else if (middleSpace.XTiles <= 12)
                             {
-                                if (freeR.YTiles > 15)
+                                if (freeR.YTiles > 15) // enough space for the flaming "+"
                                 {
-                                    if (freeR.YTiles < 18) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3,                     1, true);
-                                    else                   CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 1, true);
+                                    if (freeR.YTiles < 18) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 1, true);
+                                    else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 1, true);
 
                                     // create lavafall on top of the flaming "+"
                                     x = freeR.XCenter;
                                     y = freeR.Y0 - 1;
-                                    WorldGen.KillTile(x    , y);
+                                    WorldGen.KillTile(x, y);
                                     WorldGen.KillTile(x + 1, y);
-                                    WorldGen.KillTile(x    , y - 1);
+                                    WorldGen.KillTile(x, y - 1);
                                     WorldGen.KillTile(x + 1, y - 1);
 
                                     x = freeR.XCenter - 2;
                                     y = freeR.Y0 - 2;
                                     WorldGen.KillTile(x, y);
-                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 255);
+                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
                                     WorldGen.PoundTile(x + 1, y);
 
                                     x = freeR.XCenter + 3;
                                     y = freeR.Y0 - 2;
                                     WorldGen.KillTile(x, y);
-                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 255);
+                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
                                     WorldGen.PoundTile(x - 1, y);
 
                                     // add some nice "v" spike to the middle
@@ -1652,15 +1652,66 @@ namespace WorldGenMod.Structures.Underworld
                                         WorldGen.PlaceTile(freeR.XCenter + 2, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
                                     }
                                 }
-                                else
+                                else // place a painting and a frame
                                 {
-
+                                    Func.ReplaceWallArea(new(middleSpace.X0 + 2, middleSpace.YCenter - 2, middleSpace.XTiles - 4, 6), Deco[S.PaintingWallpaper].id, chance: 60, chanceWithType: Deco[S.CrookedWall].id);
+                                    Place6x4PaintingByStyle(new(middleSpace.X0 + 3, middleSpace.YCenter - 1, 6, 4), Deco[S.StyleSave].id);
                                 }
                             }
                             #endregion
 
-                            #region middleSpace.XTiles <= 18
-                            else if (middleSpace.XTiles <= 18)
+                            #region middleSpace.XTiles <= 14
+                            else if (middleSpace.XTiles <= 14)
+                            {
+                                if (freeR.YTiles > 17) // enough space for the flaming "+"
+                                {
+                                    if (freeR.YTiles < 20) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 2, true);
+                                    else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 2, true);
+
+                                    // create lavafall on top of the flaming "+"
+                                    x = freeR.XCenter;
+                                    y = freeR.Y0 - 1;
+                                    WorldGen.KillTile(x, y);
+                                    WorldGen.KillTile(x + 1, y);
+                                    WorldGen.KillTile(x, y - 1);
+                                    WorldGen.KillTile(x + 1, y - 1);
+
+                                    x = freeR.XCenter - 2;
+                                    y = freeR.Y0 - 2;
+                                    WorldGen.KillTile(x, y);
+                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
+                                    WorldGen.PoundTile(x + 1, y);
+
+                                    x = freeR.XCenter + 3;
+                                    y = freeR.Y0 - 2;
+                                    WorldGen.KillTile(x, y);
+                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
+                                    WorldGen.PoundTile(x - 1, y);
+
+                                    // add some nice "v" spike to the middle
+                                    x = freeR.XCenter;
+                                    y = freeR.Y0 - 3;
+                                    Func.SlopeTile(x, y, (int)Func.SlopeVal.BotLeft);
+
+                                    x = freeR.XCenter + 1;
+                                    y = freeR.Y0 - 3;
+                                    Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
+
+
+                                    altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
+
+                                    if (altarResult.success)
+                                    {
+                                        y = altarResult.altar.Y0 - 1;
+                                        WorldGen.PlaceTile(freeR.XCenter - 2, y, TileID.Campfire, style: 2);
+                                        WorldGen.PlaceTile(freeR.XCenter + 2, y, TileID.Campfire, style: 2);
+                                    }
+                                }
+                            }
+                            #endregion
+
+                            #region middleSpace.XTiles <= 20
+                            else if (middleSpace.XTiles <= 20)
                             {
                                 //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
                             }
@@ -2394,6 +2445,397 @@ namespace WorldGenMod.Structures.Underworld
             chest.item[nextItem].stack = WorldGen.genRand.Next(1, 3);
             if (style == 4) chest.item[nextItem].stack = WorldGen.genRand.Next(6, 20);
         }
+
+
+
+
+
+        /// <summary>
+        /// Tries to place a painting in the given area. It tries to place paintings from tall to flat (6x4 -> 3x3 -> 2x3 -> 3x2)
+        /// <br/>
+        /// <br/> ATTENTION: does not pre-check if the final placement position is empty. Best make sure that the whole area is free.
+        /// </summary>
+        /// <param name="area">The area where the painting can be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeMode">The placement method: 0 = centered in x and y, 1 = random x and centered y, 2 = centered x and random y, 3 = random x and y</param>
+        /// <param name="allowType">Allow types of paintings: (binary selection) 0= no painting, 1=3x2, 2=2x3, 4=3x3, 8=6x4, 15=all types</param>
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        /// <param name="centerErrorX">If x-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force left position, 0 = random, 1 = force right position, -88 = abort function</param>
+        /// <param name="centerErrorX">If y-placeMode is "centered" and the painting placement results in an impossible symmetrical centering do: -1 = force upper position, 0 = random, 1 = force lower position, -88 = abort function</param>
+
+        /// <returns><br/>Tupel item1 <b>success</b>: true if placement was successful
+        ///          <br/>Tupel item2 <b>paintingArea</b>: if success = true, the covered area of the painting, else Rectangle2P.Empty
+        ///          <br/>Tupel item3 <b>paintingType</b>: contains the placed / attempted to place painting type (1 = 3x2, 2 = 2x3, 4 = 3x3, 8 = 6x4), else 0
+        ///          <br/>Tupel item4 <b>failReason</b>: if success = false, contains the reason for failing 
+        ///          <br/> --> (1 = WorldGen.PlaceTile failed(), 2 = aborted because of centerErrorX, 3 = aborted because of centerErrorY, 4 = every single painting Chance roll failed), else 0</returns>
+        ///          
+        public (bool success, Rectangle2P paintingArea, int paintingType, int failReason) PlacePainting(Rectangle2P area, int style, int placeMode = 0, byte allowType = 15, bool placeWall = false, int centerErrorX = 0, int centerErrorY = -1)
+        {
+            bool allow3x2 = ((allowType & 1) != 0) && (area.XTiles >= 3) && (area.YTiles >= 2);
+            bool allow2x3 = ((allowType & 2) != 0) && (area.XTiles >= 2) && (area.YTiles >= 3);
+            bool allow3x3 = ((allowType & 4) != 0) && (area.XTiles >= 3) && (area.YTiles >= 3);
+            bool allow6x4 = ((allowType & 8) != 0) && (area.XTiles >= 6) && (area.YTiles >= 4);
+
+            bool centX = (placeMode == 0) || (placeMode == 2); // painting centered in x direction
+            bool centY = (placeMode == 0) || (placeMode == 1); // painting centered in y direction
+
+            bool roomEvenX = (area.XTiles % 2) == 0;
+            bool roomEvenY = (area.YTiles % 2) == 0;
+
+            int randAddX, randAddY;// 3 XTiles cannot be put centered symmetrically in an even XTiles room, and 2 XTiles cannot in an uneven XTiles room,
+                                   // so these values are for alternating betweend the two "out-center" positions
+
+            // prepare random positioning values
+            if (centerErrorX == -1) randAddX = 0; // force left position
+            else if (centerErrorX == 1) randAddX = 1; // force right position
+            else randAddX = WorldGen.genRand.Next(2);
+            bool abortCenterX = centerErrorX == -88;
+
+            if (centerErrorY == -1) randAddY = 0; // force upper position
+            else if (centerErrorY == 1) randAddY = 1; // force lower position
+            else randAddY = WorldGen.genRand.Next(2);
+            bool abortCenterY = centerErrorY == -88;
+
+            // prepare local output variables
+            bool success = false;
+            Rectangle2P paintingArea = Rectangle2P.Empty;
+            int paintingType = 0;
+            int failReason = 0;
+
+            //painting
+            int x = area.X0, y = area.Y0; // init
+
+            if (allow6x4 && Chance.Simple())
+            {
+                paintingType = 8;
+
+                if (!roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
+                if (centX)
+                {
+                    x = area.XCenter - 2; // even room
+                    if (!roomEvenX) x -= (1 - randAddX);
+                }
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 6) + 1);
+
+                if (centY)
+                {
+                    y = area.YCenter - 1; // even room
+                    if (!roomEvenY) y -= (1 - randAddY);
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 4) + 1);
+
+                paintingArea = new(x, y, 6, 4);
+                success = Place6x4PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
+            }
+
+            else if (allow3x3 && Chance.Simple())
+            {
+                paintingType = 4;
+
+                if (roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
+                if (centX)
+                {
+                    x = area.XCenter - 1; // uneven room
+                    if (roomEvenX) x += randAddX;
+                }
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 3) + 1);
+
+                if (centY)
+                {
+                    y = area.YCenter - 1; // uneven room
+                    if (roomEvenY) y += randAddY;
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 3) + 1);
+
+                paintingArea = new(x, y, 3, 3);
+                success = Place3x3PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
+            }
+
+            else if (allow2x3 && Chance.Simple())
+            {
+                paintingType = 2;
+
+                if (!roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
+                if (centX)
+                {
+                    x = area.XCenter; // even room
+                    if (!roomEvenX) x -= (1 - randAddX);
+                }
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 2) + 1);
+
+                if (centY)
+                {
+                    y = area.YCenter - 1; // uneven room
+                    if (roomEvenY) y += randAddY;
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 3) + 1);
+
+                paintingArea = new(x, y, 2, 3);
+                success = Place2x3PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
+            }
+
+            else if (allow3x2 && Chance.Simple())
+            {
+                paintingType = 1;
+
+                if (roomEvenX && abortCenterX) return (success, paintingArea, paintingType, 2);
+                if (!roomEvenY && abortCenterY) return (success, paintingArea, paintingType, 3);
+
+                if (centX)
+                {
+                    x = area.XCenter - 1; // uneven room
+                    if (roomEvenX) x += randAddX;
+                }
+                else x = area.X0 + WorldGen.genRand.Next((area.XTiles - 3) + 1);
+
+                if (centY)
+                {
+                    y = area.YCenter; // even room
+                    if (!roomEvenY) y -= (1 - randAddY);
+                }
+                else y = area.Y0 + WorldGen.genRand.Next((area.YTiles - 2) + 1);
+
+                paintingArea = new(x, y, 3, 2);
+                success = Place3x2PaintingByStyle(paintingArea, style, placeWall);
+
+                if (!success) failReason = 1;
+            }
+
+            if (!success && paintingType == 0) failReason = 4;
+
+            return (success, paintingArea, paintingType, failReason);
+        }
+
+        /// <summary>
+        /// Places a random 6x4 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 6x4 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place6x4PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
+        {
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall].id);
+
+            List<int> paintings = [];
+            if (style == S.StyleHellstone)
+            {
+                paintings.Add(0); // The Eye Sees the End
+                paintings.Add(3); // The Screamer
+                paintings.Add(8); // The Destroyer
+                paintings.Add(13); // Facing the Cerebral Mastermind
+                paintings.Add(14); // Lake of Fire
+                paintings.Add(21); // Morbid Curiosity
+                paintings.Add(52); // Ocular Resonance
+                paintings.Add(53); // Wings of Evil
+                paintings.Add(56); // Dread of the Red Sea
+            }
+            else if (style == S.StyleTitanstone)
+            {
+                paintings.Add(0); // The Eye Sees the End
+                paintings.Add(8); // The Destroyer
+                paintings.Add(14); // Lake of Fire
+                paintings.Add(21); // Morbid Curiosity
+                paintings.Add(36); // Not a Kid, nor a Squid
+                paintings.Add(44); // Graveyard (Painting)
+                paintings.Add(50); // Remnants of Devotion
+                paintings.Add(55); // Eyezorhead
+                paintings.Add(56); // Dread of the Red Sea
+
+            }
+            else if (style == S.StyleBlueBrick)
+            {
+                paintings.Add(17); // Jacking Skeletron
+                paintings.Add(18); // Bitter Harvest
+                paintings.Add(19); // Blood Moon Countess
+                paintings.Add(21); // Morbid Curiosity
+                paintings.Add(29); // The Truth Is Up There
+                paintings.Add(44); // Graveyard (Painting)
+                paintings.Add(50); // Remnants of Devotion
+                paintings.Add(52); // Ocular Resonance
+                paintings.Add(55); // Eyezorhead
+                paintings.Add(59); // Moonman & Company
+            }
+            else
+            {
+                paintings.Add(23); // Leopard Skin...should never occur or I called the method wrong...so just to be sure
+            }
+
+            bool success = WorldGen.PlaceTile(area.X0 + 2, area.Y0 + 2, TileID.Painting6X4, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
+        }
+
+        /// <summary>
+        /// Places a random 3x3 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 3x3 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place3x3PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
+        {
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall].id);
+
+            List<int> paintings = [];
+            if (style == S.StyleHellstone)
+            {
+                paintings.Add(22); // Guide Picasso
+                paintings.Add(24); // Father of Someone
+                paintings.Add(26); // Discover
+                paintings.Add(76); // Outcast
+                paintings.Add(77); // Fairy Guides
+                paintings.Add(79); // Morning Hunt
+                paintings.Add(82); // Cat Sword
+            }
+            else if (style == S.StyleTitanstone)
+            {
+                paintings.Add(13); // The Hanged Man
+                paintings.Add(19); // The Cursed Man
+                paintings.Add(20); // Sunflowers
+                paintings.Add(22); // Guide Picasso
+                paintings.Add(23); // The Guardian's Gaze
+                paintings.Add(25); // Nurse Lisa
+                paintings.Add(28); // Old Miner
+                paintings.Add(33); // The Merchant
+                paintings.Add(34); // Crowno Devours His Lunch
+                paintings.Add(70); // Nevermore
+                paintings.Add(78); // A Horrible Night for Alchemy
+            }
+            else if (style == S.StyleBlueBrick)
+            {
+                paintings.Add(70); // Nevermore
+                paintings.Add(71); // Reborn
+                paintings.Add(68); // Snakes, I Hate Snakes
+                paintings.Add(65); // Burning Spirit
+                paintings.Add(35); // Rare Enchantment
+                paintings.Add(34); // Crowno Devours His Lunch
+                paintings.Add(12); // Blood Moon Rising
+                paintings.Add(13); // The Hanged Man
+                paintings.Add(15); // Bone Warp
+                paintings.Add(18); // Skellington J Skellingsworth
+                paintings.Add(23); // The Guardian's Gaze
+                paintings.Add(30); // Imp Face
+            }
+            else
+            {
+                paintings.Add(48); // Compass Rose...should never occur or I called the method wrong...so just to be sure
+            }
+
+            bool success = WorldGen.PlaceTile(area.X0 + 1, area.Y0 + 1, TileID.Painting3X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
+        }
+
+        /// <summary>
+        /// Places a random 2x3 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 2x3 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place2x3PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
+        {
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall].id);
+
+            List<int> paintings = [];
+            if (style == S.StyleHellstone)
+            {
+                paintings.Add(0); // Waldo
+                paintings.Add(10); // Ghost Manifestation
+                paintings.Add(15); // Strange Growth #1
+                paintings.Add(19); // Happy Little Tree
+                paintings.Add(26); // Love is in the Trash Slot
+            }
+            else if (style == S.StyleTitanstone)
+            {
+                paintings.Add(1); // Darkness
+                paintings.Add(2); // Dark Soul Reaper
+                paintings.Add(3); // Land
+                paintings.Add(4); // Trapped Ghost
+                paintings.Add(6); // Glorious Night
+                paintings.Add(7); // Bandage Boy
+                paintings.Add(17); // Strange Growth #3
+                paintings.Add(18); // Strange Growth #4
+                paintings.Add(21); // Secrets
+                paintings.Add(22); // Thunderbolt
+                paintings.Add(24); // The Werewolf
+            }
+            else if (style == S.StyleBlueBrick)
+            {
+                paintings.Add(4); // Trapped Ghost
+                paintings.Add(11); // Wicked Undead
+                paintings.Add(12); // Bloody Goblet
+                paintings.Add(20); // Strange Dead Fellows
+                paintings.Add(22); // Thunderbolt
+                paintings.Add(24); // The Werewolf
+            }
+            else
+            {
+                paintings.Add(18); // Strange Growth #4...should never occur or I called the method wrong...so just to be sure
+            }
+
+            bool success = WorldGen.PlaceTile(area.X0, area.Y0 + 1, TileID.Painting2X3, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
+        }
+
+        /// <summary>
+        /// Places a random 3x2 painting of a pre-selected variety for the given decoration style 
+        /// </summary>
+        /// <param name="area">The 3x2 area where the painting shall be placed</param>
+        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
+        public bool Place3x2PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
+        {
+            if (placeWall) Func.PlaceWallArea(area, Deco[S.BackWall].id);
+
+            List<int> paintings = [];
+            if (style == S.StyleHellstone)
+            {
+                paintings.Add(6); // Place Above the Clouds
+                paintings.Add(8); // Cold Waters in the White Land
+                paintings.Add(15); // Sky Guardian
+                paintings.Add(32); // Viking Voyage
+                paintings.Add(35); // Forest Troll
+            }
+            else if (style == S.StyleTitanstone)
+            {
+                paintings.Add(1); // Finding Gold
+                paintings.Add(5); // Through the Window
+                paintings.Add(7); // Do Not Step on the Grass
+                paintings.Add(11); // Daylight
+                paintings.Add(20); // Still Life
+                paintings.Add(33); // Bifrost
+            }
+            else if (style == S.StyleBlueBrick)
+            {
+                paintings.Add(0); // Demon's Eye
+                paintings.Add(1); // Finding Gold
+                paintings.Add(9); // Lightless Chasms
+                paintings.Add(20); // Still Life
+                paintings.Add(36); // Aurora Borealis
+            }
+            else
+            {
+                paintings.Add(4); // Underground Reward...should never occur or I called the method wrong...so just to be sure
+            }
+
+            bool success = WorldGen.PlaceTile(area.X0 + 1, area.Y0, TileID.Painting3X2, style: paintings[WorldGen.genRand.Next(paintings.Count)]);
+
+            return success;
+        }
+
+
     }
 
     internal class S //Style

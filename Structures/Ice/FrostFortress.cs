@@ -4722,7 +4722,7 @@ namespace WorldGenMod.Structures.Ice
                 paintings.Add(19); // Blood Moon Countess
                 paintings.Add(21); // Morbid Curiosity
                 paintings.Add(44); // Graveyard (Painting)
-                paintings.Add(49); // Remnants of Devotion
+                paintings.Add(50); // Remnants of Devotion
             }
             else
             {
