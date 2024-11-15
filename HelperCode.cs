@@ -1416,6 +1416,129 @@ namespace WorldGenMod
             stairs[(point.x, point.y)] = temp;
         }
 
+        /// <summary>
+        /// Creates ("prints") a pattern from a string List into the world
+        /// </summary>
+        /// <param name="pattern">The string pattern with to be created, every string list is one line.</param>
+        /// <param name="patternData">The dictionary, stating how a char of the pattern shall be treated
+        ///                  <br/> -> variant: 1 = tile, 10 = wall
+        ///                  <br/> -> id: the TileID or the WallID
+        ///                  <br/> -> paint: paintID of the to be applied paint
+        ///                  <br/> -> overWrite: specific id which specific tile / wall to overwrite (-1 = overwrite all, 0 = no overwrite, >0 = specific id) and a chance to overwrite</param>
+        /// <param name="startPos">The world coordinates where to start with creating the top left corner of the pattern</param>
+        /// <param name="space">Specific string for stating which char is for skipping a position</param>
+        public static void DrawPatternFromString(List<String> pattern, Dictionary<char, (int variant, int id, int paint, (int id, int chance) overWrite)> patternData, (int x, int y) startPos, char space = ' ')
+        {
+            int xAct, yAct = startPos.y;
+            (int variant, int id, int paint, (int id, int chance) overWrite) actData;
+            int tile = 1;
+            int wall = 10;
+            Tile actTile;
+
+            foreach (String line in pattern)
+            {
+                xAct = startPos.x;
+
+                foreach (char symbol in line)
+                {
+                    if (symbol == space) { } //do nothing, only advance
+
+                    else if (patternData.ContainsKey(symbol))
+                    {
+                        actData = patternData[symbol];
+
+                        if (actData.variant == tile)
+                        {
+                            actTile = Main.tile[xAct, yAct];
+                            if ( (actData.overWrite.id == -1 && Chance.Perc(actData.overWrite.chance)) ||
+                                 (actData.overWrite.id == 0 && !actTile.HasTile) ||
+                                 (actData.overWrite.id > 0 && ((actTile.TileType == actData.overWrite.id && Chance.Perc(actData.overWrite.chance)) || actTile.TileType != actData.overWrite.id)) )
+                            {
+                                WorldGen.KillTile(xAct, yAct);
+                                WorldGen.EmptyLiquid(xAct, yAct);
+                                WorldGen.PlaceTile(xAct, yAct, actData.id);
+                                if (actData.paint > 0) WorldGen.paintTile(xAct, yAct, (byte)actData.paint);
+                            }
+                            
+                        }
+
+                        else if (actData.variant == wall)
+                        {
+                            actTile = Main.tile[xAct, yAct];
+                            if ( (actData.overWrite.id == -1 && Chance.Perc(actData.overWrite.chance)) ||
+                                 (actData.overWrite.id == 0 && actTile.WallType == 0) ||
+                                 (actData.overWrite.id  > 0 && (actTile.WallType == actData.overWrite.id && Chance.Perc(actData.overWrite.chance) || actTile.WallType != actData.overWrite.id)) )
+                            {
+                                WorldGen.KillWall(xAct, yAct);
+                                WorldGen.PlaceWall(xAct, yAct, actData.id);
+                                if (actData.paint > 0) WorldGen.paintWall(xAct, yAct, (byte)actData.paint);
+                            }
+                        }
+                    }
+
+                    xAct++;
+                }
+                yAct++;
+            }
+        }
+
+        /// <summary>
+        /// Puts a big arrow of living flames on top of the room so it's visible from the map
+        /// </summary>
+        public static void MarkRoom(Rectangle2P room)
+        {
+            List<String> pattern = [];
+            Dictionary<char, (int variant, int id, int paint, (int id, int chance) overWrite)> patternData = [];
+
+            pattern.Clear();
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+            pattern.Add(" FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF ");
+            pattern.Add("  FFFFFFFFFFFFFFFFFFFFFFFFFFFF  ");
+            pattern.Add("   FFFFFFFFFFFFFFFFFFFFFFFFFF   ");
+            pattern.Add("    FFFFFFFFFFFFFFFFFFFFFFFF    ");
+            pattern.Add("     FFFFFFFFFFFFFFFFFFFFFF     ");
+            pattern.Add("      FFFFFFFFFFFFFFFFFFFF      ");
+            pattern.Add("       FFFFFFFFFFFFFFFFFF       ");
+            pattern.Add("        FFFFFFFFFFFFFFFF        ");
+            pattern.Add("         FFFFFFFFFFFFFF         ");
+            pattern.Add("          FFFFFFFFFFFF          ");
+            pattern.Add("           FFFFFFFFFF           ");
+            pattern.Add("            FFFFFFFF            ");
+            pattern.Add("             FFFFFF             ");
+            pattern.Add("              FFFF              ");
+            
+            
+            int yTiles = 24;
+            int xTiles = 32;
+
+            patternData.Clear();
+            patternData.Add('F', (1, TileID.LivingFrostFire, 0, (-1, 100)) );
+
+            int x = room.XCenter - ((xTiles / 2) - 1);
+            int y = room.Y0 - 2 * yTiles;
+
+            for (int i = x; i < x + xTiles; i++)
+            {
+                for (int j = y; j < y + yTiles; j++)
+                {
+                    WorldGen.KillTile(i, j);
+                    WorldGen.KillWall(i, j);
+                    WorldGen.EmptyLiquid(i, j);
+                }
+            }
+
+            Func.DrawPatternFromString(pattern, patternData, (x, y));
+        }
+
 
 
 

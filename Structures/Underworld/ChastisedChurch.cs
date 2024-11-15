@@ -1048,6 +1048,14 @@ namespace WorldGenMod.Structures.Underworld
             List<(int x, int y)> rememberPos = []; // for remembering positions
             List<(ushort TileID, int style, byte chance)> randomItems = [], randomItems2 = []; // for random item placement
             (ushort id, int style, byte chance) randomItem, randomItem2; // for random item placement
+
+            // for pattern placement
+            List<int> randomStyles = [];
+            List<String> pattern = [];
+            Dictionary<char, (int variant, int id, int paint, (int id, int chance) overWrite)> patternData = [];
+            (int id, int chance) overWrite = (Deco[S.CrookedWall].id, 60);
+            int height, diff;
+
             int x, y, chestID, unusedXTiles, num, numOld;
 
 
@@ -1605,57 +1613,249 @@ namespace WorldGenMod.Structures.Underworld
                             }
                             #endregion
 
-                            #region XTiles <= 12 -> Altar with pianos / campfires and big window
+                            #region XTiles <= 12 -> Altar with pianos / campfires and big window / flaming "+"
                             else if (middleSpace.XTiles <= 12)
                             {
-                                if (freeR.YTiles > 15) // enough space for the flaming "+"
+                                randomStyles.Clear();
+                                if (middleSpace.YTiles > 10) randomStyles.Add(1); // window type 1 "crystal"
+                                if (middleSpace.YTiles > 10) randomStyles.Add(2); // window type 2 "scales"
+                                if (middleSpace.YTiles > 15) randomStyles.Add(3); // flaming "+"
+                                if (middleSpace.YTiles <= 15) randomStyles.Add(4); // painting with frame
+
+                                switch (randomStyles[WorldGen.genRand.Next(randomStyles.Count())])
                                 {
-                                    if (freeR.YTiles < 18) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 1, true);
-                                    else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 1, true);
+                                    case 1:  // window type 1 "crystal"
 
-                                    // create lavafall on top of the flaming "+"
-                                    x = freeR.XCenter;
-                                    y = freeR.Y0 - 1;
-                                    WorldGen.KillTile(x, y);
-                                    WorldGen.KillTile(x + 1, y);
-                                    WorldGen.KillTile(x, y - 1);
-                                    WorldGen.KillTile(x + 1, y - 1);
+                                        if (middleSpace.YTiles < 12)
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add(" W▓▓▓▓W ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("  W▓▓W  ");
+                                            height = 10;
+                                        }
+                                        else if (middleSpace.YTiles < 16)
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("  WWWW  ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add(" W▓▓▓▓W ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("  W▓▓W  ");
+                                            pattern.Add("  WWWW  ");
+                                            height = 12;
+                                        }
+                                        else if (middleSpace.YTiles <= 22)
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("  WWWW  ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add(" W▓▓▓▓W ");
+                                            pattern.Add(" W▓▓▓▓W ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("  W▓▓W  ");
+                                            pattern.Add("  W▓▓W  ");
+                                            pattern.Add("  WWWW  ");
+                                            height = 15;
+                                        }
+                                        else
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("  WWWW  ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("W▓▓▓▓▓▓W");
+                                            pattern.Add("WW▓▓▓▓WW");
+                                            pattern.Add(" W▓▓▓▓W ");
+                                            pattern.Add(" W▓▓▓▓W ");
+                                            pattern.Add(" WW▓▓WW ");
+                                            pattern.Add("  W▓▓W  ");
+                                            pattern.Add("  W▓▓W  ");
+                                            pattern.Add("  WWWW  ");
+                                            height = 19;
+                                        }
 
-                                    x = freeR.XCenter - 2;
-                                    y = freeR.Y0 - 2;
-                                    WorldGen.KillTile(x, y);
-                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-                                    WorldGen.PoundTile(x + 1, y);
+                                        patternData.Clear();
+                                        patternData.Add('W', (10, Deco[S.PaintingWallpaper].id, 0, overWrite));
+                                        patternData.Add('▓', (10, Deco[S.WindowWall].id, Deco[S.WindowPaint].id, overWrite));
 
-                                    x = freeR.XCenter + 3;
-                                    y = freeR.Y0 - 2;
-                                    WorldGen.KillTile(x, y);
-                                    WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-                                    WorldGen.PoundTile(x - 1, y);
+                                        diff = middleSpace.YTiles - height;
+                                        if (freeR.YTiles <= 15) Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 2, middleSpace.Y0 + (diff / 2)) );
+                                        else                    Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 2, middleSpace.Y0 + (diff / 3)) );
 
-                                    // add some nice "v" spike to the middle
-                                    x = freeR.XCenter;
-                                    y = freeR.Y0 - 3;
-                                    Func.SlopeTile(x, y, (int)Func.SlopeVal.BotLeft);
+                                        break;
 
-                                    x = freeR.XCenter + 1;
-                                    y = freeR.Y0 - 3;
-                                    Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
+                                    case 2:  // window type 2 "scales"
 
 
-                                    altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 6);
+                                        Func.MarkRoom(room);
 
-                                    if (altarResult.success)
-                                    {
-                                        y = altarResult.altar.Y0 - 1;
-                                        WorldGen.PlaceTile(freeR.XCenter - 1, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
-                                        WorldGen.PlaceTile(freeR.XCenter + 2, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
-                                    }
-                                }
-                                else // place a painting and a frame
-                                {
-                                    Func.ReplaceWallArea(new(middleSpace.X0 + 2, middleSpace.YCenter - 2, middleSpace.XTiles - 4, 6), Deco[S.PaintingWallpaper].id, chance: 60, chanceWithType: Deco[S.CrookedWall].id);
-                                    Place6x4PaintingByStyle(new(middleSpace.X0 + 3, middleSpace.YCenter - 1, 6, 4), Deco[S.StyleSave].id);
+                                        if (middleSpace.YTiles < 12)
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            height = 10;
+                                        }
+                                        else if (middleSpace.YTiles < 16)
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            height = 12;
+                                        }
+                                        else if (middleSpace.YTiles <= 22)
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("▓  ▓▓  ▓");
+                                            pattern.Add("▓▓ ▓▓ ▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓ ▓▓ ▓▓");
+                                            pattern.Add("▓  ▓▓  ▓");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            height = 15;
+                                        }
+                                        else
+                                        {
+                                            pattern.Clear();
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("▓  ▓▓  ▓");
+                                            pattern.Add("▓  ▓▓  ▓");
+                                            pattern.Add("▓▓ ▓▓ ▓▓");
+                                            pattern.Add("▓▓ ▓▓ ▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓ ▓▓ ▓▓");
+                                            pattern.Add("▓▓ ▓▓ ▓▓");
+                                            pattern.Add("▓  ▓▓  ▓");
+                                            pattern.Add("▓  ▓▓  ▓");
+                                            pattern.Add("   ▓▓   ");
+                                            pattern.Add("  ▓▓▓▓  ");
+                                            pattern.Add(" ▓▓▓▓▓▓ ");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            pattern.Add("▓▓▓▓▓▓▓▓");
+                                            height = 19;
+                                        }
+
+                                        patternData.Clear();
+                                        patternData.Add('W', (10, Deco[S.PaintingWallpaper].id, 0, overWrite));
+                                        patternData.Add('▓', (10, Deco[S.WindowWall].id, Deco[S.WindowPaint].id, overWrite));
+
+                                        diff = middleSpace.YTiles - height;
+                                        Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 2, middleSpace.YCenter - (height / 2)));
+
+                                        break;
+
+                                    case 3:  // flaming "+"
+
+                                        if (freeR.YTiles < 18) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 1, true);
+                                        else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 1, true);
+
+                                        // create lavafall on top of the flaming "+"
+                                        x = freeR.XCenter;
+                                        y = freeR.Y0 - 1;
+                                        WorldGen.KillTile(x, y);
+                                        WorldGen.KillTile(x + 1, y);
+                                        WorldGen.KillTile(x, y - 1);
+                                        WorldGen.KillTile(x + 1, y - 1);
+
+                                        x = freeR.XCenter - 2;
+                                        y = freeR.Y0 - 2;
+                                        WorldGen.PoundTile(x + 1, y);
+                                        WorldGen.KillTile(x, y);
+                                        WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
+                                        
+                                        x = freeR.XCenter + 3;
+                                        y = freeR.Y0 - 2;
+                                        WorldGen.PoundTile(x - 1, y);
+                                        WorldGen.KillTile(x, y);
+                                        WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
+
+                                        // add some nice "v" spike to the middle
+                                        x = freeR.XCenter;
+                                        y = freeR.Y0 - 3;
+                                        Func.SlopeTile(x, y, (int)Func.SlopeVal.BotLeft);
+
+                                        x = freeR.XCenter + 1;
+                                        y = freeR.Y0 - 3;
+                                        Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
+
+
+                                        altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 6);
+
+                                        if (altarResult.success)
+                                        {
+                                            y = altarResult.altar.Y0 - 1;
+                                            WorldGen.PlaceTile(freeR.XCenter - 1, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
+                                            WorldGen.PlaceTile(freeR.XCenter + 2, y, Deco[S.Piano].id, style: Deco[S.Piano].style);
+                                        }
+
+                                        break;
+
+                                    case 4:
+
+                                        Func.ReplaceWallArea(new(middleSpace.X0 + 2, middleSpace.YCenter - 2, middleSpace.XTiles - 4, 6), Deco[S.PaintingWallpaper].id, chance: 60, chanceWithType: Deco[S.CrookedWall].id);
+                                        Place6x4PaintingByStyle(new(middleSpace.X0 + 3, middleSpace.YCenter - 1, 6, 4), Deco[S.StyleSave].id);
+
+                                        break;
                                 }
                             }
                             #endregion
@@ -1678,15 +1878,17 @@ namespace WorldGenMod.Structures.Underworld
 
                                     x = freeR.XCenter - 2;
                                     y = freeR.Y0 - 2;
+                                    WorldGen.PoundTile(x + 1, y);
                                     WorldGen.KillTile(x, y);
                                     WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-                                    WorldGen.PoundTile(x + 1, y);
+                                    
 
                                     x = freeR.XCenter + 3;
                                     y = freeR.Y0 - 2;
+                                    WorldGen.PoundTile(x - 1, y);
                                     WorldGen.KillTile(x, y);
                                     WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-                                    WorldGen.PoundTile(x - 1, y);
+                                    
 
                                     // add some nice "v" spike to the middle
                                     x = freeR.XCenter;
@@ -1707,6 +1909,27 @@ namespace WorldGenMod.Structures.Underworld
                                         WorldGen.PlaceTile(freeR.XCenter + 2, y, TileID.Campfire, style: 2);
                                     }
                                 }
+
+                                //   ▓▓▓▓   
+                                //  ▓▓▓▓▓▓  
+                                // ▓▓▓▓▓▓▓▓ 
+                                //▓▓▓▓▓▓▓▓▓▓
+                                //▓▓▓▓▓▓▓▓▓▓
+                                //▓  ▓▓▓▓  ▓
+                                // ▓▓ ▓▓ ▓▓ 
+                                // ▓▓ ▓▓ ▓▓ 
+                                //▓  ▓▓▓▓  ▓
+                                //▓▓▓▓▓▓▓▓▓▓
+                                // ▓▓▓  ▓▓▓ 
+                                //  ▓▓  ▓▓  
+                                //  ▓▓▓▓▓▓  
+                                //   ▓▓▓▓   
+                                // ▓  ▓▓  ▓ 
+                                // ▓▓    ▓▓ 
+                                // ▓▓▓  ▓▓▓ 
+                                // ▓▓▓▓▓▓▓▓ 
+                                // ▓▓▓▓▓▓▓▓ 
+                                //   ▓▓▓▓   
                             }
                             #endregion
 
