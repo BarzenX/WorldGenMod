@@ -17,6 +17,7 @@ using System.Collections.Immutable;
 using static WorldGenMod.LineAutomat;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
+using Terraria.GameContent.UI.States;
 
 namespace WorldGenMod
 {
@@ -104,7 +105,7 @@ namespace WorldGenMod
 
             if (tile.TileFrameX < 36) // candelabra is lit
             {
-                for (int i = x - 1; i <= x; i++)  // don't know why the PlaceTile anker point bottom right and ingame placing is bottom left...
+                for (int i = x - 1; i <= x; i++)  // don't know why the PlaceTile anchor point is bottom right and ingame placing point is bottom left...
                 {
                     for (int j = y - 1; j <= y; j++)
                     {
@@ -1539,6 +1540,211 @@ namespace WorldGenMod
             Func.DrawPatternFromString(pattern, patternData, (x, y));
         }
 
+        /// <summary>
+        /// Places a candelabra on a user defined support (platforms / work bench / table)
+        /// </summary>
+        /// <param name="posBotLeft">The bottom left position of the chosen base</param>
+        /// <param name="candelabra">The placement data of the candelabra</param>
+        /// <param name="support">The placement data of the candelabra</param>
+        /// <param name="unlight">If the candelabras "UnlightCandelabra" function shall be called</param>
+        /// <param name="leftOn3XTiles">If the candelabra shall be placed on the right position on a possible 3 XTiles base (true) or on the left (false)</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: true if candelabra placement was successful
+        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of bottom left corner of successfully placed candelabra, otherwise 0
+        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of bottom left corner of successfully placed candelabra, otherwise 0</returns>
+        public static (bool success, int xCand, int yCand) PlaceCandelabraOnBase((int x, int y) posBotLeft, (int id, int style, int paint) candelabra, (int id, int style, int paint) support, bool unlight = true, bool rightOn3XTiles = false)
+        {
+            if (candelabra.id <= 0 || support.id <= 0 || posBotLeft.x <= 0 || posBotLeft.y <= 0) return (false, 0, 0);
+
+            int supportToAnchorX; // offset from the bottom left corner of the support to it's anchor (placement) position
+            (int x, int y) supportDiff; // the dimension of the support structure (seen from bottom left point), as Diff notation (value = 0 means 1 Tile, 1 means this tile and the next one)
+            bool threeXTilesSupport = false;
+            bool placed;
+
+            if (support.id == TileID.Platforms)
+            {
+                supportToAnchorX = 0;
+                supportDiff.x = supportDiff.y = 0;
+            }
+            else if (support.id == TileID.WorkBenches)
+            {
+                supportToAnchorX = 0;
+                supportDiff.x = 1;
+                supportDiff.y = 0;
+            }
+            else if (support.id == TileID.Tables || support.id == TileID.Tables2)
+            {
+                supportToAnchorX = 1;
+                supportDiff.x = 2;
+                supportDiff.y = 1; // 1 in negative y direction (away from the floor!)
+                threeXTilesSupport = true;
+            }
+            else if (support.id == TileID.Bookcases)
+            {
+                supportToAnchorX = 1;
+                supportDiff.x = 2;
+                supportDiff.y = 3; // 3 in negative y direction (away from the floor!)
+                threeXTilesSupport = true;
+            }
+            else if (support.id == TileID.Pianos)
+            {
+                supportToAnchorX = 1;
+                supportDiff.x = 2;
+                supportDiff.y = 1; // 1 in negative y direction (away from the floor!)
+                threeXTilesSupport = true;
+            }
+            else return (false, 0, 0); // unspecified case, fix this first
+
+            // place support
+            if (support.id == TileID.Platforms)
+            {
+                for (int i = posBotLeft.x + supportToAnchorX; i <= posBotLeft.x + supportToAnchorX + 1; i++)
+                {
+                    placed = WorldGen.PlaceTile(i, posBotLeft.y, support.id, style: support.style);
+                    if (support.paint > 0 && placed) WorldGen.paintTile(i, posBotLeft.y, (byte)support.paint);
+                }
+            }
+            else
+            {
+                placed = WorldGen.PlaceTile(posBotLeft.x + supportToAnchorX, posBotLeft.y, support.id, style: support.style);
+                if (support.paint > 0 && placed) Func.PaintArea(new(posBotLeft.x, posBotLeft.y - supportDiff.y, posBotLeft.x + supportDiff.x, posBotLeft.y, "dummyString"), (byte)support.paint);
+            }
+
+            // place candelabra
+            int x = posBotLeft.x;
+            int y = posBotLeft.y - supportDiff.y - 1;
+            if (threeXTilesSupport && rightOn3XTiles) x++;
+
+            placed = WorldGen.PlaceTile(x + 1, y, candelabra.id, style: candelabra.style);
+            if (candelabra.paint > 0 && placed) Func.PaintArea(new(x, y - 1, x + 1, y, "dummyString"), (byte)candelabra.paint);
+            if (unlight && placed) Func.UnlightCandelabra(x + 1, y);
+
+            return (true, x, y);
+        }
+
+        /// <summary>
+        /// Places hanging chains (also ropes or spikes) in a given room 
+        /// </summary>
+        /// <param name="posBotLeft">The bottom left position of the chosen base</param>
+        /// <param name="candelabra">The placement data of the candelabra</param>
+        /// <param name="support">The placement data of the candelabra</param>
+        /// <param name="unlight">If the candelabras "UnlightCandelabra" function shall be called</param>
+        /// <param name="leftOn3XTiles">If the candelabra shall be placed on the right position on a possible 3 XTiles base (true) or on the left (false)</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: true if candelabra placement was successful
+        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of bottom left corner of successfully placed candelabra, otherwise 0
+        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of bottom left corner of successfully placed candelabra, otherwise 0</returns>
+        public static (bool success, int xCand, int yCand) PlaceHangingChains(Rectangle2P room, (int id, int style, int paint) chain, int maxChainLength, int minChainLength = 2, int maxChains = 3, int gap = 1, int segmentAfterMinChance = 50, bool scanRoom = false)
+        {
+            if (minChainLength < 1 || maxChains < 1 || gap < 0) return;
+
+            #region init chainAllowed array
+            bool[,] chainAllowed = new bool[room.YTiles, room.XTiles];
+
+            int jDim = chainAllowed.GetLength(0);
+            int iDim = chainAllowed.GetLength(1);
+
+            if (scanRoom)
+            {
+                for (int i = 0; i < iDim; i++)
+                {
+                    for (int j = 0; j < jDim; j++)
+                    {
+                        chainAllowed[j, i] = (Main.tile[room.X0 + i, room.Y0 + j].TileType != chain.id);
+                    }
+                }
+            }
+            else // assume empty room
+            {
+                for (int i = 0; i < iDim; i++)
+                {
+                    for (int j = 0; j < jDim; j++)
+                    {
+                        chainAllowed[j, i] = true;
+                    }
+                }
+            }
+            #endregion
+
+
+            int actI, actJ;
+            int generatedChains = 0; // init
+            bool posOK;
+            int maxTryPos;
+
+            while (generatedChains < maxChains)
+            {
+                maxTryPos = 15; // init
+                posOK = false;
+                do
+                {
+                    actI = WorldGen.genRand.Next(iDim);
+                    actJ = WorldGen.genRand.Next(jDim);
+
+                    if (minChainLength = 1)
+                    posOK = CheckAroundFree(chainAllowed, (actI, actJ), 216);
+
+                    maxTryPos--;
+                }
+                while (!posOK && maxTryPos > 0);
+
+                if (!posOK || maxTryPos <= 0) // position search was aborted by max tries
+                {
+                    generatedChains++; // count this failed attempt
+                    continue; // and start the next one
+                }
+
+                generatedChains++;
+            }
+
+
+
+        }
+
+        /// <summary>
+        /// Checks the surroundings of a tile for the presence of a given tile type
+        /// </summary>
+        /// <param name="chainAllowed">2D array of the known chain presences -> TRUE = no chains</param>
+        /// <param name="index">The index to be checked around</param>
+        /// <param name="posToCheck">Stating which of the 8 possible positions around the index position shall be checked.
+        /// <br/>                    -> Bit masked as following (number refers to bit number in the byte):
+        /// <br/>                      0 1 2 --> value: __1___2___4
+        /// <br/>                      7 _ 3 --> value: 128_______8
+        /// <br/>                      6 5 4 --> value: _64__32__16
+        /// <br/>                    -> e.g. the 4 straight neighbors result in the byte value 170, the 4 diagonal ones in 85, straight left and right in 136</param>
+        public static bool CheckAroundFree(bool[,] chainAllowed, (int i, int j) index, byte posToCheck)
+        {
+            int jDim = chainAllowed.GetLength(0);
+            int iDim = chainAllowed.GetLength(1);
+
+            if (posToCheck <= 0) return false;
+            if (jDim <= 0 || iDim <= 0) return false;
+            if (index.i < 0 || index.i >= iDim || index.j < 0 || index.j >= jDim) return false;
+
+            Dictionary<int, bool> checkAllowed = [];
+            checkAllowed.Add(2,   (index.j - 1 >= 0));   // top, middle
+            checkAllowed.Add(8,   (index.i + 1 < iDim)); // right, middle
+            checkAllowed.Add(32,  (index.j + 1 < jDim)); // below, middle
+            checkAllowed.Add(128, (index.i - 1 >= 0));   // bottom, middle
+
+            checkAllowed.Add(1,  (checkAllowed[2] && checkAllowed[128]));  // top left
+            checkAllowed.Add(4,  (checkAllowed[2] && checkAllowed[8]));    // top right
+            checkAllowed.Add(16, (checkAllowed[8] && checkAllowed[32]));   // top right
+            checkAllowed.Add(64, (checkAllowed[32] && checkAllowed[128])); // bottom right
+
+
+            bool free = true;
+
+            if (((posToCheck & 1) == 1)     && checkAllowed[1])   free &= chainAllowed[index.j - 1, index.i - 1];
+            if (((posToCheck & 2) == 2)     && checkAllowed[2])   free &= chainAllowed[index.j - 1, index.i    ];
+            if (((posToCheck & 4) == 4)     && checkAllowed[4])   free &= chainAllowed[index.j - 1, index.i + 1];
+            if (((posToCheck & 8) == 8)     && checkAllowed[8])   free &= chainAllowed[index.j    , index.i + 1];
+            if (((posToCheck & 16) == 16)   && checkAllowed[16])  free &= chainAllowed[index.j + 1, index.i + 1];
+            if (((posToCheck & 32) == 32)   && checkAllowed[32])  free &= chainAllowed[index.j + 1, index.i    ];
+            if (((posToCheck & 64) == 64)   && checkAllowed[64])  free &= chainAllowed[index.j + 1, index.i - 1];
+            if (((posToCheck & 128) == 128) && checkAllowed[128]) free &= chainAllowed[index.j    , index.i - 1];
+
+            return free;
+        }
+
 
 
 
@@ -2061,6 +2267,7 @@ namespace WorldGenMod
                 this.x0 = value;
                 this.xdiff = this.x1 - this.x0;
                 this.xTiles = xdiff + 1;
+                this.xCenter = x0 + this.xdiff / 2;
 
                 this.xEven = (xTiles % 2 == 0);
             }
@@ -2077,6 +2284,7 @@ namespace WorldGenMod
                 this.y0 = value;
                 this.ydiff = this.y1 - this.y0;
                 this.yTiles = ydiff + 1;
+                this.yCenter = y0 + this.ydiff / 2;
 
                 this.yEven = (yTiles % 2 == 0);
             }
@@ -2093,6 +2301,7 @@ namespace WorldGenMod
                 this.x1 = value;
                 this.xdiff = this.x1 - this.x0;
                 this.xTiles = xdiff + 1;
+                this.xCenter = x0 + this.xdiff / 2;
 
                 this.xEven = (xTiles % 2 == 0);
             }
@@ -2109,6 +2318,7 @@ namespace WorldGenMod
                 this.y1 = value;
                 this.ydiff = this.y1 - this.y0;
                 this.yTiles = ydiff + 1;
+                this.yCenter = y0 + this.ydiff / 2;
 
                 this.yEven = (yTiles % 2 == 0);
             }
@@ -2187,11 +2397,13 @@ namespace WorldGenMod
         {
             unchecked
             {
-                x0 += x;
-                x1 += x;
+                this.x0 += x;
+                this.x1 += x;
+                this.xCenter = x0 + this.xdiff / 2;
 
-                y0 += y;
-                y1 += y;
+                this.y0 += y;
+                this.y1 += y;
+                this.yCenter = y0 + this.ydiff / 2;
             }
         }
 
@@ -2251,10 +2463,10 @@ namespace WorldGenMod
         /// <br/>
         /// <br/><b>Attention</b>: <i>xRadius = 0</i>  or <i>yRadius = 0</i>  will reduce the Ellipse to a line of tiles
         /// </summary>
-        /// <param name="xCenter">The x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
-        /// <param name="yCenter">The y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point</param>
-        /// <param name="xRadius">The amount of tiles on the x side of the rectangular region defined by this Rectangle2Point</param>
-        /// <param name="yRadius">The amount of tiles on the y side of the rectangular region defined by this Rectangle2Point</param>
+        /// <param name="xCenter">The x-coordinate of the upper-left corner of the rectangular region defined by this Ellipse</param>
+        /// <param name="yCenter">The y-coordinate of the upper-left corner of the rectangular region defined by this Ellipse</param>
+        /// <param name="xRadius">The amount of tiles on the x side of the rectangular region defined by this Ellipse</param>
+        /// <param name="yRadius">The amount of tiles on the y side of the rectangular region defined by this Ellipse</param>
         public Ellipse(int xCenter, int yCenter, int xRadius, int yRadius)
         {
             this.x0 = xCenter;
@@ -2269,7 +2481,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets or sets the x-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point.
+        /// Gets or sets the x-coordinate of the upper-left corner of the rectangular region defined by this Ellipse.
         /// </summary>
         public int X0
         {
@@ -2278,7 +2490,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets or sets the y-coordinate of the upper-left corner of the rectangular region defined by this Rectangle2Point.
+        /// Gets or sets the y-coordinate of the upper-left corner of the rectangular region defined by this Ellipse.
         /// </summary>
         public int Y0
         {
@@ -2305,7 +2517,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets the amount of tiles on the x side of the rectangular region defined by this Rectangle2Point.
+        /// Gets the amount of tiles on the x side of the rectangular region defined by this Ellipse.
         /// </summary>
         public readonly int XTiles
         {
@@ -2313,7 +2525,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Gets the amount of tiles on the y side of the rectangular region defined by this Rectangle2Point.
+        /// Gets the amount of tiles on the y side of the rectangular region defined by this Ellipse.
         /// </summary>
         public readonly int YTiles
         {
@@ -2321,7 +2533,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Adjusts the location of this rectangle by the specified amount.
+        /// Adjusts the location of this Ellipse by the specified amount.
         /// </summary>
         public void Move(int x, int y)
         {
