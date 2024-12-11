@@ -355,7 +355,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.RunicWallPaint] = (PaintID.RedPaint, 0);
                     break;
 
-                case S.StyleBlueBrick: //TODO: look for another third design. It was recommended to use EbonstoneBrick on Steam, maybe also just red brick?
+                case S.StyleBlueBrick:
 
                     subStyle = Chance.Simple();
 
@@ -1515,12 +1515,7 @@ namespace WorldGenMod.Structures.Underworld
                                 {
                                     for (int i = xStart; i <= xEnd; i++)
                                     {
-                                        if ((Main.tile[i, j].WallType != Deco[S.CrookedWall].id) || Chance.Perc(60))
-                                        {
-                                            WorldGen.KillWall(i, j);
-                                            WorldGen.PlaceWall(i, j, Deco[S.MiddleWall].id);
-                                            WorldGen.paintWall(i, j, (byte)Deco[S.MiddleWallPaint].id);
-                                        }
+                                        Func.ReplaceWallTile((i, j), Deco[S.MiddleWall].id, (byte)Deco[S.MiddleWallPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
                                     }
 
                                     if ((xEnd - xStart) > 2) { xStart++; xEnd--; } // start with 6, then 4, then 2 tiles wide
@@ -1539,6 +1534,7 @@ namespace WorldGenMod.Structures.Underworld
                                     {
                                         WorldGen.KillTile(i, y);
                                         if (Deco[S.MiddleWall].id != WallID.Bone) WorldGen.PlaceLiquid(i, y, (byte)LiquidID.Lava, 255); //255 means tile is full of liquid
+                                        else Func.ReplaceWallTile((i, y), Deco[S.MiddleWall].id, (byte)Deco[S.MiddleWallPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
                                     }
                                 }
                                 else if (Chance.Perc(60) && middleSpace.XTiles > 6) // small altar
@@ -2882,8 +2878,8 @@ namespace WorldGenMod.Structures.Underworld
                                 int middleSectionMinXTiles = 4; // minimal width, the central section shall have to look good
                                 Rectangle2P leftSection = new(freeR.X0 + 1, freeR.Y0 + 1, sectionXTiles, freeR.YTiles - 1); // init
                                 Rectangle2P rightSection = new(freeR.X1 - sectionXTiles, freeR.Y0 + 1, sectionXTiles, freeR.YTiles - 1); // init
+                                Rectangle2P middleSection = new(1,1,1,1); //init so the compiler doesn't complain
 
-                                Func.MarkRoom(room);
 
                                 if (rightSection.X0 > leftSection.X1) // at least one complete pair of sections
                                 {
@@ -2906,7 +2902,10 @@ namespace WorldGenMod.Structures.Underworld
                                                     WorldGen.paintTile(i, j, (byte)Deco[S.ColumnPaint].id);
                                                 }
                                             }
+                                            middleSection = new(leftSection.X1 + sectionColumnsXTiles + 1, freeR.Y0 + 1, rightSection.X0 - sectionColumnsXTiles - 1, freeR.Y1, "dummyString");
                                         }
+                                        else middleSection = new(leftSection.X1 + 1, freeR.Y0 + 1, rightSection.X0 - 1, freeR.Y1, "dummyString");
+
 
                                         // left candelabra
                                         x = leftSection.XCenter;
@@ -2914,14 +2913,60 @@ namespace WorldGenMod.Structures.Underworld
                                         Func.PlaceCandelabraOnBase((x, y), (Deco[S.Candelabra].id, Deco[S.Candelabra].style, 0),
                                                                            (Deco[S.DecoPlat].id, Deco[S.DecoPlat].style, Deco[S.StylePaint].id), unlight: true);
 
+                                        Func.PlaceHangingChains(leftSection, (TileID.Chain, 0, 0), 4);
+
                                         // right candelabra
                                         x = rightSection.XCenter;
                                         y = rightSection.YCenter;
                                         Func.PlaceCandelabraOnBase((x, y), (Deco[S.Candelabra].id, Deco[S.Candelabra].style, 0),
                                                                            (Deco[S.DecoPlat].id, Deco[S.DecoPlat].style, Deco[S.StylePaint].id), unlight: true);
 
+                                        Func.PlaceHangingChains(rightSection, (TileID.Chain, 0, 0), 4);
+
                                         leftSection.Move(         sectionXTiles + sectionColumnsXTiles, 0); // update
                                         rightSection.Move((-1) * (sectionXTiles + sectionColumnsXTiles), 0); // update
+                                    }
+
+                                    // middle section
+                                    if (middleSection.XTiles < sectionXTiles)
+                                    {
+                                        if (middleSection.XTiles <= 0) num = 1; //do nothing
+                                        if (Main.tile[middleSection.X0 - 1, middleSection.Y0].TileType == Deco[S.Column].id) // middle section between columns
+                                        {
+                                            Func.ReplaceWallArea(middleSection, Deco[S.WindowWall].id, (byte)Deco[S.WindowPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
+                                        }
+                                        else
+                                        {
+                                            Func.ReplaceWallArea(new(middleSection.X0, middleSection.Y0, 1, middleSection.YTiles),
+                                                                 Deco[S.MiddleWall].id, (byte)Deco[S.MiddleWallPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
+
+                                            Func.ReplaceWallArea(new(middleSection.X0 + 1, middleSection.Y0, middleSection.X1 - 1, middleSection.Y1, "dummy"),
+                                                                 Deco[S.WindowWall].id, (byte)Deco[S.WindowPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
+
+                                            Func.ReplaceWallArea(new(middleSection.X1, middleSection.Y0, 1, middleSection.YTiles),
+                                                                 Deco[S.MiddleWall].id, (byte)Deco[S.MiddleWallPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
+                                        }
+                                    }
+                                    else if (middleSection.XTiles <= 14)
+                                    {
+                                        // right candelabra
+                                        x = middleSection.XCenter;
+                                        y = middleSection.YCenter;
+                                        Func.PlaceCandelabraOnBase((x, y), (Deco[S.Candelabra].id, Deco[S.Candelabra].style, 0),
+                                                                           (Deco[S.DecoPlat].id, Deco[S.DecoPlat].style, Deco[S.StylePaint].id), unlight: true);
+
+                                        Func.PlaceHangingChains(middleSection, (TileID.Chain, 0, 0), 4);
+                                    }
+                                    else
+                                    {
+                                        Func.ReplaceWallArea(new(middleSection.X0, middleSection.Y0, 4, middleSection.YTiles),
+                                                             Deco[S.WindowWall].id, (byte)Deco[S.WindowPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
+
+                                        Func.ReplaceWallArea(new(middleSection.X1 - 3, middleSection.Y0, 4, middleSection.YTiles),
+                                                             Deco[S.WindowWall].id, (byte)Deco[S.WindowPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
+
+                                        Place6x4PaintingByStyle(new(middleSection.XCenter - 2, middleSection.YCenter - 2, 6, 4), Deco[S.StyleSave].id);
+
                                     }
                                 }
                                 else
@@ -2938,6 +2983,8 @@ namespace WorldGenMod.Structures.Underworld
                                         y = freeR.YCenter + 1;
                                         Func.PlaceCandelabraOnBase((x, y), (Deco[S.Candelabra].id, Deco[S.Candelabra].style, 0),
                                                                            (Deco[S.DecoPlat].id  , Deco[S.DecoPlat].style  , Deco[S.StylePaint].id), unlight: true);
+
+                                        Func.PlaceHangingChains(freeR, (TileID.Chain, 0, 0), 4, maxChains: 6);
                                     }
                                     else
                                     {
@@ -2946,6 +2993,8 @@ namespace WorldGenMod.Structures.Underworld
                                         y = freeR.YCenter + 1;
                                         Func.PlaceCandelabraOnBase((x, y), (Deco[S.Candelabra].id, Deco[S.Candelabra].style, 0),
                                                                            (Deco[S.DecoPlat].id  , Deco[S.DecoPlat].style  , Deco[S.StylePaint].id), unlight: true);
+
+                                        Func.PlaceHangingChains(freeR, (TileID.Chain, 0, 0), 4, maxChains: 5);
                                     }
                                 }
 
@@ -3859,7 +3908,7 @@ namespace WorldGenMod.Structures.Underworld
         /// Places a random 6x4 painting of a pre-selected variety for the given decoration style 
         /// </summary>
         /// <param name="area">The 6x4 area where the painting shall be placed</param>
-        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="style">The decoration style of the chastised church</param>
         /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
         public bool Place6x4PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
@@ -3918,7 +3967,7 @@ namespace WorldGenMod.Structures.Underworld
         /// Places a random 3x3 painting of a pre-selected variety for the given decoration style 
         /// </summary>
         /// <param name="area">The 3x3 area where the painting shall be placed</param>
-        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="style">The decoration style of the chastised church</param>
         /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
         public bool Place3x3PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
@@ -3978,7 +4027,7 @@ namespace WorldGenMod.Structures.Underworld
         /// Places a random 2x3 painting of a pre-selected variety for the given decoration style 
         /// </summary>
         /// <param name="area">The 2x3 area where the painting shall be placed</param>
-        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="style">The decoration style of the chastised church</param>
         /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
         public bool Place2x3PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {
@@ -4030,7 +4079,7 @@ namespace WorldGenMod.Structures.Underworld
         /// Places a random 3x2 painting of a pre-selected variety for the given decoration style 
         /// </summary>
         /// <param name="area">The 3x2 area where the painting shall be placed</param>
-        /// <param name="style">The decoration style of the frost fortress</param>
+        /// <param name="style">The decoration style of the chastised church</param>
         /// <param name="placeWall">Forces backwall placement before trying to place the painting</param>
         public bool Place3x2PaintingByStyle(Rectangle2P area, int style, bool placeWall = false)
         {

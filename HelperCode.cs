@@ -1148,7 +1148,7 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Replaces existing background walls in the given area. If there is none, no wall will be placed
+        /// Replaces existing background walls in the given area. If there is none, wall can be placed
         /// </summary>
         /// <param name="area">The to be filled area</param>
         /// <param name="wallType">The ID of the to be placed wall</param>
@@ -1168,11 +1168,7 @@ namespace WorldGenMod
                 for (int j = area.Y0; j <= area.Y1; j++)
                 {
                     if (chance == 100) chanceOk = true;
-                    else if (chanceWithType == 0)
-                    {
-                        if (Chance.Perc(chance)) chanceOk = true;
-                        else chanceOk = false;
-                    }
+                    else if (chanceWithType == 0) chanceOk = Chance.Perc(chance);
                     else if (chanceWithType > 0)
                     {
                         if (Main.tile[i, j].WallType == chanceWithType) chanceOk = Chance.Perc(chance);
@@ -1188,6 +1184,43 @@ namespace WorldGenMod
                         if (paintwall)   WorldGen.paintWall(i, j, paint);
                     }
                 }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Replaces the existing background wall of a given tile. If there is none, wall can be placed
+        /// </summary>
+        /// <param name="pos">The tile to be worked on</param>
+        /// <param name="wallType">The ID of the to be placed wall</param>
+        /// <param name="paint">The ID of the paint that shall be applied to the wall (optional)</param>
+        /// <param name="placeIfNoWall">Option to choose if wall shall be placed if there is no wall present (to replace)</param>
+        /// <param name="chance">Option to state a chance roll that has to be passed to replace a wall</param>
+        /// <param name="chanceWithType">Option to state if the chance applies to all types or only to the stated one (0 = chance applies to all wall types)</param>
+        public static bool ReplaceWallTile((int x, int y) pos, int wallType, byte paint = 0, bool placeIfNoWall = false, int chance = 100, int chanceWithType = 0)
+        {
+            // pre-checks
+            if (wallType <= 0) return false;
+
+            bool chanceOk;
+            bool paintwall = paint > 0;
+
+            if (chance == 100) chanceOk = true;
+            else if (chanceWithType == 0) chanceOk = Chance.Perc(chance);
+            else if (chanceWithType > 0)
+            {
+                if (Main.tile[pos.x, pos.y].WallType == chanceWithType) chanceOk = Chance.Perc(chance);
+                else chanceOk = true;
+            }
+            else chanceOk = false;
+
+            if ((Main.tile[pos.x, pos.y].WallType > 0 || placeIfNoWall) && chanceOk)
+            {
+                WorldGen.KillWall(pos.x, pos.y);
+                WorldGen.PlaceWall(pos.x, pos.y, wallType);
+
+                if (paintwall) WorldGen.paintWall(pos.x, pos.y, paint);
             }
 
             return true;
@@ -1624,17 +1657,20 @@ namespace WorldGenMod
         /// <summary>
         /// Places hanging chains (also ropes or spikes) in a given room 
         /// </summary>
-        /// <param name="posBotLeft">The bottom left position of the chosen base</param>
-        /// <param name="candelabra">The placement data of the candelabra</param>
-        /// <param name="support">The placement data of the candelabra</param>
-        /// <param name="unlight">If the candelabras "UnlightCandelabra" function shall be called</param>
-        /// <param name="leftOn3XTiles">If the candelabra shall be placed on the right position on a possible 3 XTiles base (true) or on the left (false)</param>
-        /// <returns><br/>Tupel item1 <b>success</b>: true if candelabra placement was successful
-        ///          <br/>Tupel item2 <b>xPlace</b>: x-coordinate of bottom left corner of successfully placed candelabra, otherwise 0
-        ///          <br/>Tupel item3 <b>yPlace</b>: y-coordinate of bottom left corner of successfully placed candelabra, otherwise 0</returns>
-        public static (bool success, int xCand, int yCand) PlaceHangingChains(Rectangle2P room, (int id, int style, int paint) chain, int maxChainLength, int minChainLength = 2, int maxChains = 3, int gap = 1, int segmentAfterMinChance = 50, bool scanRoom = false)
+        /// <param name="room">The Rectangle2P where the chains shall be placed</param>
+        /// <param name="chain">The placement data of the chains</param>
+        /// <param name="maxChainLength">The max allowed length of a chain</param>
+        /// <param name="minChainLength">The min demanded length of a chain</param>
+        /// <param name="maxChains">The maximum amount of generated hanging chains</param>
+        /// <param name="gap">The gap between two hanging chains - ATTENTION: only 0 and 1 are implemented!!</param>
+        /// <param name="segmentAfterMinChance">The percental change with which each extra segment (> minChainLength) && (<= maxChainLength) get created</param>
+        /// <param name="scanRoom">If the given room shall be scanned for existing chains - not neccesary for empty rooms</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: True if at least 1 hanging chain was placed successfully
+        ///          <br/>Tupel item2 <b>generatedChains</b>: The amount of generated hanging chains</returns>
+        public static (bool success, int generatedChains) PlaceHangingChains(Rectangle2P room, (int id, int style, int paint) chain, int maxChainLength, int minChainLength = 2, int maxChains = 4, int gap = 1, int segmentAfterMinChance = 50, bool scanRoom = false)
         {
-            if (minChainLength < 1 || maxChains < 1 || gap < 0) return;
+            if (minChainLength < 1 || minChainLength >= room.YTiles || maxChainLength < minChainLength || maxChains < 1 || gap < 0) return (false, 0);
+            if (gap > 1) gap = 1; // not needed now and makes a hassle implementing! So cap it at 1 by now...
 
             #region init chainAllowed array
             bool[,] chainAllowed = new bool[room.YTiles, room.XTiles];
@@ -1665,42 +1701,103 @@ namespace WorldGenMod
             #endregion
 
 
-            int actI, actJ;
+            int anchorI, anchorJ;
             int generatedChains = 0; // init
-            bool posOK;
-            int maxTryPos;
+            int generationAttempts = 0; // init
+            Dictionary< (int x, int y), int> chainPosLength = []; // key is the starting position and value is the length of the chain
 
-            while (generatedChains < maxChains)
+            bool posOk;
+            int maxTryPos;
+            int x, y;
+
+            while (generationAttempts < maxChains)
             {
-                maxTryPos = 15; // init
-                posOK = false;
+                #region search chain starting pos that guarantees minChainLength
+                // remark: I don't care if chains spawn one over another.... e.g. two 2 segment chains combine to one 4 segmented one.
+                maxTryPos = 25; // init
                 do
                 {
-                    actI = WorldGen.genRand.Next(iDim);
-                    actJ = WorldGen.genRand.Next(jDim);
+                    posOk = true; //init... not necessary because minChainLength >= 1, just so that the compiler doesn't complain
+                    anchorI = WorldGen.genRand.Next(iDim);
+                    anchorJ = WorldGen.genRand.Next(jDim);
 
-                    if (minChainLength = 1)
-                    posOK = CheckAroundFree(chainAllowed, (actI, actJ), 216);
+                    x = room.X0 + anchorI;
+                    y = room.Y0 + anchorJ;
+
+                    for (int num = 0; num < minChainLength; num++)
+                    {
+                        posOk = !Main.tile[x, y + num].HasTile && (anchorJ + num < jDim); // tile is free and in range
+                        if (!posOk) break; // don't check more if check already failed
+
+                        posOk = CheckAroundNoChains(chainAllowed, (anchorI, anchorJ + num), 136) || gap == 0; // left and right have no chains, if gap
+                        if (!posOk) break; // don't check more if check already failed
+                    }
 
                     maxTryPos--;
                 }
-                while (!posOK && maxTryPos > 0);
+                while (!posOk && maxTryPos > 0);
 
-                if (!posOK || maxTryPos <= 0) // position search was aborted by max tries
+                if (!posOk && maxTryPos <= 0) // position search was aborted by max tries
                 {
-                    generatedChains++; // count this failed attempt
+                    generationAttempts++; // count this failed attempt
                     continue; // and start the next one
                 }
+                #endregion
 
-                generatedChains++;
+                #region define chain length
+                int chainLength = minChainLength;
+                for (int num = minChainLength; num < maxChainLength; num++)
+                {
+                    if (!Chance.Perc(segmentAfterMinChance)) break;
+
+                    posOk = !Main.tile[x, y + num].HasTile && (anchorJ + num < jDim); // tile is free and in range
+                    if (!posOk) break; // don't check more if check already failed
+
+                    posOk = CheckAroundNoChains(chainAllowed, (anchorI, anchorJ + num), 136) || gap == 0; // left and right have no chains, if gap
+
+                    if (!posOk) break; // don't check more if check already failed
+                    else chainLength++;
+                }
+                #endregion
+
+                #region place chains
+                bool placeOk;
+                for (int num = 0; num < chainLength; num++)
+                {
+                    placeOk = WorldGen.PlaceTile(x, y + num, chain.id, style: chain.style);
+
+                    if (!placeOk) break; // if this happens with num == 0 my previous code has errors!
+
+                    if (placeOk && num == 0)
+                    {
+                        generatedChains++; // first placement succeesful: count it!
+                        chainPosLength.Add((x, y), 1);
+                    }
+                    else if (placeOk && num > 0) chainPosLength[(x, y)] += 1; // count further length
+
+                    if (placeOk)
+                    {
+                        if (chain.paint > 0) WorldGen.paintTile(x, y + num, (byte)chain.paint);
+
+                        //actualize chainAllowed
+                        chainAllowed[anchorJ + num, anchorI] = false;
+                        if (gap > 0)
+                        {
+                            if (anchorI - 1 >= 0)   chainAllowed[anchorJ + num, anchorI - 1] = false; // left
+                            if (anchorI + 1 < iDim) chainAllowed[anchorJ + num, anchorI + 1] = false; // right
+                        }
+                    }
+                }
+                #endregion
+
+                generationAttempts++;
             }
 
-
-
+            return (true, chainPosLength.Count);
         }
 
         /// <summary>
-        /// Checks the surroundings of a tile for the presence of a given tile type
+        /// Checks the surroundings of specific position in the chainAllowed 2D array for the presence of a given tile type
         /// </summary>
         /// <param name="chainAllowed">2D array of the known chain presences -> TRUE = no chains</param>
         /// <param name="index">The index to be checked around</param>
@@ -1710,7 +1807,7 @@ namespace WorldGenMod
         /// <br/>                      7 _ 3 --> value: 128_______8
         /// <br/>                      6 5 4 --> value: _64__32__16
         /// <br/>                    -> e.g. the 4 straight neighbors result in the byte value 170, the 4 diagonal ones in 85, straight left and right in 136</param>
-        public static bool CheckAroundFree(bool[,] chainAllowed, (int i, int j) index, byte posToCheck)
+        public static bool CheckAroundNoChains(bool[,] chainAllowed, (int i, int j) index, byte posToCheck)
         {
             int jDim = chainAllowed.GetLength(0);
             int iDim = chainAllowed.GetLength(1);
@@ -1719,28 +1816,28 @@ namespace WorldGenMod
             if (jDim <= 0 || iDim <= 0) return false;
             if (index.i < 0 || index.i >= iDim || index.j < 0 || index.j >= jDim) return false;
 
-            Dictionary<int, bool> checkAllowed = [];
-            checkAllowed.Add(2,   (index.j - 1 >= 0));   // top, middle
-            checkAllowed.Add(8,   (index.i + 1 < iDim)); // right, middle
-            checkAllowed.Add(32,  (index.j + 1 < jDim)); // below, middle
-            checkAllowed.Add(128, (index.i - 1 >= 0));   // bottom, middle
+            Dictionary<int, bool> canBeQueried = []; // state if the 8 positions can be queried in the array
+            canBeQueried.Add(2,   (index.j - 1 >= 0));   // top, middle
+            canBeQueried.Add(8,   (index.i + 1 < iDim)); // right, middle
+            canBeQueried.Add(32,  (index.j + 1 < jDim)); // below, middle
+            canBeQueried.Add(128, (index.i - 1 >= 0));   // bottom, middle
 
-            checkAllowed.Add(1,  (checkAllowed[2] && checkAllowed[128]));  // top left
-            checkAllowed.Add(4,  (checkAllowed[2] && checkAllowed[8]));    // top right
-            checkAllowed.Add(16, (checkAllowed[8] && checkAllowed[32]));   // top right
-            checkAllowed.Add(64, (checkAllowed[32] && checkAllowed[128])); // bottom right
+            canBeQueried.Add(1,  (canBeQueried[2]  && canBeQueried[128]));  // top left
+            canBeQueried.Add(4,  (canBeQueried[2]  && canBeQueried[8]));    // top right
+            canBeQueried.Add(16, (canBeQueried[8]  && canBeQueried[32]));   // top right
+            canBeQueried.Add(64, (canBeQueried[32] && canBeQueried[128])); // bottom right
 
 
             bool free = true;
 
-            if (((posToCheck & 1) == 1)     && checkAllowed[1])   free &= chainAllowed[index.j - 1, index.i - 1];
-            if (((posToCheck & 2) == 2)     && checkAllowed[2])   free &= chainAllowed[index.j - 1, index.i    ];
-            if (((posToCheck & 4) == 4)     && checkAllowed[4])   free &= chainAllowed[index.j - 1, index.i + 1];
-            if (((posToCheck & 8) == 8)     && checkAllowed[8])   free &= chainAllowed[index.j    , index.i + 1];
-            if (((posToCheck & 16) == 16)   && checkAllowed[16])  free &= chainAllowed[index.j + 1, index.i + 1];
-            if (((posToCheck & 32) == 32)   && checkAllowed[32])  free &= chainAllowed[index.j + 1, index.i    ];
-            if (((posToCheck & 64) == 64)   && checkAllowed[64])  free &= chainAllowed[index.j + 1, index.i - 1];
-            if (((posToCheck & 128) == 128) && checkAllowed[128]) free &= chainAllowed[index.j    , index.i - 1];
+            if (((posToCheck & 1) == 1)     && canBeQueried[1])   free &= chainAllowed[index.j - 1, index.i - 1];
+            if (((posToCheck & 2) == 2)     && canBeQueried[2])   free &= chainAllowed[index.j - 1, index.i    ];
+            if (((posToCheck & 4) == 4)     && canBeQueried[4])   free &= chainAllowed[index.j - 1, index.i + 1];
+            if (((posToCheck & 8) == 8)     && canBeQueried[8])   free &= chainAllowed[index.j    , index.i + 1];
+            if (((posToCheck & 16) == 16)   && canBeQueried[16])  free &= chainAllowed[index.j + 1, index.i + 1];
+            if (((posToCheck & 32) == 32)   && canBeQueried[32])  free &= chainAllowed[index.j + 1, index.i    ];
+            if (((posToCheck & 64) == 64)   && canBeQueried[64])  free &= chainAllowed[index.j + 1, index.i - 1];
+            if (((posToCheck & 128) == 128) && canBeQueried[128]) free &= chainAllowed[index.j    , index.i - 1];
 
             return free;
         }
