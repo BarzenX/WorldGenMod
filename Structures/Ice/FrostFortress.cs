@@ -3248,7 +3248,7 @@ namespace WorldGenMod.Structures.Ice
                             WorldGen.PlaceTile(bricksRightStart + 1, j, TileID.Spikes);
                         }
 
-                        // create ledges
+                        // place backwall
                         Func.PlaceWallArea(new Rectangle2P(freeR.X0, brickHeight + 1, bricksLeftEnd - 2, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
                         Func.PlaceWallArea(new Rectangle2P(bricksRightStart + 2, brickHeight + 1, freeR.X1, brickHeight + 4, "dummyString"), WallID.WroughtIronFence, (byte)Deco[S.StylePaint]);
 
@@ -3281,6 +3281,7 @@ namespace WorldGenMod.Structures.Ice
                             else placedRight = WorldGen.PlaceObject(x, y, TileID.Banners, style: 19); // Lost Hopes of Man Banner
                         }
 
+                        // slope ledges
                         Func.SlopeTile(bricksLeftEnd, brickHeight, (int)Func.SlopeVal.UpRight);
                         Func.SlopeTile(bricksRightStart, brickHeight, (int)Func.SlopeVal.UpLeft);
 
@@ -3384,8 +3385,8 @@ namespace WorldGenMod.Structures.Ice
 
                     //ceiling stuff
                     area1 = area2 = Rectangle2P.Empty;
-                    int pileStart = 0, pileEnd = 4;
-                    switch (freeR.YTiles % 5) //every cell is 5 Tiles high
+                    int pileStart = 0, pileEnd = 4; // define which entries of prisonItems_all are going to be used for random item selection
+                    switch (freeR.YTiles % 5) //every cell is 5 Tiles high, get the remaining space till the ceiling
                     {
                         case 1: // put spikes
                             y = freeR.Y0;
@@ -3403,8 +3404,8 @@ namespace WorldGenMod.Structures.Ice
                             y = freeR.Y0 + 1;
                             area1 = new Rectangle2P(freeR.X0, y, freeR.X1, y, "dummyString");
                             area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
-                            pileStart = 1; // only single until..
-                            pileEnd = 4;  // ..large piles (wall skeletons don't fit)
+                            pileStart = 1; // only large piles (wall skeletons don't fit) until..
+                            pileEnd = 4;  // ..single piles 
 
                             break;
 
@@ -3412,8 +3413,8 @@ namespace WorldGenMod.Structures.Ice
                             y = freeR.Y0 + 2;
                             area1 = new Rectangle2P(freeR.X0 + 1, y, freeR.X1 - 1, y, "dummyString");
                             area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
-                            pileStart = 1; // only single until..
-                            pileEnd = 4;  // ..large piles
+                            pileStart = 1; // large piles until..
+                            pileEnd = 4;  // ..single piles
 
                             //Spikes
                             y = freeR.Y0;
@@ -3438,8 +3439,8 @@ namespace WorldGenMod.Structures.Ice
                             y = freeR.Y0 + 3;
                             area1 = new Rectangle2P(freeR.X0 + 1, y, freeR.X1 - 1, y, "dummyString");
                             //area2 = new Rectangle2P(doors[Door.Up].doorRect.X0, y, doors[Door.Up].doorRect.X1, y, "dummyString");
-                            pileStart = 1; // only single until..
-                            pileEnd = 4;  // ..large piles
+                            pileStart = 1; // large piles until..
+                            pileEnd = 4;  // ..single piles
 
                             // banners
                             bool placedLeft = false; //init
@@ -3504,7 +3505,7 @@ namespace WorldGenMod.Structures.Ice
                             if (pile == 0) checkAdd = [1, 1, 1, 1]; // Wall skeletons
                             else if (pile == 1) checkAdd = [1, 1, 1, 0]; // LargePiles
                             else if (pile == 2) checkAdd = [0, 1, 1, 0]; // SmallPiles
-                            else checkAdd = [0, 0, 0, 0]; // SinglePiles
+                            else checkAdd = [0, 0, 0, 0];               // SinglePiles
 
                             Func.TryPlaceTile(area1, area2, (ushort)type, style: style, chance: 75, add: new() { { "Piles", [xSprite, ySprite] }, { "CheckFree", checkAdd } });
 

@@ -24,7 +24,7 @@ namespace WorldGenMod.Structures.Underworld
         readonly int forceEvenRoom = 1; // 1 = force all rooms to have an even XTiles count; 0 = force all side rooms to have an odd XTiles count
         readonly int maxChurchLength = 500; // maximum tile length of the ChastisedChurch
         readonly (int xMin, int xMax, int yMin, int yMax) roomSizes = (12, 80, 12, 30); // possible room dimensions
-        readonly (int xMin, int xMax, int yMin, int yMax) belowRoomSizes = (35, 60, 14, 16); // possible below room dimensions
+        readonly (int xMin, int xMax, int yMin, int yMax) belowRoomSizes = (35, 60, 10, 14); // possible below room dimensions
         List<Rectangle2P> belowRoomsAndStairs = []; // list of all created below rooms and staircases to check and prevent overlappings
         List<(int x, int y, int pounds, int type, int style, byte paint, bool echoCoating)> PoundAfterSmoothWorld = []; // as the worldgen step "Smooth World" destroys the stairs of below rooms, they get stored here to create the stairs after that step
         
@@ -158,6 +158,8 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.RoofBrickPaint, (0, 0));
             Deco.Add(S.Floor, (0, 0));
             Deco.Add(S.FloorPaint, (0, 0));
+            Deco.Add(S.BelowRoomFloor, (0, 0));
+            Deco.Add(S.BelowRoomFloorPaint, (0, 0));
             Deco.Add(S.EvilTile, (0, 0));
             Deco.Add(S.BackWall, (0, 0));
             Deco.Add(S.BackWallPaint, (0, 0));
@@ -223,6 +225,8 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.RoofBrickPaint] = (0, 0);
                     Deco[S.Floor] = (TileID.CrimtaneBrick, 0);
                     Deco[S.FloorPaint] = (PaintID.RedPaint, 0);
+                    Deco[S.BelowRoomFloor] = (TileID.IronBrick, 0);
+                    Deco[S.BelowRoomFloorPaint] = (0, 0);
 
                     if (subStyle)
                     { 
@@ -298,6 +302,8 @@ namespace WorldGenMod.Structures.Underworld
 
                     Deco[S.Floor] = (TileID.CrimtaneBrick, 0);
                     Deco[S.FloorPaint] = (0, 0);
+                    Deco[S.BelowRoomFloor] = (TileID.IronBrick, 0);
+                    Deco[S.BelowRoomFloorPaint] = (0, 0);
                     if (subStyle)
                     {
                         Deco[S.Floor] = (TileID.AncientObsidianBrick, 0);
@@ -365,6 +371,8 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Floor] = (TileID.EbonstoneBrick, 0);
                     if (subStyle) Deco[S.Floor] = (TileID.MeteoriteBrick, 0);
                     Deco[S.FloorPaint] = (0, 0);
+                    Deco[S.BelowRoomFloor] = (TileID.IronBrick, 0);
+                    Deco[S.BelowRoomFloorPaint] = (0, 0);
                     Deco[S.EvilTile] = (TileID.Ebonstone, 0);
                     Deco[S.BackWall] = (WallID.Shadewood, 0);
                     Deco[S.BackWallPaint] = (PaintID.None, 0);
@@ -616,7 +624,7 @@ namespace WorldGenMod.Structures.Underworld
             {
                 for (y = room.Y0; y <= room.Y1; y++)
                 {
-                    if (isStairCase && y < freeR.Y0) continue; // cellars overlap with the above laying room (they share the same floor / ceiling), don't touch that!
+                    if (isStairCase && y < freeR.Y0) continue; // staircases overlap with the above laying room (they share the same floor / ceiling), don't touch that!
 
                     WorldGen.KillWall(x, y);
                     WorldGen.KillTile(x, y);
@@ -626,6 +634,7 @@ namespace WorldGenMod.Structures.Underworld
                     {
                         if ((!doors[Door.Left].doorExist && x < freeR.X0))       { WorldGen.PlaceTile(x, y, Deco[S.Brick].id, true, true); WorldGen.paintTile(x, y, (byte)Deco[S.BrickPaint].id); }
                         else if ((!doors[Door.Right].doorExist && x > freeR.X1)) { WorldGen.PlaceTile(x, y, Deco[S.Brick].id, true, true); WorldGen.paintTile(x, y, (byte)Deco[S.BrickPaint].id); }
+                        else if (isBelowRoom || isStairCase)                     { WorldGen.PlaceTile(x, y, Deco[S.BelowRoomFloor].id, true, true); }
                         else                                                     { WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true); WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id); }
                     }
                     else if (!freeR.Contains(x, y)) // x,y  are not in the free room? -> put outer wall bricks!
@@ -1045,7 +1054,7 @@ namespace WorldGenMod.Structures.Underworld
         /// </summary>
         /// <param name="room">The rectangular area of the room, including the outer walls</param>
         /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
-        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        /// <param name="wallBreak">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
         public void DecorateRoom(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak)
         {
             // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
@@ -2930,8 +2939,10 @@ namespace WorldGenMod.Structures.Underworld
                                     // middle section
                                     if (middleSection.XTiles < sectionXTiles)
                                     {
-                                        if (middleSection.XTiles <= 0) num = 1; //do nothing
-                                        if (Main.tile[middleSection.X0 - 1, middleSection.Y0].TileType == Deco[S.Column].id) // middle section between columns
+                                        Func.MarkRoom(room);
+
+                                        if (middleSection.XTiles < 1) num = 1; //do nothing
+                                        else if (Main.tile[middleSection.X0 - 1, middleSection.Y0].TileType == Deco[S.Column].id) // middle section between columns
                                         {
                                             Func.ReplaceWallArea(middleSection, Deco[S.WindowWall].id, (byte)Deco[S.WindowPaint].id, chance: overWrite.chance, chanceWithType: overWrite.id);
                                         }
@@ -3004,7 +3015,7 @@ namespace WorldGenMod.Structures.Underworld
                     }
                     #endregion
 
-                    //TODO: Stuff on ceiling: HangingPots, Chandeliers, banners
+                    //TODO: Stuff on ceiling? HangingPots, Chandeliers, banners
 
                     Func.PlaceStinkbug(freeR);
 
@@ -3089,16 +3100,16 @@ namespace WorldGenMod.Structures.Underworld
         /// </summary>
         /// <param name="room">The rectangular area of the room, including the outer walls</param>
         /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
-        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        /// <param name="wallBreak">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
         public void DecorateStairCase(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak)
         {
             // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
             Rectangle2P freeR = new(room.X0 + wThick, room.Y0 + wThick, room.X1 - wThick, room.Y1 - wThick, "dummyString");
 
-
             // init variables
             int x, y;
-            
+            (int id, int chance) overWrite = (Deco[S.CrookedWall].id, 60);
+
             #region put middle beam ("pole")
 
             int startY = doors[Door.Up].doorRect.Y1 + 1;
@@ -3114,6 +3125,7 @@ namespace WorldGenMod.Structures.Underworld
                     WorldGen.PlaceWall(i, j, Deco[S.DoorWall].id);
                 }
             }
+            int beamWidth = ((freeR.XCenter + 1) - startX) + 1;
 
             List<int> onPole = [];
             for (int i = startX; i <= (freeR.XCenter + 1); i++) onPole.Add(i);
@@ -3138,11 +3150,17 @@ namespace WorldGenMod.Structures.Underworld
             for (int i = onPole.Min() - 1; i <= (onPole.Max() + 1); i++) poundRange.Add(i);
 
 
-
-
-            // pound platform tile of the already existing down door
+            // pound platform tile of the already existing down door of the room above
             (int x, int y) stairsStart = (startX - creationDir, startY - 1);
             stairs.Add((stairsStart.x, stairsStart.y), (1, false));
+
+
+            // define backwall deco strip length and put first one
+            int decoStripYTiles = 2 * beamWidth + 1;
+            if ((stairsStart.y + 1 + decoStripYTiles) <= freeR.Y1)
+            {
+                Func.ReplaceWallArea(new(stairsStart.x - creationDir, stairsStart.y + 3, 1, decoStripYTiles - 1), WallID.Bone, chance: overWrite.chance, chanceWithType: overWrite.id);
+            }
 
             bool first = true;
             while (y <= freeR.Y1)
@@ -3166,6 +3184,12 @@ namespace WorldGenMod.Structures.Underworld
 
                         if (poundRange.Contains(i)) Func.AddPoundToStairTile(stairs, (i, y), 1);
                     }
+
+                    // place backwall deco strip
+                    if ((y + 1 + decoStripYTiles) <= freeR.Y1)
+                    {
+                        Func.ReplaceWallArea(new(x + 1, y + 2, 1, decoStripYTiles), WallID.Bone, chance: overWrite.chance, chanceWithType: overWrite.id);
+                    }
                 }
                 else if (x == leftTurningPoint)
                 {
@@ -3178,6 +3202,12 @@ namespace WorldGenMod.Structures.Underworld
                         stairs.Add((i, y), (0, false)); // "place tile"
 
                         if (poundRange.Contains(i)) Func.AddPoundToStairTile(stairs, (i, y), 1);
+                    }
+
+                    // place backwall deco strip
+                    if ((y + 1 + decoStripYTiles) <= freeR.Y1)
+                    {
+                        Func.ReplaceWallArea(new(x - 1, y + 2, 1, decoStripYTiles), WallID.Bone, chance: overWrite.chance, chanceWithType: overWrite.id);
                     }
                 }
 
@@ -3205,6 +3235,47 @@ namespace WorldGenMod.Structures.Underworld
 
             CreateStairsFromData(poundList);
 
+            #region place bones on the floor
+            List<(ushort tileID, (int y, int x) sprite, byte chance)> randomBones =
+            [
+                (TileID.LargePiles, (0, 0) , 75 ), // 3x2 BonePile1
+                (TileID.LargePiles, (0, 1) , 75 ), // 3x2 BonePile2
+                (TileID.LargePiles, (0, 2) , 75 ), // 3x2 BonePile3
+                (TileID.LargePiles, (0, 3) , 75 ), // 3x2 BonePile4
+                (TileID.LargePiles, (0, 4) , 75 ), // 3x2 BonePile5
+                (TileID.LargePiles, (0, 5) , 75 ), // 3x2 BonePile6
+                                             
+                (TileID.SmallPiles, (1, 6) , 75 ), // 2x1 BonePile1
+                (TileID.SmallPiles, (1, 7) , 75 ), // 2x1 BonePile2
+                (TileID.SmallPiles, (1, 8) , 75 ), // 2x1 BonePile3
+                (TileID.SmallPiles, (1, 9) , 75 ), // 2x1 BonePile4
+                (TileID.SmallPiles, (1, 10), 75 ), // 2x1 BonePile5
+                (TileID.SmallPiles, (1, 10), 75 ), // 2x1 BonePile5 again, to have the an equal amount for each size
+                                              
+                (TileID.SmallPiles, (0, 12), 75 ), // 1x1 BonePile1
+                (TileID.SmallPiles, (0, 13), 75 ), // 1x1 BonePile2
+                (TileID.SmallPiles, (0, 14), 75 ), // 1x1 BonePile3 --> taken out to have the an equal amount for each size
+                (TileID.SmallPiles, (0, 15), 75 ), // 1x1 BonePile4 --> taken out to have the an equal amount for each size
+                (TileID.SmallPiles, (0, 16), 75 ), // 1x1 BonePile5
+                (TileID.SmallPiles, (0, 17), 75 ), // 1x1 BonePile6
+                (TileID.SmallPiles, (0, 18), 75 ), // 1x1 BonePile7
+                (TileID.SmallPiles, (0, 19), 75 )  // 1x1 BonePile8
+            ];
+
+            (ushort tileID, (int y, int x) sprite, byte chance) randomBone; // for random item placement, to make interaction with randomBones List shorter
+            Rectangle2P area1 = new(freeR.X0, freeR.Y1, freeR.XTiles, 1);
+            Rectangle2P noBlock = Rectangle2P.Empty;
+
+            for (int i = 1; i <= 3; i++)
+            {
+                randomBone = randomBones[WorldGen.genRand.Next(randomBones.Count)];
+
+                Func.TryPlaceTile(area1, noBlock, randomBone.tileID, chance: randomBone.chance,
+                                  add: new() { { "Piles", [randomBone.sprite.x, randomBone.sprite.y] } });
+            }
+            #endregion
+
+
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
         }
 
@@ -3213,7 +3284,7 @@ namespace WorldGenMod.Structures.Underworld
         /// </summary>
         /// <param name="room">The rectangular area of the room, including the outer walls</param>
         /// <param name="doors">The rectangular areas of the possible doors in the room and a bool stating if it actually exists (use class "Door" to refer to a specific door)</param>
-        /// <param name="doors">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
+        /// <param name="wallBreak">The points of the possible backwall breaks in the room and a bool stating if it actually exists (use class "BP" to refer to a specific breaking point)</param>
         public void DecorateBelowRoom(Rectangle2P room, IDictionary<int, (bool doorExist, Rectangle2P doorRect)> doors, IDictionary<int, (bool exist, Vector2 point)> wallBreak)
         {
             // the "free" room.... e.g. the rooms free inside ("room" without the wall bricks)
@@ -3230,22 +3301,305 @@ namespace WorldGenMod.Structures.Underworld
             int x, y, chestID, unusedXTiles, num, numOld;
 
 
-            // for window placement
-            List<Rectangle2P> windowsPairs = []; // ascending indexes refer to windows in the room like this: 6 windows (0 2 4 5 3 1), 8 windows (0 2 4 6 7 5 3 1) etc.
-            List<Rectangle2P> windowsOrder = []; // ascending indexes refer to windows in the room like this: 6 windows (0 1 2 3 4 5), 8 windows (0 1 2 3 4 5 6 7) etc.
-            List<Rectangle2P> spacesOrder = []; // ascending indexes refer to the spaces between windows in the room like this: 2 spaces (4 windows) (W 0 W | W 1 W), 4 spaces (6 windows) (W 0 W 1 W | W 2 W 3 W) etc.
-            Rectangle2P middleSpace; // the middle space if the room has pairs of windows
-
-            int windowXTiles = 4;
-
-            int windowYMargin = 2; // how many Tiles the window shall be away from the ceiling / floor
-            int windowY0 = freeR.Y0 + windowYMargin; // height where the window starts
-            int windowYTiles = freeR.YTiles - (2 * windowYMargin); // the YTiles height of a window
-
-            bool awayEnough1, awayEnough2, windowsExist, windowPairsExist, middleSpaceExist = false, windowDistanceXTilesOdd = false;
+            LineAutomat automat;
+            int actX;
 
 
 
+            #region prison / torture room at rooms end
+
+            #region prepare lists
+            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_WallSkeletons =
+            [
+                (TileID.Painting3X3, 16, (3,3), (1,-1), 75, []), // wall skeleton
+                (TileID.Painting3X3, 17, (3,3), (1,-1), 75, [])  // hanging skeleton
+            ];
+            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_LargePiles =
+            [
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 0] } }),  // BonePile1
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 1] } }),  // BonePile2
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 2] } }),  // BonePile3
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 3] } }),  // BonePile4
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 4] } }),  // BonePile5
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 5] } }),  // BonePile6
+                (TileID.LargePiles,  0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 6] } }),  // Skeleton Pierced by a Sword
+                (TileID.LargePiles2, 0, (3,2), (1,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 13] } })  // a Dead Body covered in Web
+            ];
+            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_SmallPiles =
+            [
+                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 6] } }),  // BonePile1
+                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 7] } }),  // BonePile2
+                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 8] } }),  // BonePile3
+                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 9] } }),  // BonePile4
+                (TileID.SmallPiles, 0, (2,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [1, 10] } })  // BonePile5
+            ];
+            List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)> prisonItems_SinglePiles =
+            [
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 12] } }),  // BonePile1
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 13] } }),  // BonePile2
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 14] } }),  // BonePile3
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 15] } }),  // BonePile4
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 16] } }),  // BonePile5
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 17] } }),  // BonePile6
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 18] } }),  // BonePile7
+                (TileID.SmallPiles, 0, (1,1), (0,0), 75, new(){ {(int)LineAutomat.Adds.Piles, [0, 19] } })   // BonePile8
+            ];
+            List<List<(int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add)>> prisonItems_all =
+            [
+                prisonItems_WallSkeletons,
+                prisonItems_LargePiles,
+                prisonItems_SmallPiles,
+                prisonItems_SinglePiles
+            ];
+            List<int> bannerStyle =
+            [
+                12, // Rusted Company Standard
+                15, // Diabolic Sigil
+                17, //  Hell Hammer
+                19, // Lost Hopes of Man
+                20, // Obsidian Watcher
+            ];
+            #endregion
+
+            int cellheight = 5; // 4 tiles free, 1 tile ceiling bricks
+            int cellLength = 11; //9 tiles free, 1 tile door spikes, 1 tile where the lamp hangs
+            int brickHeight = freeR.Y1 - (cellheight - 1); //init; the height of the topmost row of iron bricks of a prison cell
+            int bricksEnd, bricksStart;
+            Rectangle2P cellFree; // the free inside of the cell
+
+            bool leftRoom = doors[Door.Right].doorExist && !doors[Door.Left].doorExist; // TRUE  -> a "left of the stairs" below room, prison is on the left wall,
+                                                                                        // FALSE -> a "right of the stairs" below room, prison is on the right wall
+            if (leftRoom) // a "right" below room, prison is on the right wall
+            {
+                bricksStart = freeR.X0;
+                bricksEnd = freeR.X0 + (cellLength - 1);
+            }
+            else
+            {
+                bricksStart = freeR.X1 - (cellLength - 1);
+                bricksEnd = freeR.X1;
+            }
+
+            #region create and fill cells
+            while (freeR.Y0 <= brickHeight)
+            {
+                if (leftRoom) cellFree = new(bricksStart, brickHeight + 1, cellLength - 2, cellheight - 1);
+                else          cellFree = new(bricksStart + 2, brickHeight + 1, cellLength - 2, cellheight - 1);
+
+                #region place bricks and wall
+                // place ceiling bricks
+                y = brickHeight;
+                for (int i = bricksStart; i <= bricksEnd; i++)
+                {
+                    WorldGen.PlaceTile(i, y, Deco[S.BelowRoomFloor].id);
+                    WorldGen.paintTile(i, y, (byte)Deco[S.BelowRoomFloorPaint].id);
+                }
+
+                // spikes "doors"
+                for (int j = brickHeight + 1; j <= brickHeight + (cellheight - 1); j++)
+                {
+                    if(leftRoom) WorldGen.PlaceTile(bricksEnd - 1, j, TileID.Spikes);
+                    else         WorldGen.PlaceTile(bricksStart + 1, j, TileID.Spikes);
+                }
+
+                // place backwall
+                Func.PlaceWallArea(cellFree, WallID.WroughtIronFence, (byte)Deco[S.StylePaint].id);
+                #endregion
+
+                #region put lanterns or banners on the ledge and slope it
+                placed = false; //init
+                if (leftRoom) x = bricksEnd;
+                else          x = bricksStart;
+                y = brickHeight + 1;
+                if (Chance.Perc(50))
+                {
+                    placed = WorldGen.PlaceTile(x, y, TileID.HangingLanterns, style: 2); // Caged Lantern
+                    if (placed) Func.UnlightLantern(x, y);
+                }
+                else if (Chance.Perc(50))
+                {
+                    placed = WorldGen.PlaceObject(x, y, TileID.Banners, style: bannerStyle[WorldGen.genRand.Next(bannerStyle.Count)]); // Rusted Company Standard
+                }
+
+                // slope ledge
+                if(leftRoom) Func.SlopeTile(bricksEnd, brickHeight, (int)Func.SlopeVal.UpRight);
+                else         Func.SlopeTile(bricksStart, brickHeight, (int)Func.SlopeVal.UpLeft);
+                #endregion
+
+
+                #region fill cell with bones
+                int randNum, limX;
+                (int TileID, int style, (int x, int y) size, (int x, int y) toAnchor, byte chance, Dictionary<int, List<int>> add) prisonItem;
+                
+                actX = cellFree.X0;
+                limX = cellFree.X1;
+                automat = new((actX, cellFree.Y1), (int)LineAutomat.Dirs.xPlus);
+
+
+                while (actX <= limX)
+                {
+                    // get one decoration item
+                    randNum = WorldGen.genRand.Next(4); // all prisonItem categories
+                    switch (randNum)
+                    {
+                        case 0:
+                            prisonItem = prisonItems_WallSkeletons[WorldGen.genRand.Next(prisonItems_WallSkeletons.Count)];
+                            break;
+                        case 1:
+                            prisonItem = prisonItems_LargePiles[WorldGen.genRand.Next(prisonItems_LargePiles.Count)];
+                            break;
+                        case 2:
+                            prisonItem = prisonItems_SmallPiles[WorldGen.genRand.Next(prisonItems_SmallPiles.Count)];
+                            break;
+                        default:
+                            prisonItem = prisonItems_SinglePiles[WorldGen.genRand.Next(prisonItems_SinglePiles.Count)];
+                            break;
+                    }
+
+                    if (prisonItem.TileID == TileID.Painting3X3 && (prisonItem.style == 16 || prisonItem.style == 17))
+                    {
+                        prisonItem.toAnchor.y -= WorldGen.genRand.Next(2); // randomly hang wall skeletons 1 tile higher
+                    }
+
+                    // analyze if left space is enought
+                    if ((actX - 1) + prisonItem.size.x <= limX)
+                    {
+                        automat.Steps.Add(((int)LineAutomat.Cmds.Tile, prisonItem.TileID, prisonItem.style, prisonItem.size, prisonItem.toAnchor, prisonItem.chance, prisonItem.add));
+                        actX += prisonItem.size.x;
+                    }
+                    else // if not, just put 1 empty space
+                    {
+                        automat.Steps.Add(((int)LineAutomat.Cmds.Space, 0, 0, size: (1, 0), (0, 0), 0, []));
+                        actX += 1;
+                    }
+                }
+                automat.Start();
+                #endregion
+
+                brickHeight -= cellheight;
+            }
+            #endregion
+
+            #region stuff above prisons / on ceiling
+            area1 = Rectangle2P.Empty; //init: line area for the LineAutomat
+            int pileKindStart = 0, pileKindEnd = 4; //init:  define which entries of prisonItems_all are going to be used for random item selection
+            if (freeR.YTiles % cellheight > 0)
+            {
+                switch (freeR.YTiles % cellheight) //every cell is 5 Tiles high, get the remaining space till the ceiling
+                {
+                    case 1: // put spikes
+                        y = freeR.Y0;
+                        for (int i = bricksStart; i <= bricksEnd; i++)
+                        {
+                            WorldGen.PlaceTile(i, y, TileID.Spikes);
+                        }
+                        break;
+
+                    case 2: // put bones
+                        y = freeR.Y0 + 1;
+                        if (leftRoom) area1 = new Rectangle2P(bricksStart, y, bricksEnd - 1, y, "dummyString");
+                        else          area1 = new Rectangle2P(bricksStart + 1, y, bricksEnd, y, "dummyString");
+                        pileKindStart = 1; // only large piles (wall skeletons don't fit) until..
+                        pileKindEnd = 4;  // ..single piles
+
+                        break;
+
+                    case 3: // put bones and spikes
+                        y = freeR.Y0 + 2;
+                        if (leftRoom) area1 = new Rectangle2P(bricksStart, y, bricksEnd - 1, y, "dummyString");
+                        else          area1 = new Rectangle2P(bricksStart + 1, y, bricksEnd, y, "dummyString");
+                        pileKindStart = 1; // large piles until..
+                        pileKindEnd = 4;  // ..single piles
+
+                        //Spikes
+                        y = freeR.Y0;
+                        for (int i = bricksStart; i <= bricksEnd; i++)
+                        {
+                            WorldGen.PlaceTile(i, y, TileID.Spikes);
+                        }
+
+                        if (leftRoom) x = bricksStart;
+                        else x = bricksEnd;
+                        for (int j = freeR.Y0; j <= freeR.Y0 + 2; j++)
+                        {
+                            WorldGen.PlaceTile(x, j, TileID.Spikes);
+                        }
+
+                        break;
+
+                    case 4: // put bones and spikes and banners
+                        y = freeR.Y0 + 3;
+                        if (leftRoom) area1 = new Rectangle2P(bricksStart, y, bricksEnd - 1, y, "dummyString");
+                        else          area1 = new Rectangle2P(bricksStart + 1, y, bricksEnd, y, "dummyString");
+                        pileKindStart = 1; // large piles until..
+                        pileKindEnd = 4;  // ..single piles
+
+                        // banner
+                        bool placedBanner = false; //init
+                        if (leftRoom) x = bricksEnd;
+                        else          x = bricksStart;
+                        y = freeR.Y0;
+                        if (Chance.Perc(70))
+                        {
+                            placedBanner = WorldGen.PlaceObject(x, y, TileID.Banners, style: bannerStyle[WorldGen.genRand.Next(bannerStyle.Count)]);
+                        }
+
+                        //Spikes
+                        y = freeR.Y0;
+                        for (int i = bricksStart; i <= bricksEnd; i++)
+                        {
+                            if (i == bricksEnd && placedBanner) continue;
+                            WorldGen.PlaceTile(i, y, TileID.Spikes);
+                        }
+
+                        if (leftRoom) x = bricksStart;
+                        else x = bricksEnd;
+                        for (int j = freeR.Y0; j <= freeR.Y0 + 3; j++)
+                        {
+                            WorldGen.PlaceTile(x, j, TileID.Spikes);
+                        }
+
+                        break;
+
+                    default: break;
+                }
+
+                if (!area1.IsEmpty())
+                {
+                    int availableX = area1.XTiles; // init
+                    while (availableX > 0)
+                    {
+                        if (availableX == 1) pileKindStart = 3; // choose single piles if nothing else fits anyway
+                        else if (availableX < 3 && pileKindStart < 2) pileKindStart = 2; // large piles would fail to place anyway
+
+                        int pilekind = WorldGen.genRand.Next(pileKindStart, pileKindEnd); // get a pile variant at random
+                        int item = WorldGen.genRand.Next(prisonItems_all[pilekind].Count); // get a specific pile item at random
+
+                        int type = prisonItems_all[pilekind][item].TileID;
+                        int style = prisonItems_all[pilekind][item].style;
+                        int xSprite = prisonItems_all[pilekind][item].add[(int)LineAutomat.Adds.Piles][1];
+                        int ySprite = prisonItems_all[pilekind][item].add[(int)LineAutomat.Adds.Piles][0];
+                        List<int> checkAdd;
+                        if (pilekind == 0) checkAdd = [1, 1, 1, 1];      // Wall skeletons
+                        else if (pilekind == 1) checkAdd = [1, 1, 1, 0]; // LargePiles
+                        else if (pilekind == 2) checkAdd = [0, 1, 1, 0]; // SmallPiles
+                        else checkAdd = [0, 0, 0, 0];               // SinglePiles
+
+                        Func.TryPlaceTile(area1, noBlock, (ushort)type, style: style, chance: 75, add: new() { { "Piles", [xSprite, ySprite] }, { "CheckFree", checkAdd } });
+
+                        availableX -= prisonItems_all[pilekind][item].size.x;
+                    }
+                }
+            }
+
+            #endregion
+            #endregion
+
+
+            #region fire pit with hanging skeleton
+            x = freeR.XCenter;
+            y = 1;
+            #endregion
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
         }
@@ -4133,6 +4487,8 @@ namespace WorldGenMod.Structures.Underworld
         public const String RoofBrickPaint = "RoofBrickPaint";
         public const String Floor = "Floor";
         public const String FloorPaint = "FloorPaint";
+        public const String BelowRoomFloor = "BelowRoomFloor";
+        public const String BelowRoomFloorPaint = "BelowRoomFloorPaint";
         public const String EvilTile = "EvilTile";
         public const String BackWall = "BackWall";
         public const String BackWallPaint = "BackWallPaint";
@@ -4169,6 +4525,7 @@ namespace WorldGenMod.Structures.Underworld
         public const String Piano = "Piano";
         public const String Column = "Column";
         public const String ColumnPaint = "ColumnPaint";
+
 
         // altar
         public const String MiddleWall = "MiddleWall";
