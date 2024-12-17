@@ -13,6 +13,9 @@ using WorldGenMod.Structures.Ice;
 using Terraria.UI;
 using System.Drawing;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static tModPorter.ProgressUpdate;
+using System.Diagnostics.Metrics;
 
 namespace WorldGenMod.Structures.Underworld
 {
@@ -1103,6 +1106,7 @@ namespace WorldGenMod.Structures.Underworld
             switch (roomDeco)
             {
                 case 0: // Statues in front of Windows
+
                     #region windows
                     windowsPairs.Clear();
 
@@ -1199,32 +1203,246 @@ namespace WorldGenMod.Structures.Underworld
                     #region modify windows shape
                     if (windowsExist)
                     {
-                        bool alternativeShape = Chance.Simple();
+                        int windowHeight = freeR.YTiles - 2 * windowYMargin;
+
+                        List<int> windowShapes = [];
+                        if (windowsPairs.Count < 2)
+                        {
+                            windowShapes.Add(0); // completely rectangular
+                            windowShapes.Add(1); // upper left & right corner missing
+                            windowShapes.Add(2); // upper end is "plus" shaped
+                        }
+                        else
+                        {
+                            windowShapes.Add(0); // completely rectangular
+                            windowShapes.Add(1); // upper left & right corner missing
+                            windowShapes.Add(2); // upper end is "plus" shaped
+                            windowShapes.Add(3); // upper end is skewed 
+                            windowShapes.Add(4); // cases 0,1,2 in random order
+                        }
+
+
 
                         List<System.Drawing.Point> windowPoints = [];
-                        Tile windowTile;
-                        foreach (Rectangle2P windowRect in windowsPairs)
+                        switch (windowShapes[WorldGen.genRand.Next(windowShapes.Count)])
                         {
-                            windowPoints.Clear();
-                            windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0)); // upper left corner
-                            windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0)); // upper right corner
+                            // completely rectangular
+                            case 0:
 
-                            if (alternativeShape && (( freeR.YTiles - 2*windowYMargin ) >= 6) ) //window higher than 6 tiles
-                            {
-                                windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0 + 3)); // point for cross shaped form
-                                windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0 + 3)); // point for cross shaped form
-                            }
+                                // nothing to do actually :-P
 
-                            foreach (System.Drawing.Point windowPoint in windowPoints)
-                            {
-                                windowTile = Main.tile[windowPoint.X, windowPoint.Y];
-                                if (windowTile.WallType == Deco[S.WindowWall].id)
+                                break;
+
+                            // upper left & right corner missing
+                            case 1: 
+
+                                foreach (Rectangle2P windowRect in windowsPairs)
                                 {
-                                    // put normal backwall
-                                    WorldGen.KillWall(windowPoint.X, windowPoint.Y);
-                                    WorldGen.PlaceWall(windowPoint.X, windowPoint.Y, Deco[S.BackWall].id);
-                                    if (Deco[S.BackWallPaint].id > 0) WorldGen.paintWall(windowPoint.X, windowPoint.Y, (byte)Deco[S.BackWallPaint].id);
+                                    windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0)); // upper left corner
+                                    windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0)); // upper right corner
                                 }
+
+                                break;
+
+                            // upper end is "plus" shaped
+                            case 2:
+
+                                if (windowHeight < 6) break;
+
+                                foreach (Rectangle2P windowRect in windowsPairs)
+                                {
+                                    windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0)); // upper left corner
+                                    windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0)); // upper right corner
+
+                                    windowPoints.Add(new System.Drawing.Point(x: windowRect.X0, y: windowRect.Y0 + 3)); // point for cross shaped form
+                                    windowPoints.Add(new System.Drawing.Point(x: windowRect.X1, y: windowRect.Y0 + 3)); // point for cross shaped form
+                                }
+
+                                break;
+
+                            // upper end is skewed
+                            case 3:
+
+                                for (int i = 0; i < windowsPairs.Count; i = i+2) // 2 consecutive indexes belong to a pair of windows --> iterate over pairs
+                                {
+                                    #region state window pairs shape
+
+                                    (int left, int right) windowShape = (0,0); // 0 = init value, 1 = cut out upper left corner, 2 = "plus" shaped form of the top, 3 = cut out upper right corner
+                                    switch (i)
+                                    {
+                                        // outermost pair
+                                        case 0:
+
+                                            windowShape = (1,3);
+                                            break;
+
+                                        // second pair
+                                        case 2:
+
+                                            if (windowsPairs.Count == 6) windowShape = (2, 2);  // special case: form a "plus" in the middle window and the other pairs are /| + |\
+                                            else                         windowShape = (3, 1);
+                                            break;
+
+                                        // third pair
+                                        case 4:
+
+                                            if (windowsPairs.Count == 6) windowShape = (3, 1); // special case: form a "plus" in the middle window and the other pairs are /| + |\
+                                            else                         windowShape = (1, 3);
+                                            break;
+
+                                        // fourth pair
+                                        case 6:
+
+                                            windowShape = (3, 1);
+                                            break;
+                                    }
+                                    #endregion
+
+                                    #region work the stated shapes of a pair
+
+                                    Rectangle2P win;
+                                    for (num = 0; num < 2; num++)
+                                    {
+                                        int shape;
+                                        if (num == 0) // left window of a pair
+                                        {
+                                            win = windowsPairs[i];
+                                            shape = windowShape.left;
+                                        }
+                                        else // right window of a pair
+                                        {
+                                            win = windowsPairs[i + 1];
+                                            shape = windowShape.right;
+                                        }
+
+                                        switch (shape)
+                                        {
+                                            // cut out upper left corner
+                                            case 1:
+                                                int ylow = win.Y0 - 1; // init
+                                                if (windowHeight > 12 && windowsPairs.Count == 6) ylow = win.Y0 + 3; // special case: let the centered "plus" stand out
+
+                                                for (x = win.X1; x >= win.X0; x--)
+                                                {
+                                                    for (y = win.Y0; y <= ylow; y++)
+                                                    {
+                                                        windowPoints.Add(new System.Drawing.Point(x, y)); // taking out the upper left corner of the window
+                                                    }
+                                                    ylow++;
+                                                }
+                                                break;
+
+                                            // "plus" shaped form of the top
+                                            case 2:
+
+                                                windowPoints.Add(new System.Drawing.Point(win.X0, win.Y0)); // upper left corner
+                                                windowPoints.Add(new System.Drawing.Point(win.X1, win.Y0)); // upper right corner
+
+                                                windowPoints.Add(new System.Drawing.Point(win.X0, win.Y0 + 3)); // point for cross shaped form
+                                                windowPoints.Add(new System.Drawing.Point(win.X1, win.Y0 + 3)); // point for cross shaped form
+
+                                                break;
+
+                                            // cut out upper left corner
+                                            case 3:
+                                                ylow = win.Y0 - 1; // init
+                                                if (windowHeight > 12 && windowsPairs.Count == 6) ylow = win.Y0 + 3; // special case: let the centered "plus" stand out
+
+                                                for (x = win.X0; x <= win.X1; x++)
+                                                {
+                                                    for (y = win.Y0; y <= ylow; y++)
+                                                    {
+                                                        windowPoints.Add(new System.Drawing.Point(x, y)); // taking out the upper right corner of the window
+                                                    }
+                                                    ylow++;
+                                                }
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                    #endregion
+                                }
+
+                                break;
+
+                            // cases 0,1,2 in random order
+                            case 4:
+
+                                List<int> avaiableShapes = [1, 2, 3]; // 1 = completely rectangular, 2 = upper left & right corner missing, 3 = upper end is "plus" shaped
+
+                                for (int i = 0; i < windowsPairs.Count; i = i + 2) // 2 consecutive indexes belong to a pair of windows --> iterate over pairs
+                                {
+                                    Func.MarkRoom(room);
+                                    
+                                    if (avaiableShapes.Count == 0) // all forms picked?
+                                    {
+                                        avaiableShapes.Add(1); // refill
+                                        avaiableShapes.Add(2);
+                                        avaiableShapes.Add(3);
+                                    }
+
+                                    int windowShape = 0; // 0 = init value
+                                    windowShape = avaiableShapes.PopAt(WorldGen.genRand.Next(avaiableShapes.Count)); // make the shapes not repeat until available ones are depleted!
+
+                                    #region work the stated shapes of a pair
+
+                                    Rectangle2P win;
+                                    for (num = 0; num < 2; num++)
+                                    {
+                                        if (num == 0) win = windowsPairs[i]; // left window of a pair
+                                        else          win = windowsPairs[i + 1];// right window of a pair
+
+                                        switch (windowShape)
+                                        {
+                                            // completely rectangular
+                                            case 1:
+                                                break;
+
+                                            // upper left & right corner missing
+                                            case 2:
+
+                                                windowPoints.Add(new System.Drawing.Point(win.X0, win.Y0)); // upper left corner
+                                                windowPoints.Add(new System.Drawing.Point(win.X1, win.Y0)); // upper right corner
+
+                                                break;
+
+                                            // upper end is "plus" shaped
+                                            case 3:
+
+                                                windowPoints.Add(new System.Drawing.Point(win.X0, win.Y0)); // upper left corner
+                                                windowPoints.Add(new System.Drawing.Point(win.X1, win.Y0)); // upper right corner
+
+                                                windowPoints.Add(new System.Drawing.Point(win.X0, win.Y0 + 3)); // point for cross shaped form
+                                                windowPoints.Add(new System.Drawing.Point(win.X1, win.Y0 + 3)); // point for cross shaped form
+
+                                                break;
+
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                    #endregion
+                                }
+
+
+                                break;
+
+                            default:
+                                break;
+                        }
+
+                        Tile windowTile;
+                        foreach (System.Drawing.Point windowPoint in windowPoints)
+                        {
+                            windowTile = Main.tile[windowPoint.X, windowPoint.Y];
+                            if (windowTile.WallType == Deco[S.WindowWall].id)
+                            {
+                                // put normal backwall
+                                WorldGen.KillWall(windowPoint.X, windowPoint.Y);
+                                WorldGen.PlaceWall(windowPoint.X, windowPoint.Y, Deco[S.BackWall].id);
+                                if (Deco[S.BackWallPaint].id > 0) WorldGen.paintWall(windowPoint.X, windowPoint.Y, (byte)Deco[S.BackWallPaint].id);
                             }
                         }
                     }
@@ -2939,8 +3157,6 @@ namespace WorldGenMod.Structures.Underworld
                                     // middle section
                                     if (middleSection.XTiles < sectionXTiles)
                                     {
-                                        Func.MarkRoom(room);
-
                                         if (middleSection.XTiles < 1) num = 1; //do nothing
                                         else if (Main.tile[middleSection.X0 - 1, middleSection.Y0].TileType == Deco[S.Column].id) // middle section between columns
                                         {
