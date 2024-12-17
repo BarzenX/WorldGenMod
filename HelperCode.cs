@@ -18,6 +18,7 @@ using static WorldGenMod.LineAutomat;
 using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using Terraria.GameContent.UI.States;
+using System.Drawing;
 
 namespace WorldGenMod
 {
@@ -1840,6 +1841,95 @@ namespace WorldGenMod
             if (((posToCheck & 128) == 128) && canBeQueried[128]) free &= chainAllowed[index.j    , index.i - 1];
 
             return free;
+        }
+
+        /// <summary>
+        /// Places a 5x6 fire pit with a hanging skeleton on top of it in the middle of the pit)
+        /// </summary>
+        /// <param name="room">The Rectangle2P of the room, if the fire pit shall be placed randomly</param>
+        /// <param name="pitArea">The Rectangle2P of the specific area, where the 5x6 pit shall be placed</param>
+        /// <param name="pitBrick">The placement data of the bricks of the pit</param>
+        /// <param name="fire">The placement data of the fire inside of the pit</param>
+        /// <param name="allowLongerChain">Stating if the chain, where the skeleton hangs onto, may be longer than 1 tile</param>
+        /// <param name="chainChance">If allowLongerChain == true, then this is the chance for each additional chain segment</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: True if the fire pit and skeleton were placed successfully
+        ///          <br/>Tupel item2 <b>xStart</b>: The left x-coordinate where the fire pit starts
+        ///          <br/>Tupel item3 <b>highestChain</b>: The y-coordinate of the highest hanged chain, if input allowLongerChain == true </returns>
+        public static (bool success, int xStart, int highestChain) PlaceFirePitSkeleton(Rectangle2P room, Rectangle2P pitArea, (int id, int paint) pitBrick, (int id, int paint) fire, bool allowLongerChain = true, int chainChance = 50)
+        {
+            bool generatePlacePos = true; // if the place pos for the fire pit shall be generated randomly....
+            if (!room.IsEmpty() && pitArea.IsEmpty()) generatePlacePos = true;
+            else if (room.IsEmpty() && !pitArea.IsEmpty()) generatePlacePos = false; // or if the pitArea has been defined already
+            else return (false, 0, 0);
+
+            if (!generatePlacePos && (pitArea.XTiles != 5 || pitArea.YTiles != 6)) return (false, 0, 0); // pit area is not 5x6
+            if (!generatePlacePos && !CheckFree(pitArea)) return (false, 0, 0); // pit area is not free
+
+
+            int firePitXTiles = 5; // 3 skeleton and +1 +1 border
+            int firePitYTiles = 6; // 2 pit + 3 skeleton +1 chain
+
+
+            #region generate pitArea if needed
+            if (generatePlacePos)
+            {
+                int xStart;
+                bool posOk = false;
+                int genTries = 10; // maximum tries to find a suitable pit area
+
+                do
+                {
+                    xStart = WorldGen.genRand.Next(room.X0, room.X1);
+                    posOk = CheckFree(new(xStart, room.Y1 - (firePitYTiles - 1), firePitXTiles, firePitYTiles));
+
+                    genTries--;
+                } while (!posOk && genTries >= 0);
+
+                if (genTries < 0 && !posOk) return (false, 0, 0); // no position found, abort
+
+                pitArea = new(xStart, room.Y1 - (firePitYTiles - 1), firePitXTiles, firePitYTiles);
+            }
+            #endregion
+
+            #region place pit and fire
+            for (int i = pitArea.X0; i <= pitArea.X1; i++)
+            {
+                WorldGen.PlaceTile(i, pitArea.Y1, pitBrick.id);
+                if (pitBrick.paint > 0) WorldGen.paintTile(i, pitArea.Y1, (byte)pitBrick.paint);
+
+                if(i == pitArea.X0 ||  i == pitArea.X1)
+                {
+                    WorldGen.PlaceTile(i, pitArea.Y1 - 1, pitBrick.id); // border brick
+                    if (pitBrick.paint > 0) WorldGen.paintTile(i, pitArea.Y1 - 1, (byte)pitBrick.paint);
+                }
+                    
+                if(i > pitArea.X0 && i < pitArea.X1)
+                {
+                    WorldGen.PlaceTile(i, pitArea.Y1 - 1, fire.id);
+                    if (fire.paint > 0) WorldGen.paintTile(i, pitArea.Y1 - 1, (byte)fire.paint);
+                }
+            }
+            #endregion
+
+            #region hang skeleton on chain
+            int x = pitArea.XCenter;
+            int y = pitArea.Y1 - 3;
+            bool placed = WorldGen.PlaceTile(x, y, TileID.Painting3X3, style: 17);
+
+            y -= 2; //where the chain starts
+            WorldGen.PlaceTile(x, y, TileID.Chain);
+            if (allowLongerChain)
+            {
+                y--;
+                while (Chance.Perc(chainChance) && !Main.tile[x, y].HasTile)
+                {
+                    WorldGen.PlaceTile(x, y, TileID.Chain);
+                    y--; //update
+                }
+            }
+            #endregion
+
+            return (placed, pitArea.X0, y);
         }
 
 

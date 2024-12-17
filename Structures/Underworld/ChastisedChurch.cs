@@ -3303,6 +3303,8 @@ namespace WorldGenMod.Structures.Underworld
 
             LineAutomat automat;
             int actX;
+            Rectangle2P cell; // area of the cell (including surroundings, and 
+            Rectangle2P roomWoCell; // area of the room without the cell
 
 
 
@@ -3373,12 +3375,17 @@ namespace WorldGenMod.Structures.Underworld
             {
                 bricksStart = freeR.X0;
                 bricksEnd = freeR.X0 + (cellLength - 1);
+
+                roomWoCell = new(bricksEnd + 1, freeR.Y0, freeR.X1, freeR.Y1, "dummy");
             }
             else
             {
                 bricksStart = freeR.X1 - (cellLength - 1);
                 bricksEnd = freeR.X1;
+
+                roomWoCell = new(freeR.X0, freeR.Y0, bricksStart - 1, freeR.Y1, "dummy");
             }
+            cell = new(bricksStart, freeR.Y0, bricksEnd, freeR.Y1, "dummy");
 
             #region create and fill cells
             while (freeR.Y0 <= brickHeight)
@@ -3593,13 +3600,177 @@ namespace WorldGenMod.Structures.Underworld
             }
 
             #endregion
+
             #endregion
 
 
-            #region fire pit with hanging skeleton
-            x = freeR.XCenter;
-            y = 1;
+            #region place torturing tools
+
+            // place cauldron first
+            Rectangle2P toolArea = new(roomWoCell.XCenter - 2, freeR.Y1, roomWoCell.XCenter + 2, freeR.Y1, "dummy"); // some random spot in the middle of the still remaining room
+            placeResult = Func.TryPlaceTile(toolArea, noBlock, TileID.CookingPots, style: 1);
+
+            if (placeResult.success)
+            {
+                // hanging skeleton above the cauldron
+                placed = false;
+                if (Chance.Perc(80)) placed = WorldGen.PlaceTile(placeResult.x, placeResult.y - 3, TileID.Painting3X3, style: 17);
+                if (placed) WorldGen.PlaceTile(placeResult.x, placeResult.y - 5, TileID.Chain);
+
+                // cooking pot next to the cualdron
+                if (Chance.Simple()) WorldGen.PlaceTile(placeResult.x - 2, placeResult.y, TileID.CookingPots, style: 0); // cooking pot left
+                else                 WorldGen.PlaceTile(placeResult.x + 2, placeResult.y, TileID.CookingPots, style: 0); // cooking pot right
+            }
+            else //should actually never happen
+            {
+                Func.TryPlaceTile(toolArea, noBlock, TileID.CookingPots, style: 0); ; // cooking pot in the middle of the remaing room
+            }
+
+            toolArea.X0 -= 4;
+            toolArea.X1 += 4; // widen toolArea for placing the workshop, the wall skeleton, and the racks
+
+            Func.TryPlaceTile(toolArea, noBlock, TileID.HeavyWorkBench);
+            Func.TryPlaceTile(toolArea.CloneAndMove(0, -1), noBlock, TileID.Painting3X3, style: 16);
+
+            Func.TryPlaceTile(toolArea.CloneAndMove(0, -4), noBlock, TileID.Painting3X3, style: 41); // Blacksmith Rack
+            Func.TryPlaceTile(toolArea.CloneAndMove(0, -4), noBlock, TileID.Painting3X3, style: 42); // Carpentry Rack
+
+
+            // WeaponRack with whip
+            for (int tries = 1; tries <= 4; tries++)
+            {
+                y = WorldGen.genRand.Next(roomWoCell.Y0 + 1, roomWoCell.Y1 - 3); // floor is already quite packed
+                x = WorldGen.genRand.Next(toolArea.X0, toolArea.X1);
+
+                placed = Func.PlaceWeaponRack(x, y, item: ItemID.BlandWhip, direction: Func.RandPlus1Minus1(), paint: PaintID.GrayPaint);
+                if (placed) break;
+            }
+
             #endregion
+
+
+            #region fire pit with skeleton hanging above
+
+            area1 = new(roomWoCell.X0 + 2, freeR.Y0, roomWoCell.X1 - 2, freeR.Y1, "dummy"); // leave some minimal distance to the entrance and the prison cell
+            Func.PlaceFirePitSkeleton(area1, Rectangle2P.Empty, (TileID.Titanstone, 0), (TileID.LivingFire, 0));
+
+            #endregion
+
+
+            #region place bones on the floor
+
+            int numBones = roomWoCell.XTiles / 3; // big bones are 3 XTiles wide, so this is the extreme case, that only big bones get placed...is also a good max amount in general
+            area1 = new(roomWoCell.X0, freeR.Y1, roomWoCell.X1, freeR.Y1, "dummy"); // ground floor
+
+            pileKindStart = 1; // large piles until..
+            pileKindEnd = 4;  // ..single piles
+
+            for (int i = 0; i < numBones; i++)
+            {
+                int pilekind = WorldGen.genRand.Next(pileKindStart, pileKindEnd); // get a pile variant at random
+                int item = WorldGen.genRand.Next(prisonItems_all[pilekind].Count); // get a specific pile item at random
+
+                int type = prisonItems_all[pilekind][item].TileID;
+                int style = prisonItems_all[pilekind][item].style;
+                int xSprite = prisonItems_all[pilekind][item].add[(int)LineAutomat.Adds.Piles][1];
+                int ySprite = prisonItems_all[pilekind][item].add[(int)LineAutomat.Adds.Piles][0];
+                List<int> checkAdd;
+                if (pilekind == 0) checkAdd = [1, 1, 1, 1];      // Wall skeletons
+                else if (pilekind == 1) checkAdd = [1, 1, 1, 0]; // LargePiles
+                else if (pilekind == 2) checkAdd = [0, 1, 1, 0]; // SmallPiles
+                else checkAdd = [0, 0, 0, 0];               // SinglePiles
+
+                Func.TryPlaceTile(area1, noBlock, (ushort)type, style: style, chance: 75, add: new() { { "Piles", [xSprite, ySprite] }, { "CheckFree", checkAdd } });
+            }
+
+            #endregion
+
+
+            #region place wall catacombs
+
+            List<(int TileID, int style, (int x, int y) size, byte chance)> WallItems =
+            [
+                (TileID.Painting3X3, 16, (3,3), 75), // wall skeleton
+                (TileID.Painting3X3, 17, (3,3), 75),  // hanging skeleton
+                (TileID.Painting4X3,  0, (4,3), 75),  // Catacomb style 1, skeleton head left
+                (TileID.Painting4X3,  1, (4,3), 75),  // Catacomb style 1, skeleton head right
+                (TileID.Painting4X3,  2, (4,3), 75),  // Catacomb style 1, skeleton arm hanging out
+                (TileID.Painting4X3,  3, (4,3), 75),  // Catacomb style 2, skeleton head left
+                (TileID.Painting4X3,  4, (4,3), 75),  // Catacomb style 2, skeleton head right
+                (TileID.Painting4X3,  5, (4,3), 75),  // Catacomb style 2, skeleton arm hanging out
+                (TileID.Painting4X3,  6, (4,3), 75),  // Catacomb style 3, skeleton head left
+                (TileID.Painting4X3,  7, (4,3), 75),  // Catacomb style 3, skeleton head right
+                (TileID.Painting4X3,  8, (4,3), 75)   // Catacomb style 3, skeleton arm hanging out
+            ];
+            (int TileID, int style, (int x, int y) size, byte chance) wallItem;
+            int numWallItem = roomWoCell.XTiles / 4; // catacombs are 4 XTiles wide, so this is the extreme case, that only big bones get placed...is also a good max amount in general
+
+            for (int i = 0; i < numWallItem; i++)
+            {
+                wallItem = WallItems[WorldGen.genRand.Next(WallItems.Count)]; // get a wall item at random
+
+                int type = wallItem.TileID;
+                int style = wallItem.style;
+
+                List<int> checkAdd;
+                if      (type == TileID.Painting3X3) checkAdd = [1, 1, 1, 1]; // Wall skeletons
+                else if (type == TileID.Painting4X3) checkAdd = [1, 2, 1, 1]; // Catacomb Skeletons
+                else                                 checkAdd = [0, 0, 0, 0]; // should never happen
+
+                y = WorldGen.genRand.Next(roomWoCell.Y0 + 1, roomWoCell.Y1); // random heigth: Y0 + 1  <=   y  <= Y1 - 1
+                area1 = new(roomWoCell.X0, y, roomWoCell.X1, y, "dummy"); // placing height
+
+                Func.TryPlaceTile(area1, noBlock, (ushort)type, style: style, chance: 75, add: new() { { "CheckFree", checkAdd } });
+            }
+
+            #endregion
+
+
+            #region place hanging chains
+
+            int maxChains = roomWoCell.XTiles / 5; // hang a chain about every fifth tile
+            Func.PlaceHangingChains(roomWoCell, (TileID.Chain, 0, 0), 5, maxChains: maxChains, scanRoom: true);
+
+            #endregion
+
+
+            #region place banners / lantern at ceiling
+
+            int maxCeiling = roomWoCell.XTiles / 5; // hang something about every fifth tile
+
+            List<(int TileID, int style, (int x, int y) size, byte chance)> CeilingItems =
+            [
+                (TileID.HangingLanterns,  2, (1,3), 75), // Caged Lantern
+                (TileID.HangingLanterns,  6, (1,3), 75), // Oil Rag Sconce
+                (TileID.HangingLanterns, 25, (1,3), 75), // Bone Lantern
+                (TileID.Banners, 10, (1,3), 75), // Marching Bones Banner
+                (TileID.Banners, 11, (1,3), 75), // Necromantic Sign
+                (TileID.Banners, 12, (1,3), 75), // Rusted Company Standard
+                (TileID.Banners, 15, (1,3), 75), // Diabolic Sigil
+                (TileID.Banners, 17, (1,3), 75), // Hell Hammer Banner
+                (TileID.Banners, 18, (1,3), 75), // Helltower Banner
+                (TileID.Banners, 21, (1,3), 75)  // Lava Erupts Banner
+            ];
+            (int TileID, int style, (int x, int y) size, byte chance) ceilingItem;
+
+            for (int i = 0; i < maxCeiling; i++)
+            {
+                if (CeilingItems.Count == 0) break; 
+
+                ceilingItem = CeilingItems.PopAt(WorldGen.genRand.Next(CeilingItems.Count)); // get a wall item at random and don't repeat!
+
+                int type = ceilingItem.TileID;
+                int style = ceilingItem.style;
+                List<int> checkAdd = [0, 2, 0, 0];
+
+                area1 = new(roomWoCell.X0, roomWoCell.Y0, roomWoCell.X1, roomWoCell.Y0, "dummy"); // ceiling
+
+                placeResult = Func.TryPlaceTile(area1, noBlock, (ushort)type, style: style, chance: 75, add: new() { { "CheckFree", checkAdd } });
+                if (type == TileID.HangingLanterns && placeResult.success) Func.UnlightLantern(placeResult.x, placeResult.y);
+            }
+
+            #endregion
+
 
             Func.PlaceCobWeb(freeR, 1, WorldGenMod.configChastisedChurchCobwebFilling);
         }
