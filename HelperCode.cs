@@ -1123,6 +1123,7 @@ namespace WorldGenMod
         {
             if (posX < 0 || posY < 0 || tileID < 0 || style < 0 || paint < 0 || slope < 0 || slope > (int)SlopeVal.BotLeft) return false;
 
+            WorldGen.KillTile(posX, posY);
             bool placed = WorldGen.PlaceTile(posX, posY, tileID, style: style);
 
             if (paint > 0) WorldGen.paintTile(posX, posY, (byte)paint);

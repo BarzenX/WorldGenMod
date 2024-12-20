@@ -16,6 +16,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static tModPorter.ProgressUpdate;
 using System.Diagnostics.Metrics;
+using System.Reflection;
 
 namespace WorldGenMod.Structures.Underworld
 {
@@ -33,6 +34,7 @@ namespace WorldGenMod.Structures.Underworld
         
 
         Dictionary<string, (int id, int style)> Deco = []; // the dictionary where the styles of tiles are stored
+        Dictionary<Action, (bool execute, int decoStyle, int decoSubStyle, List<(int x, int y, int tileID)> checkPoints)> runAfterWorldCleanup = []; // structures that get damaged after later world generation steps and need to be redone
 
         public override void ModifyWorldGenTasks(List<GenPass> tasks, ref double totalWeight)
         {
@@ -45,6 +47,7 @@ namespace WorldGenMod.Structures.Underworld
 
                     PoundAfterSmoothWorld.Clear(); //init for each world generation
                     belowRoomsAndStairs.Clear(); //init for each world generation
+                    runAfterWorldCleanup.Clear();
 
                     int side; //init
                     if (WorldGenMod.chastisedChurchGenerationSide == "Left") side = -1;
@@ -70,12 +73,38 @@ namespace WorldGenMod.Structures.Underworld
 
                 }));
 
+
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Smooth World"));
-                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: repair CC stairs", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: repair stairs", delegate (GenerationProgress progress, GameConfiguration config)
                 {
-                    progress.Message = "Repairing the stairs that got deleted during the previous worldgen step...";
+                    progress.Message = "Repairing the stairs that got damaged during the previous worldgen step...";
 
                     CreateStairsFromData();
+                }));
+
+
+                genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Quick Cleanup"));
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: repair structure", delegate (GenerationProgress progress, GameConfiguration config)
+                {
+                    progress.Message = "Repairing the structures that got damaged during the previous worldgen step...";
+
+                    foreach (KeyValuePair<Action, (bool execute, int decoStyle, int decoSubStyle, List<(int x, int y, int tileID)> checkPoints)> function in runAfterWorldCleanup)
+                    {
+                        if (function.Value.execute)
+                        {
+                            FillAndChooseStyle(function.Value.decoStyle, function.Value.decoSubStyle); // reload the style with which the structure was created
+
+                            bool checkOk = true;
+                            foreach ((int x, int y, int tileID) point in function.Value.checkPoints) // check if the checkPoint still have the correct TileIDs or if they got overwritten
+                            {
+                                checkOk &= Main.tile[point.x, point.y].TileType == point.tileID;
+                            }
+
+                            if (checkOk) function.Key.Invoke(); // put the structure again
+
+                        }
+
+                    }
                 }));
             }
         }
@@ -149,12 +178,22 @@ namespace WorldGenMod.Structures.Underworld
             }
         }
 
-        public void FillAndChooseStyle()
+        /// <summary>
+        /// Chooses a random decoration style for the ChastisedChurch or executes the one that it got handed over
+        /// </summary>
+        /// <param name="forceStyle">Impose a style (useful for redoing steps after "Smooth World" world creation step, to "reload" a style)
+        ///                         <br/> --> -1 = don't force, choose at random </param>
+        /// <param name="forceSubstyle">Impose a substyle, possible values: 0 or 1 (useful for redoing steps after "Smooth World" world creation step, to "reload" a style)
+        ///                         <br/> --> -1 = don't force, choose at random
+        ///                         <br/> --> 0 = normal style
+        ///                         <br/> --> 1 = substyle </param>
+        public void FillAndChooseStyle(int forceStyle = -1, int forceSubstyle = -1)
         {
             Deco.Clear(); // init
 
             #region create dictionary entries
             Deco.Add(S.StyleSave, (0,0));
+            Deco.Add(S.SubStyleSave, (0,0));
             Deco.Add(S.Brick, (0, 0));
             Deco.Add(S.BrickPaint, (0, 0));
             Deco.Add(S.RoofBrick, (0, 0));
@@ -220,16 +259,25 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.SwordBladeWall, (0, 0));
             #endregion
 
-            //choose a random style and define it's types
-            int chooseStyle = WorldGen.genRand.Next(3);
-            bool subStyle = false;
-            switch (chooseStyle)
+            //use the handed over style / choose a random style and define it's IDs
+            int chosenStyle, subStyle;
+
+            if (forceStyle > 0) chosenStyle = forceStyle;
+            else                chosenStyle = WorldGen.genRand.Next(3);
+
+            if (forceSubstyle == 0 || forceSubstyle == 1) subStyle = forceSubstyle;
+            else
+            {
+                if (Chance.Simple()) subStyle = 1;
+                else                 subStyle = 0;
+            }
+
+            switch (chosenStyle)
             {
                 case S.StyleHellstone: // Hellstone
 
-                    subStyle = Chance.Simple();
-
                     Deco[S.StyleSave] = (0, S.StyleHellstone);
+                    Deco[S.SubStyleSave] = (0, subStyle);
 
                     Deco[S.Brick] = (TileID.AncientHellstoneBrick, 0);
                     Deco[S.BrickPaint] = (0, 0);
@@ -240,7 +288,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.BelowRoomFloor] = (TileID.IronBrick, 0);
                     Deco[S.BelowRoomFloorPaint] = (0, 0);
 
-                    if (subStyle)
+                    if (subStyle == 1)
                     { 
                         Deco[S.Brick] = (TileID.IridescentBrick, 0);
                         Deco[S.BrickPaint] = (PaintID.RedPaint, 0);
@@ -271,7 +319,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.MainPainting] = (TileID.Painting3X3, 26); //* "Discover"
                     Deco[S.Chandelier] = (TileID.Chandeliers, 19); // Shadewood
                     Deco[S.Candelabra] = (TileID.Candelabras, 14); // Shadewood
-                    if (subStyle) Deco[S.Candelabra] = (TileID.Candelabras, 12); // Spooky
+                    if (subStyle == 1) Deco[S.Candelabra] = (TileID.Candelabras, 12); // Spooky
                     Deco[S.Candle] = (TileID.PlatinumCandle, 0); // PlatinumCandle
                     Deco[S.Lamp] = (TileID.Lamps, 14); // Shadewood
                     Deco[S.Torch] = (TileID.Torches, 9); //* Ice
@@ -313,9 +361,9 @@ namespace WorldGenMod.Structures.Underworld
 
                 case S.StyleTitanstone: // Titanstone
 
-                    subStyle = Chance.Simple();
-
                     Deco[S.StyleSave] = (S.StyleTitanstone, 0);
+                    Deco[S.SubStyleSave] = (0, subStyle);
+
                     Deco[S.Brick] = (TileID.Titanstone, 0);
                     Deco[S.BrickPaint] = (0, 0);
                     Deco[S.RoofBrick] = (TileID.Titanstone, 0);
@@ -325,7 +373,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.FloorPaint] = (0, 0);
                     Deco[S.BelowRoomFloor] = (TileID.IronBrick, 0);
                     Deco[S.BelowRoomFloorPaint] = (0, 0);
-                    if (subStyle)
+                    if (subStyle == 1)
                     {
                         Deco[S.Floor] = (TileID.AncientObsidianBrick, 0);
                         Deco[S.FloorPaint] = (PaintID.GrayPaint, 0);
@@ -363,7 +411,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Bookcase] = (TileID.Bookcases, 19); // Shadewood
                     Deco[S.Sofa] = (TileID.Benches, 5); // Shadewood
                     Deco[S.Clock] = (TileID.GrandfatherClocks, 21); // Shadewood
-                    if (subStyle) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
+                    if (subStyle == 1) Deco[S.Clock] = (TileID.GrandfatherClocks, 43); // AshWood
                     Deco[S.PaintingWallpaper] = (WallID.CrimstoneEcho, 0); // Crimstone Wall
                     Deco[S.Dresser] = (TileID.Dressers, 18); //* Boreal
                     Deco[S.Piano] = (TileID.Pianos, 4); // Shadewood
@@ -393,13 +441,13 @@ namespace WorldGenMod.Structures.Underworld
 
                 case S.StyleBlueBrick:
 
-                    subStyle = Chance.Simple();
-
                     Deco[S.StyleSave] = (S.StyleBlueBrick, 0);
+                    Deco[S.SubStyleSave] = (0, subStyle);
+
                     Deco[S.Brick] = (TileID.BlueDungeonBrick, 0);
                     Deco[S.RoofBrick] = (TileID.BlueDungeonBrick, 0);
                     Deco[S.Floor] = (TileID.EbonstoneBrick, 0);
-                    if (subStyle) Deco[S.Floor] = (TileID.MeteoriteBrick, 0);
+                    if (subStyle == 1) Deco[S.Floor] = (TileID.MeteoriteBrick, 0);
                     Deco[S.FloorPaint] = (0, 0);
                     Deco[S.BelowRoomFloor] = (TileID.IronBrick, 0);
                     Deco[S.BelowRoomFloorPaint] = (0, 0);
@@ -413,7 +461,7 @@ namespace WorldGenMod.Structures.Underworld
 
                     Deco[S.DoorPlat] = (TileID.Platforms, 16); // Spooky
                     Deco[S.DoorPlatPaint] = (PaintID.BluePaint, 0);
-                    if (subStyle)
+                    if (subStyle == 1)
                     {
                         Deco[S.DoorPlat] = (TileID.Platforms, 27); // Meteorite
                         Deco[S.DoorPlatPaint] = (0, 0);
@@ -430,7 +478,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.MainPainting] = (TileID.Painting3X3, 35); //* "Rare Enchantment"
                     Deco[S.Chandelier] = (TileID.Chandeliers, 32); // Obsidian
                     Deco[S.Candelabra] = (TileID.Candelabras, 2); // Ebonwood
-                    if (subStyle) Deco[S.Candelabra] = (TileID.PlatinumCandelabra, 0); // PlatinumCandelabra
+                    if (subStyle == 1) Deco[S.Candelabra] = (TileID.PlatinumCandelabra, 0); // PlatinumCandelabra
                     Deco[S.Candle] = (TileID.Candles, 5); // Ebonwood
                     Deco[S.Lamp] = (TileID.Lamps, 23); // Obsidian
                     Deco[S.Torch] = (TileID.Torches, 7); //* Demon
@@ -453,10 +501,10 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.MiddleWall] = (WallID.Bone, 0);
                     Deco[S.MiddleWallPaint] = (PaintID.RedPaint, 0);
                     Deco[S.AltarSteps] = (TileID.Platforms, 10); //Brass Shelf
-                    if (subStyle) Deco[S.AltarSteps] = (TileID.Platforms, 22); //Skyware
+                    if (subStyle == 1) Deco[S.AltarSteps] = (TileID.Platforms, 22); //Skyware
                     Deco[S.AltarStepsPaint] = (0, 0);
                     Deco[S.AltarDeco] = (TileID.Platforms, 10); //Brass Shelf
-                    if (subStyle) Deco[S.AltarDeco] = (TileID.Platforms, 22); //Skyware
+                    if (subStyle == 1) Deco[S.AltarDeco] = (TileID.Platforms, 22); //Skyware
                     Deco[S.AltarDecoPaint] = (0, 0);
                     Deco[S.AltarWall] = (WallID.DemoniteBrick, 0);
                     Deco[S.AltarWallPaint] = (0, 0);
@@ -3017,13 +3065,95 @@ namespace WorldGenMod.Structures.Underworld
                             }
                             #endregion
 
-                            #region middleSpace.XTiles <= 20
-                            else if (middleSpace.XTiles >= 15)
+                            #region middleSpace.XTiles <= 16
+                            else if (middleSpace.XTiles <= 16)
                             {
-                                Func.MarkRoom(room);
+                                //Func.MarkRoom(room);
                                 //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
                                 //CreateGiantSword(middleSpace, (4, 5), 6, freeR.Y1);
-                                CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: true, actuated: true);
+                                //CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: false, smallCrossGuard: true, actuated: false);
+                            }
+                            #endregion
+
+                            #region middleSpace.XTiles <= 18
+                            else if (middleSpace.XTiles <= 18)
+                            {
+                                //Func.MarkRoom(room);
+                                //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
+                                //CreateGiantSword(middleSpace, (4, 5), 6, freeR.Y1);
+                                //CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: false, smallCrossGuard: true, actuated: false);
+                            }
+                            #endregion
+
+                            #region middleSpace.XTiles <= 20
+                            else if (middleSpace.XTiles <= 20)
+                            {
+                                (bool success, Rectangle2P pommelR, Rectangle2P handleR, Rectangle2P crossGuardR, Rectangle2P crossGuardCenterR, Rectangle2P bladeR, List<(int x, int y, int tileID)> checkPoints) result;
+                                Func.MarkRoom(freeR);
+                                if (freeR.YTiles >= 17)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+
+                                    // small stone podest for the statue where it can stuck into
+                                    int podestXStart = freeR.XCenter - 5;//result.bladeR.X0 - 3;
+                                    int podestXEnd = freeR.XCenter + 6;//result.bladeR.X1 + 3;
+                                    int podestYEnd = freeR.Y1 - 1;
+                                    if (freeR.YTiles == 17)
+                                    {
+                                        podestXStart++; // just one line of podest
+                                        podestXEnd++;
+                                        podestYEnd--;
+                                    }
+
+                                    for (int j = freeR.Y1; j >= podestYEnd; j--)
+                                    {
+                                        for (int i = podestXStart; i <= podestXEnd; i++)
+                                        {
+                                            if (i == podestXStart)    Func.PlaceSingleTile(i, j, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id, slope: (int)Func.SlopeVal.UpLeft);
+                                            else if (i == podestXEnd) Func.PlaceSingleTile(i, j, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id, slope: (int)Func.SlopeVal.UpRight);
+                                            else                      Func.PlaceSingleTile(i, j, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id);
+                                        }
+                                        podestXStart++;
+                                        podestXEnd--;
+                                    }
+
+                                    WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 2, TileID.Statues, style: 1);
+                                }
+                                else if (freeR.YTiles >= 16)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+
+                                    WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1, TileID.Statues, style: 1);
+                                }
+                                else if (freeR.YTiles >= 13)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6, smallPommel: false, smallCrossGuard: false, actuated: true);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6, smallPommel: false, smallCrossGuard: false, actuated: true); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+                                }
+                                else if (freeR.YTiles == 12)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6, smallPommel: true, smallCrossGuard: false, actuated: true);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6, smallPommel: true, smallCrossGuard: false, actuated: true); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+                                }
+                                else if (freeR.YTiles == 11)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 3), 6, smallPommel: true, smallCrossGuard: false, actuated: true);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 3), 6, smallPommel: true, smallCrossGuard: false, actuated: true); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+                                }
+                                else if (freeR.YTiles == 10)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: false, actuated: true);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: false, actuated: true); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+                                }
+                                else if (freeR.YTiles == 9)
+                                {
+                                    result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: true, actuated: true);
+                                    runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: true, actuated: true); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
+                                }
+
+                                //TODO: idea for small rooms....the sword is alomost unrecognizable there, maybe hand it horizontally? But there is the problem of 
                             }
                             #endregion
                         }
@@ -4436,21 +4566,34 @@ namespace WorldGenMod.Structures.Underworld
 
 
         /// <summary>
-        /// Creates the 6x4 pommel of the giant sword decoration in the top middle of the given space
+        /// Creates a giant sword decoration in the middle of the given space, leaves 1 tile space on left / right and none on top / bottom
         /// <br/>Hint: by now only for even-X-Tiled-rooms
         /// </summary>
-        /// <param name="area">The area where the giant sword pommel shall be placed in the top center</param>
-        /// <param name="handle">Minimum is (2, 3)</param>
+        /// <param name="area">The area where the giant sword shall be placed -> leaves 1 tile space on left / right and none on top / bottom</param>
+        /// <param name="handle">Dimensions of the swords handle. Minimum is (2, 2)</param>
+        /// <param name="bladeXTiles">Width of the swords blade. Minimum is 2</param>
+        /// <param name="smallPommel">Reduce the pommels height by 1 tile (take out the topmost tip)</param>
+        /// <param name="smallCrossGuard">Reduce the crossguards height by 1 tile (move the bottom line 1 tile up)</param>
+        /// <param name="actuated">Make all bricks of the sword actuated so it can be walked through</param>
         /// <returns><br/>Tupel item1 <b>success</b>: True if the giant sword pommel was placed successfully
-        ///          <br/>Tupel item2 <b>pommelRect</b>: The actual area covered by the giant sword pommel</returns>
-        public (bool success, Rectangle2P pommelRect) CreateGiantSword(Rectangle2P area, (int xTiles, int yTiles) handle, int bladeXTiles, bool smallPommel = false, bool smallCrossGuard = false, bool actuated = false)
+        ///          <br/>Tupel item2 <b>pommelR</b>: The actual area covered by the giant swords pommel</returns>
+        ///          <br/>Tupel item3 <b>handleR</b>: The actual area covered by the giant swords handle</returns>
+        ///          <br/>Tupel item4 <b>crossGuardR</b>: The actual area covered by the giant swords whole crossguard</returns>
+        ///          <br/>Tupel item5 <b>crossGuardCenterR</b>: The actual area covered by the center of the giant swords crossguard</returns>
+        ///          <br/>Tupel item6 <b>bladeR</b>: The actual area covered by the center of the giant swords blade</returns>
+        ///          <br/>Tupel item7 <b>checkPoints</b>: Return some remarkable points of the structure with which later can be checked if later worlgen steps overwrote the structure</returns>
+        public (bool success, Rectangle2P pommelR, Rectangle2P handleR, Rectangle2P crossGuardR, Rectangle2P crossGuardCenterR, Rectangle2P bladeR, List<(int x, int y, int tileID)> checkPoints) CreateGiantSword(
+            Rectangle2P area, (int xTiles, int yTiles) handle, int bladeXTiles, bool smallPommel = false, bool smallCrossGuard = false, bool actuated = false)
         {
-            int minYTiles = 12; // 14 --> 5 (pommel) + 3 (handle) + 4 (crossguard) + 0 (blade)
+            Rectangle2P empty = Rectangle2P.Empty;
+            List<(int x, int y, int tileID)> checkPoints = [];
+
+            int minYTiles = 11; // 14 --> 5 (pommel) + 2 (handle) + 4 (crossguard) + 0 (blade)
             if (smallPommel) minYTiles--;
             if (smallCrossGuard) minYTiles--;
 
-            if (area.IsEmpty() || area.XTiles < 14 || area.YTiles < minYTiles) return (false, Rectangle2P.Empty); //XTiles < 14 --> crossguard minimal design
-            if (handle.xTiles < 2 || handle.yTiles < 2 || bladeXTiles < 2) return (false, Rectangle2P.Empty);
+            if (area.IsEmpty() || area.XTiles < 14 || area.YTiles < 0) return (false, empty, empty, empty, empty, empty, [] ); //XTiles < 14 --> crossguard minimal design
+            if (handle.xTiles < 2 || handle.yTiles < 2 || bladeXTiles < 2) return (false, empty, empty, empty, empty, empty, []);
 
             int x, y, x1, x2;
             (int x, int y) lastPartEnd; // the connection point of the pommel to the handle, to the crossguard, to the blade (always the bottom left corner of the previous structure)
@@ -4467,7 +4610,7 @@ namespace WorldGenMod.Structures.Underworld
                 if (smallPommel) pommelArea.Move(0, -1);
             }
                 
-            else                pommelArea = new(area.XCenter - 3, area.Y0, 7, 6); // space reserved for GemLock instead of ItemFrame, not tested!
+            else pommelArea = new(area.XCenter - 3, area.Y0, 7, 6); // space reserved for GemLock instead of ItemFrame, not tested!
 
 
 
@@ -4511,6 +4654,8 @@ namespace WorldGenMod.Structures.Underworld
                 Func.PlaceSingleTile(i, y + 2, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
             }
 
+            checkPoints.Add((x    , y - 1, Deco[S.SwordBrick].id));
+            checkPoints.Add((x + 2, y + 2, Deco[S.SwordBrick].id));
             #endregion
 
 
@@ -4575,6 +4720,7 @@ namespace WorldGenMod.Structures.Underworld
                     }
                 }
             }
+            checkPoints.Add((handleArea.X0, handleArea.Y0, Deco[S.SwordBrick].id));
 
             // last complete line before sword crossguard
             if (!shortHandle)
@@ -4630,6 +4776,8 @@ namespace WorldGenMod.Structures.Underworld
             Func.PlaceSingleTile(x1 + 1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotRight, actuated: actuated);
             Func.PlaceSingleTile(x2 - 1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
 
+            checkPoints.Add((x2, y, Deco[S.SwordBrick].id));
+
             if (smallCrossGuard)
             {
                 Func.PlaceSingleTile(x1 + 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
@@ -4665,6 +4813,8 @@ namespace WorldGenMod.Structures.Underworld
 
             Func.PlaceSingleTile(x, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
             Func.PlaceSingleTile(x, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+            checkPoints.Add((x, y, Deco[S.SwordBrick].id));
 
             if (crossguardArea.XTiles <= 12) // special case: no 3 yTiles part of the crossguard
             {
@@ -4708,6 +4858,8 @@ namespace WorldGenMod.Structures.Underworld
 
             Func.PlaceSingleTile(x, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
             Func.PlaceSingleTile(x, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+            checkPoints.Add((x, y, Deco[S.SwordBrick].id));
 
             if (crossguardArea.XTiles <= 12) // special case: no 3 yTiles part of the crossguard
             {
@@ -4792,7 +4944,7 @@ namespace WorldGenMod.Structures.Underworld
             #endregion
 
 
-            return (true, pommelArea);
+            return (true, pommelArea, handleArea, crossguardArea, crossguardCenterArea, bladeArea, checkPoints);
         }
 
 
@@ -5265,6 +5417,7 @@ namespace WorldGenMod.Structures.Underworld
     internal class S //Style
     {
         public const String StyleSave = "Style";
+        public const String SubStyleSave = "SubStyleSave";
         public const String Brick = "Brick";
         public const String BrickPaint = "BrickPaint";
         public const String RoofBrick = "RoofBrick";
