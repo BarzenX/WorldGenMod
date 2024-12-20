@@ -199,8 +199,8 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.Column, (0, 0));
             Deco.Add(S.ColumnPaint, (0, 0));
 
-        //altar
-        Deco.Add(S.MiddleWall, (0, 0));
+            //altar
+            Deco.Add(S.MiddleWall, (0, 0));
             Deco.Add(S.MiddleWallPaint, (0, 0));
             Deco.Add(S.AltarSteps, (0, 0));
             Deco.Add(S.AltarStepsPaint, (0, 0));
@@ -209,10 +209,19 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.AltarWall, (0, 0));
             Deco.Add(S.AltarWallPaint, (0, 0));
             Deco.Add(S.RunicWallPaint, (0, 0));
-        #endregion
 
-        //choose a random style and define it's types
-        int chooseStyle = WorldGen.genRand.Next(3);
+            // giant sword
+            Deco.Add(S.SwordBrick, (0, 0));
+            Deco.Add(S.SwordHandleGemItem, (0, 0));
+            Deco.Add(S.SwordHandlePaint, (0, 0));
+            Deco.Add(S.SwordCrossGPaint, (0, 0));
+            Deco.Add(S.SwordEnergyFlowWall, (0, 0));
+            Deco.Add(S.SwordBladeEdgeWall, (0, 0));
+            Deco.Add(S.SwordBladeWall, (0, 0));
+            #endregion
+
+            //choose a random style and define it's types
+            int chooseStyle = WorldGen.genRand.Next(3);
             bool subStyle = false;
             switch (chooseStyle)
             {
@@ -291,6 +300,15 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.AltarWall] = (WallID.Lava3Echo, 0);
                     Deco[S.AltarWallPaint] = (0, 0);
                     Deco[S.RunicWallPaint] = (PaintID.RedPaint, 0);
+
+                    // giant sword
+                    Deco[S.SwordBrick] = (TileID.TeamBlockRed, 0);
+                    Deco[S.SwordHandleGemItem] = (ItemID.LargeAmber, 0);
+                    Deco[S.SwordHandlePaint] = (PaintID.RedPaint, 0);
+                    Deco[S.SwordCrossGPaint] = (0, 0);
+                    Deco[S.SwordEnergyFlowWall] = (WallID.Lavafall, 0);
+                    Deco[S.SwordBladeEdgeWall] = (WallID.RubyGemspark, 0);
+                    Deco[S.SwordBladeWall] = (WallID.CrimstoneEcho, 0);
                     break;
 
                 case S.StyleTitanstone: // Titanstone
@@ -362,6 +380,15 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.AltarWall] = (WallID.GoldBrick, 0);
                     Deco[S.AltarWallPaint] = (PaintID.RedPaint, 0);
                     Deco[S.RunicWallPaint] = (PaintID.RedPaint, 0);
+
+                    // giant sword
+                    Deco[S.SwordBrick] = (TileID.TeamBlockRed, 0);
+                    Deco[S.SwordHandleGemItem] = (ItemID.LargeAmber, 0);
+                    Deco[S.SwordHandlePaint] = (PaintID.RedPaint, 0);
+                    Deco[S.SwordCrossGPaint] = (0, 0);
+                    Deco[S.SwordEnergyFlowWall] = (WallID.Lavafall, 0);
+                    Deco[S.SwordBladeEdgeWall] = (WallID.RubyGemspark, 0);
+                    Deco[S.SwordBladeWall] = (WallID.CrimstoneEcho, 0);
                     break;
 
                 case S.StyleBlueBrick:
@@ -434,6 +461,15 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.AltarWall] = (WallID.DemoniteBrick, 0);
                     Deco[S.AltarWallPaint] = (0, 0);
                     Deco[S.RunicWallPaint] = (0, 0);
+
+                    // giant sword
+                    Deco[S.SwordBrick] = (TileID.TeamBlockBlue, 0);
+                    Deco[S.SwordHandleGemItem] = (ItemID.LargeSapphire, 0);
+                    Deco[S.SwordHandlePaint] = (PaintID.BluePaint, 0);
+                    Deco[S.SwordCrossGPaint] = (PaintID.BluePaint, 0);
+                    Deco[S.SwordEnergyFlowWall] = (WallID.GrinchFingerWallpaper, 0);
+                    Deco[S.SwordBladeEdgeWall] = (WallID.SapphireGemspark, 0);
+                    Deco[S.SwordBladeWall] = (WallID.ShroomitePlating, 0);
                     break;
             }
         }
@@ -1200,7 +1236,7 @@ namespace WorldGenMod.Structures.Underworld
                     }
                     #endregion
 
-                    #region modify windows shape
+                    #region modify shape of windows
                     if (windowsExist)
                     {
                         int windowHeight = freeR.YTiles - 2 * windowYMargin;
@@ -1374,8 +1410,6 @@ namespace WorldGenMod.Structures.Underworld
 
                                 for (int i = 0; i < windowsPairs.Count; i = i + 2) // 2 consecutive indexes belong to a pair of windows --> iterate over pairs
                                 {
-                                    Func.MarkRoom(room);
-                                    
                                     if (avaiableShapes.Count == 0) // all forms picked?
                                     {
                                         avaiableShapes.Add(1); // refill
@@ -2986,8 +3020,10 @@ namespace WorldGenMod.Structures.Underworld
                             #region middleSpace.XTiles <= 20
                             else if (middleSpace.XTiles >= 15)
                             {
-                                //Func.MarkRoom(room);
+                                Func.MarkRoom(room);
                                 //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
+                                //CreateGiantSword(middleSpace, (4, 5), 6, freeR.Y1);
+                                CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: true, actuated: true);
                             }
                             #endregion
                         }
@@ -4399,6 +4435,367 @@ namespace WorldGenMod.Structures.Underworld
         }
 
 
+        /// <summary>
+        /// Creates the 6x4 pommel of the giant sword decoration in the top middle of the given space
+        /// <br/>Hint: by now only for even-X-Tiled-rooms
+        /// </summary>
+        /// <param name="area">The area where the giant sword pommel shall be placed in the top center</param>
+        /// <param name="handle">Minimum is (2, 3)</param>
+        /// <returns><br/>Tupel item1 <b>success</b>: True if the giant sword pommel was placed successfully
+        ///          <br/>Tupel item2 <b>pommelRect</b>: The actual area covered by the giant sword pommel</returns>
+        public (bool success, Rectangle2P pommelRect) CreateGiantSword(Rectangle2P area, (int xTiles, int yTiles) handle, int bladeXTiles, bool smallPommel = false, bool smallCrossGuard = false, bool actuated = false)
+        {
+            int minYTiles = 12; // 14 --> 5 (pommel) + 3 (handle) + 4 (crossguard) + 0 (blade)
+            if (smallPommel) minYTiles--;
+            if (smallCrossGuard) minYTiles--;
+
+            if (area.IsEmpty() || area.XTiles < 14 || area.YTiles < minYTiles) return (false, Rectangle2P.Empty); //XTiles < 14 --> crossguard minimal design
+            if (handle.xTiles < 2 || handle.yTiles < 2 || bladeXTiles < 2) return (false, Rectangle2P.Empty);
+
+            int x, y, x1, x2;
+            (int x, int y) lastPartEnd; // the connection point of the pommel to the handle, to the crossguard, to the blade (always the bottom left corner of the previous structure)
+
+
+
+            #region sword pommel
+
+            Rectangle2P pommelArea;
+            
+            if (area.IsEvenX())
+            {
+                pommelArea = new(area.XCenter - 2, area.Y0, 6, 4);
+                if (smallPommel) pommelArea.Move(0, -1);
+            }
+                
+            else                pommelArea = new(area.XCenter - 3, area.Y0, 7, 6); // space reserved for GemLock instead of ItemFrame, not tested!
+
+
+
+            #region place ItemFrame
+
+            x = pommelArea.XCenter;
+            y = pommelArea.Y0 + 2;
+
+            Func.ReplaceWallArea(new(x, y, 2, 2), Deco[S.SwordEnergyFlowWall].id);
+
+            bool placed = Func.PlaceItemFrame(x, y, item: Deco[S.SwordHandleGemItem].id);
+
+            WorldGen.paintCoatTile(x    , y    , PaintCoatingID.Echo);
+            WorldGen.paintCoatTile(x    , y + 1, PaintCoatingID.Echo);
+            WorldGen.paintCoatTile(x + 1, y    , PaintCoatingID.Echo);
+            WorldGen.paintCoatTile(x + 1, y + 1, PaintCoatingID.Echo);
+
+            #endregion
+
+
+            #region place full bricks
+
+            x = pommelArea.XCenter; // start at the pommel gems upper left corner
+            y = pommelArea.Y0 + 2;
+
+            // left
+            Func.PlaceSingleTile(x - 1, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x - 1, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+
+            // top
+            Func.PlaceSingleTile(x    , y - 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x + 1, y - 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+
+            // right
+            Func.PlaceSingleTile(x + 2, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x + 2, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+
+            // bottom (last line before sword handle)
+            for (int i = x - 1; i <= x + 2; i++)
+            {
+                Func.PlaceSingleTile(i, y + 2, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+            }
+
+            #endregion
+
+
+            #region place and shape bricks for pommel tips
+
+            x = pommelArea.XCenter; // start at the pommel gems upper left corner
+            y = pommelArea.Y0 + 2;
+
+            // left side
+            Func.PlaceSingleTile(x - 2, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+
+            Func.PlaceSingleTile(x - 2, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
+
+            // top
+            if (!smallPommel)
+            {
+                Func.PlaceSingleTile(x    , y - 2, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+
+                Func.PlaceSingleTile(x + 1, y - 2, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+            }
+
+            // right side
+            Func.PlaceSingleTile(x + 3, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+
+            Func.PlaceSingleTile(x + 3, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.BotRight, actuated: actuated);
+
+            // top left corner
+            Func.PlaceSingleTile(x - 1, y - 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+
+
+            // top right corner
+            Func.PlaceSingleTile(x + 2, y - 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+
+            #endregion
+
+
+            lastPartEnd = (x - 1, y + 2);
+
+            #endregion
+
+
+
+            #region sword handle
+
+            Rectangle2P handleArea = new(lastPartEnd.x, lastPartEnd.y + 1, handle.xTiles, handle.yTiles);
+            bool shortHandle = handle.yTiles <= 2;
+
+            for (int j = handleArea.Y0; j <= handleArea.Y1; j++)
+            {
+                if (j == handleArea.Y1 && !shortHandle) continue;
+
+                for (int i = handleArea.X0; i <= handleArea.X1; i++)
+                {
+                    if (i == handleArea.X0 || i == handleArea.X1)
+                    {
+                        Func.PlaceSingleTile(i, j, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+                    }
+                    else
+                    {
+                        WorldGen.KillWall(i, j);
+                        WorldGen.PlaceWall(i, j, Deco[S.SwordEnergyFlowWall].id);
+                    }
+                }
+            }
+
+            // last complete line before sword crossguard
+            if (!shortHandle)
+            {
+                y = handleArea.Y1;
+                for (int i = handleArea.X0; i <= handleArea.X1; i++)
+                {
+                    Func.PlaceSingleTile(i, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordHandlePaint].id, actuated: actuated);
+                }
+            }
+
+            lastPartEnd = (handleArea.X0, handleArea.Y1);
+
+            #endregion
+
+
+
+            #region sword crossguard
+
+            int xMin = area.X0 + 1; // leave 1 space to the sides
+            int xMax = area.X1 - 1; // leave 1 space to the sides
+            int yMin = lastPartEnd.y - 1; // an 18 xTiles giant sword would have the crossguard stand out 1 yTile more than the connection point
+            if (area.XTiles - 2 <= 16) yMin = lastPartEnd.y; // 16 xTiles and less giant swords would have no outstanding crossguard
+            int yMax = lastPartEnd.y + 4;
+            if (smallCrossGuard) yMax--;
+
+            Rectangle2P crossguardArea = new(xMin, yMin, xMax, yMax, "dummy");
+            Rectangle2P crossguardCenterArea = new(lastPartEnd.x - 1, lastPartEnd.y + 1, lastPartEnd.x + 4, lastPartEnd.y + 4, "dummy");
+
+            #region center part
+
+            // going from top to bottom
+            x1 = crossguardCenterArea.X0;
+            x2 = crossguardCenterArea.X1;
+            y = crossguardCenterArea.Y0;
+
+            Func.PlaceSingleTile(x1    , y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+            Func.PlaceSingleTile(x2    , y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+
+            Func.PlaceSingleTile(x1 + 1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x2 - 1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+            if (shortHandle)
+            {
+                Func.PlaceSingleTile(x1 + 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+                Func.PlaceSingleTile(x2 - 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+            }
+
+            y++;
+            Func.PlaceSingleTile(x1    , y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x2    , y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+            Func.PlaceSingleTile(x1 + 1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotRight, actuated: actuated);
+            Func.PlaceSingleTile(x2 - 1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
+
+            if (smallCrossGuard)
+            {
+                Func.PlaceSingleTile(x1 + 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+                Func.PlaceSingleTile(x2 - 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+            }
+
+            if (!smallCrossGuard)
+            {
+                y++;
+                Func.PlaceSingleTile(x1, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                Func.PlaceSingleTile(x2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+                Func.PlaceSingleTile(x1 + 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+                Func.PlaceSingleTile(x2 - 2, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+            }
+
+            y++;
+            for (int i = crossguardCenterArea.X0; i <= crossguardCenterArea.X1; i++)
+            {
+                Func.PlaceSingleTile(i, y, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+            }
+
+            // put energy flow backwall
+            Func.ReplaceWallArea(new(crossguardCenterArea.X0 + 1, crossguardCenterArea.Y0, crossguardCenterArea.X1 - 1, crossguardCenterArea.Y1, "dummy"), Deco[S.SwordEnergyFlowWall].id);
+
+            #endregion
+
+
+            #region left part
+
+            x = crossguardCenterArea.X0 - 1;
+            y = crossguardCenterArea.Y0 + 1;
+
+            Func.PlaceSingleTile(x, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+            if (crossguardArea.XTiles <= 12) // special case: no 3 yTiles part of the crossguard
+            {
+                Func.PlaceSingleTile(x - 1, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                Func.PlaceSingleTile(x - 1, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+                Func.PlaceSingleTile(x - 2, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+                Func.PlaceSingleTile(x - 2, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
+            }
+            else
+            {
+                for (int i = x - 1; i >= crossguardArea.X0 + 1; i--) // the area where there are always 3 or 4 yTiles
+                {
+                    if (i > crossguardArea.X0 + 1) y--;
+
+                    Func.PlaceSingleTile(i, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                    Func.PlaceSingleTile(i, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                    Func.PlaceSingleTile(i, y + 2, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+                    if (i == x - 1 ) Func.SlopeTile(i, y, (int)Func.SlopeVal.UpRight);
+                    else if (i == crossguardArea.X0 + 1) Func.SlopeTile(i, y + 2, (int)Func.SlopeVal.BotLeft);
+                    else
+                    {
+                        Func.SlopeTile(i, y, (int)Func.SlopeVal.UpRight);
+                        Func.PlaceSingleTile(i, y + 3, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
+                    }
+                }
+
+                x = crossguardArea.X0;
+                Func.PlaceSingleTile(x, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+                Func.PlaceSingleTile(x, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
+            }
+
+            #endregion
+
+
+            #region right part
+
+            x = crossguardCenterArea.X1 + 1;
+            y = crossguardCenterArea.Y0 + 1;
+
+            Func.PlaceSingleTile(x, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+            Func.PlaceSingleTile(x, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+            if (crossguardArea.XTiles <= 12) // special case: no 3 yTiles part of the crossguard
+            {
+                Func.PlaceSingleTile(x + 1, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                Func.PlaceSingleTile(x + 1, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+                Func.PlaceSingleTile(x + 2, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpLeft, actuated: actuated);
+                Func.PlaceSingleTile(x + 2, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotLeft, actuated: actuated);
+            }
+            else
+            {
+                for (int i = x + 1; i <= crossguardArea.X1 - 1; i++) // the area where there are always 3 or 4 yTiles
+                {
+                    if (i < crossguardArea.X1 - 1) y--;
+
+                    Func.PlaceSingleTile(i, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                    Func.PlaceSingleTile(i, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+                    Func.PlaceSingleTile(i, y + 2, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, actuated: actuated);
+
+                    if (i == x + 1) Func.SlopeTile(i, y, (int)Func.SlopeVal.UpLeft);
+                    else if (i == crossguardArea.X1 - 1) Func.SlopeTile(i, y + 2, (int)Func.SlopeVal.BotRight);
+                    else
+                    {
+                        Func.SlopeTile(i, y, (int)Func.SlopeVal.UpLeft);
+                        Func.PlaceSingleTile(i, y + 3, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotRight, actuated: actuated);
+                    }
+                }
+
+                x = crossguardArea.X1;
+                Func.PlaceSingleTile(x, y    , Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.UpRight, actuated: actuated);
+                Func.PlaceSingleTile(x, y + 1, Deco[S.SwordBrick].id, paint: Deco[S.SwordCrossGPaint].id, slope: (int)Func.SlopeVal.BotRight, actuated: actuated);
+            }
+            #endregion
+
+            lastPartEnd = (crossguardCenterArea.X0, crossguardCenterArea.Y1);
+
+            #endregion
+
+
+
+            #region sword blade
+
+            Rectangle2P bladeArea = new(lastPartEnd.x, lastPartEnd.y, crossguardCenterArea.X1, area.Y1, "dummy");
+            bool bladeEnergyFlowWallExist = bladeArea.XTiles > 2;
+            bool bladeCenterWallExist = bladeArea.XTiles > 4;
+
+            for (int j = bladeArea.Y0; j <= bladeArea.Y1; j++)
+            {
+                for (int i = bladeArea.X0; i <= bladeArea.X1; i++)
+                {
+                    if (i == bladeArea.X0 || i == bladeArea.X1)
+                    {
+                        WorldGen.KillWall(i, j);
+                        WorldGen.PlaceWall(i, j, Deco[S.SwordBladeEdgeWall].id);
+                    }
+                    if (bladeEnergyFlowWallExist)
+                    {
+                        if (i == bladeArea.X0 + 1 || i == bladeArea.X1 - 1)
+                        {
+                            WorldGen.KillWall(i, j);
+                            WorldGen.PlaceWall(i, j, Deco[S.SwordEnergyFlowWall].id);
+                        }
+                    }
+                    if (bladeCenterWallExist)
+                    {
+                        if (i > bladeArea.X0 + 1 && i < bladeArea.X1 - 1)
+                        {
+                            WorldGen.KillWall(i, j);
+                            WorldGen.PlaceWall(i, j, Deco[S.SwordBladeWall].id);
+                        }
+                    }
+                }
+            }
+
+            // hide wall on the sides of the blade so the cutting edge wall of the blade stands out more
+            for (int j = bladeArea.Y0 - 1; j <= bladeArea.Y1 + 1; j++)
+            {
+                WorldGen.paintCoatWall(bladeArea.X0 - 1, j, PaintCoatingID.Echo);
+                WorldGen.paintCoatWall(bladeArea.X1 + 1, j, PaintCoatingID.Echo);
+            }
+
+            #endregion
+
+
+            return (true, pommelArea);
+        }
+
+
         //TODO: put and fill chest
         public void FillChest(Chest chest, int style)
         {
@@ -4925,6 +5322,17 @@ namespace WorldGenMod.Structures.Underworld
         public const String AltarWallPaint = "AltarWallPaint";
 
         public const String RunicWallPaint = "RunicWallPaint";
+
+        // giant sword
+        public const String SwordBrick = "SwordBrick";
+        public const String SwordHandleGemItem = "SwordHandleGemItem";
+        public const String SwordHandlePaint = "SwordHandlePaint";
+        public const String SwordCrossGPaint = "SwordCrossGPaint";
+        public const String SwordEnergyFlowWall = "SwordEnergyFlowWall";
+        public const String SwordBladeEdgeWall = "SwordBladeEdgeWall";
+        public const String SwordBladeWall = "SwordBladeWall";
+
+
 
         public const int StyleHellstone = 0;
         public const int StyleTitanstone = 1;

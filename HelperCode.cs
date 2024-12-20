@@ -51,6 +51,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Turns a fireplace from it's lit appearance (standard appearance after placing) to it's unlit appearance
         /// </summary>
@@ -75,6 +76,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Turns a lantern from it's lit appearance (standard appearance after placing) to it's unlit appearance
         /// </summary>
@@ -93,6 +95,7 @@ namespace WorldGenMod
                 }
             }
         }
+
 
         /// <summary>
         /// Turns a candelabra from it's lit appearance (standard appearance after placing) to it's unlit appearance
@@ -116,6 +119,7 @@ namespace WorldGenMod
 
             }
         }
+
 
         /// <summary>
         /// Turns a 1x1 light source from it's lit appearance (standard appearance after placing) to it's unlit appearance
@@ -142,6 +146,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Turns a lamp from it's lit appearance (standard appearance after placing) to it's unlit appearance
         /// </summary>
@@ -161,6 +166,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Changes a chair's facing direction from "to the left" (standard appearance after placing) to "to the right"
         /// </summary>
@@ -174,6 +180,7 @@ namespace WorldGenMod
                 Main.tile[x, y - 1].TileFrameX += 18; // make the chair face "to the right"
             }
         }
+
 
         /// <summary>
         /// Changes a bed's facing direction from "to the right" (standard appearance after placing) to "to the left"
@@ -194,6 +201,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Changes a TargetDummy's facing direction from "to the left" (standard appearance after placing) to "to the right"
         /// </summary>
@@ -212,6 +220,7 @@ namespace WorldGenMod
                 }
             }
         }
+
 
         /// <summary>
         /// Changes a Statue's facing direction from the standard appearance after placing to other one
@@ -232,6 +241,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Changes a TallGate's facing direction from "Door knob on the left" (standard appearance after placing) to "Door knob on the right"
         /// </summary>
@@ -250,6 +260,7 @@ namespace WorldGenMod
                 }
             }
         }
+
 
         /// <summary>
         /// Works like WorldGen.PlaceSmallPile, but for large piles (186 or 187).
@@ -286,6 +297,7 @@ namespace WorldGenMod
             return success;
         }
 
+
         /// <summary>
         /// Places a specific SubID of a 1x1 tile 
         /// </summary>
@@ -300,6 +312,7 @@ namespace WorldGenMod
             Main.tile[xPlace, yPlace].TileFrameX += (short)(XSprite * 18);
             Main.tile[xPlace, yPlace].TileFrameY += (short)(YSprite * 18);
         }
+
 
         /// <summary>
         /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
@@ -342,6 +355,7 @@ namespace WorldGenMod
 
             return true;
         }
+
 
         /// <summary>
         /// Tries to place an ItemFrame.
@@ -404,6 +418,7 @@ namespace WorldGenMod
 
             return true;
         }
+
 
         /// <summary>
         /// Tries to place a WeaponRack (TileID 471).
@@ -477,6 +492,7 @@ namespace WorldGenMod
             return true;
         }
 
+
         /// <summary>
         /// Checks the space and places a Mannequin at the given world position and equips it with items
         /// </summary>
@@ -536,6 +552,7 @@ namespace WorldGenMod
 
             return (true, id);
         }
+
 
         /// <summary>
         /// Tries to place a tile repeatedly in a given space (a straight line!), each time variating the placement position.
@@ -666,6 +683,7 @@ namespace WorldGenMod
             return (false, 0, 0);
         }
 
+
         /// <summary>
         /// Randomly chooses a coin quality (copper, silver, gold) with customizable thresholds
         /// </summary>
@@ -682,6 +700,7 @@ namespace WorldGenMod
             else if (coinQuality >= silverThreshold) return TileID.SilverCoinPile; // Silver coins
             else                                     return TileID.CopperCoinPile; // Copper coins
         }
+
 
         /// <summary>
         /// Fills a room with coins, the shape of the top of the pile can be chosen
@@ -944,6 +963,7 @@ namespace WorldGenMod
             //}
         }
 
+
         /// <summary>
         /// Searches through the handed over list for the longest line of consecutive "true" values
         /// </summary>
@@ -988,6 +1008,7 @@ namespace WorldGenMod
             return (maxLength, maxStart, maxEnd);
 
         }
+
 
         /// <summary>
         /// Places a Ghostly Stinkbug in a room.
@@ -1056,6 +1077,7 @@ namespace WorldGenMod
             return (false, 0, 0); //if you reach this point something went terribly wrong....most probably the room is too small
         }
 
+
         /// <summary>
         /// Slopes a tile
         /// </summary>
@@ -1091,6 +1113,32 @@ namespace WorldGenMod
             return true;
         }
 
+
+        /// <summary>
+        /// Slopes a tile
+        /// </summary>
+        /// <param name="pos">The x and y position of the to-be-sloped tile </param>
+        /// <param name="slopeForm">The to-be-applied slope form (use ENUM "SlopeVal") </param>
+        public static bool PlaceSingleTile(int posX, int posY, int tileID, int style = 0, int paint = 0, int slope = 0, bool actuated = false)
+        {
+            if (posX < 0 || posY < 0 || tileID < 0 || style < 0 || paint < 0 || slope < 0 || slope > (int)SlopeVal.BotLeft) return false;
+
+            bool placed = WorldGen.PlaceTile(posX, posY, tileID, style: style);
+
+            if (paint > 0) WorldGen.paintTile(posX, posY, (byte)paint);
+
+            if (slope > 0) SlopeTile(posX, posY, slope);
+
+            if (actuated)
+            {
+                Tile tile = Main.tile[posX, posY];
+                tile.IsActuated = true;
+            }
+
+            return placed;
+        }
+
+
         /// <summary>
         /// Checks if the rectangular area is free of any other tiles
         /// <br/>Has an option for checking for present background walls and another option to place some at once if missing
@@ -1122,6 +1170,7 @@ namespace WorldGenMod
             return true;
         }
 
+
         /// <summary>
         /// Places background walls in the given area, killing existing walls
         /// </summary>
@@ -1147,6 +1196,7 @@ namespace WorldGenMod
 
             return true;
         }
+
 
         /// <summary>
         /// Replaces existing background walls in the given area. If there is none, wall can be placed
@@ -1190,6 +1240,7 @@ namespace WorldGenMod
             return true;
         }
 
+
         /// <summary>
         /// Replaces the existing background wall of a given tile. If there is none, wall can be placed
         /// </summary>
@@ -1227,6 +1278,7 @@ namespace WorldGenMod
             return true;
         }
 
+
         /// <summary>
         /// Paints tiles in the given area
         /// </summary>
@@ -1247,6 +1299,7 @@ namespace WorldGenMod
 
             return true;
         }
+
 
         /// <summary>
         /// Checks for free space, places a tile at (x,y-1) (option to paint it) and attaches a banner to it
@@ -1277,6 +1330,7 @@ namespace WorldGenMod
 
             return true;
         }
+
 
         /// <summary>
         /// Places patches of CobWeb in an rectangular space and adds some randomness on the edges.
@@ -1315,6 +1369,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
         /// <br/>CobWebs are only placed on "free" tiles, where there are no other tiles present.
@@ -1348,6 +1403,7 @@ namespace WorldGenMod
                 }
             }
         }
+
 
         /// <summary>
         /// Places patches of CobWeb in an ellipsoid space and adds some randomness on the edges.
@@ -1383,6 +1439,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Checks if the handed over main line room is far away enough of previous below rooms in the ChastisedChurch.
         /// <br/>The two result bools state if a below room to the left / right is possible.
@@ -1410,6 +1467,7 @@ namespace WorldGenMod
             return (leftPossible, rightPossible);
         }
 
+
         /// <summary>
         /// Returns randomly a -1 or a +1
         /// </summary>
@@ -1417,6 +1475,7 @@ namespace WorldGenMod
         {
             return (WorldGen.genRand.Next(2) * 2) - 1;
         }
+
 
         /// <summary>
         /// Adds pounds to the given tile of the local stairs dictionary of DecorateStairCase
@@ -1429,6 +1488,7 @@ namespace WorldGenMod
             stairs[(point.x, point.y)] = temp;
         }
 
+
         /// <summary>
         /// Adds echo coating to the given tile of local stairs dictionary of DecorateStairCase
         /// </summary>
@@ -1440,6 +1500,7 @@ namespace WorldGenMod
             stairs[(point.x, point.y)] = temp;
         }
 
+
         /// <summary>
         /// Same as "AddPoundToStairTile()" but with the complete structure of "stairs"
         /// </summary>
@@ -1450,6 +1511,7 @@ namespace WorldGenMod
 
             stairs[(point.x, point.y)] = temp;
         }
+
 
         /// <summary>
         /// Creates ("prints") a pattern from a string List into the world
@@ -1517,6 +1579,7 @@ namespace WorldGenMod
             }
         }
 
+
         /// <summary>
         /// Puts a big arrow of living flames on top of the room so it's visible from the map
         /// </summary>
@@ -1573,6 +1636,7 @@ namespace WorldGenMod
 
             Func.DrawPatternFromString(pattern, patternData, (x, y));
         }
+
 
         /// <summary>
         /// Places a candelabra on a user defined support (platforms / work bench / table)
@@ -1654,6 +1718,7 @@ namespace WorldGenMod
 
             return (true, x, y);
         }
+
 
         /// <summary>
         /// Places hanging chains (also ropes or spikes) in a given room 
@@ -1797,6 +1862,7 @@ namespace WorldGenMod
             return (true, chainPosLength.Count);
         }
 
+
         /// <summary>
         /// Checks the surroundings of specific position in the chainAllowed 2D array for the presence of a given tile type
         /// </summary>
@@ -1842,6 +1908,7 @@ namespace WorldGenMod
 
             return free;
         }
+
 
         /// <summary>
         /// Places a 5x6 fire pit with a hanging skeleton on top of it in the middle of the pit)
