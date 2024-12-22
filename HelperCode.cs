@@ -1124,13 +1124,16 @@ namespace WorldGenMod
         /// <param name="paint">Add a PaintID to paint the tile </param>
         /// <param name="coat">Add a PaintCoatingID to coat the tile </param>
         /// <param name="slope">The to-be-applied slope form (use ENUM "SlopeVal") </param>
+        /// <param name="overlayID">The TildID of a possible overlay of the tile (moss f.ex.) </param>
         /// <param name="actuated">State if the placed tile shall be actuated or not </param>
-        public static bool PlaceSingleTile(int posX, int posY, int tileID, int style = 0, int paint = 0, int coat = 0, int slope = 0, bool actuated = false)
+        public static bool PlaceSingleTile(int posX, int posY, int tileID, int style = 0, int paint = 0, int coat = 0, int slope = 0, int overlayID = 0, bool actuated = false)
         {
             if (posX < 0 || posY < 0 || tileID < 0 || style < 0 || paint < 0 || coat < 0 || slope < 0 || slope > (int)SlopeVal.BotLeft) return false;
             
             WorldGen.KillTile(posX, posY);
             bool placed = WorldGen.PlaceTile(posX, posY, tileID, style: style);
+
+            if (overlayID > 0) placed &= WorldGen.PlaceTile(posX, posY, overlayID);
 
             if (paint > 0) WorldGen.paintTile(posX, posY, (byte)paint);
 
@@ -1177,6 +1180,56 @@ namespace WorldGenMod
             }
 
             return true;
+        }
+
+
+        /// <summary>
+        /// Checks if the specified tile is surrounded by other tiles (4 or 8)
+        /// </summary>
+        /// <param name="x">The x coordinate of the to-be-check tile </param>
+        /// <param name="y">The y coordinate of the to-be-check tile </param>
+        /// <param name="check8">State if all 8 straight and diagonal tiles shall be checked or just the 4 straigh ones (above, below, left, right) </param>
+        /// <param name="specType">Specify a specific type to be checked for. (-1) = all types count </param>
+        public static bool CheckSurrounded(int x, int y, bool check8 = false, int specType = -1)
+        {
+            List<(int x, int y)> straightTiles =
+            [
+                (x    , y - 1), // above
+                (x + 1, y    ), // right
+                (x    , y + 1), // below
+                (x - 1, y    )  // left
+
+            ];
+
+            List<(int x, int y)> diagonalTiles =
+            [
+                (x + 1, y - 1), //above right
+                (x + 1, y + 1), //below right
+                (x - 1, y + 1), //below left
+                (x - 1, y - 1), //above left
+
+            ];
+
+            bool surrounded = true;
+
+            foreach ((int x, int y) tile in straightTiles)
+            {
+                surrounded &= Main.tile[tile.x, tile.y].HasTile;
+
+                if (!surrounded) break;
+            }
+
+            if (surrounded && check8)
+            {
+                foreach ((int x, int y) tile in diagonalTiles)
+                {
+                    surrounded &= Main.tile[tile.x, tile.y].HasTile;
+
+                    if (!surrounded) break;
+                }
+            }
+
+            return surrounded;
         }
 
 
@@ -2708,10 +2761,10 @@ namespace WorldGenMod
     {
         private int x0; // The x-coordinate of the center point of this Ellipse
         private int y0; // The y-coordinate of the center point of this Ellipse
-        private int xRadius; // The amount of tiles this Ellipse advances in the x-direction (and -x direction)
-        private int yRadius; // The amount of tiles this Ellipse advances in the y-direction (and -y direction)
-        private int xTiles; // The amount of tiles along the x diameter of the region defined by this Ellipse
-        private int yTiles; // The amount of tiles along the y diameter of the region defined by this Ellipse
+        private int xRadius; // The amount of tiles this Ellipse advances from the center in +x direction (same as -x direction)
+        private int yRadius; // The amount of tiles this Ellipse advances from the center in +y direction (same as -y direction)
+        private int xTiles; // The amount of tiles along the x diameter of the region defined by this Ellipse (including the center point)
+        private int yTiles; // The amount of tiles along the y diameter of the region defined by this Ellipse (including the center point)
 
         private bool xForm; // Defines the appearance of the Ellipse: true = long side of the ellipse is along x-direction, false = long side of the ellipse is along y-direction
 
@@ -2726,16 +2779,129 @@ namespace WorldGenMod
         /// <br/>
         /// <br/><b>Attention</b>: <i>xRadius = 0</i>  or <i>yRadius = 0</i>  will reduce the Ellipse to a line of tiles
         /// </summary>
-        /// <param name="xCenter">The x-coordinate of the upper-left corner of the rectangular region that would cover this Ellipse completely</param>
-        /// <param name="yCenter">The y-coordinate of the upper-left corner of the rectangular region that would cover this Ellipse completely</param>
-        /// <param name="xRadius">The amount of tiles on the x side of the rectangular region defined by this Ellipse</param>
-        /// <param name="yRadius">The amount of tiles on the y side of the rectangular region defined by this Ellipse</param>
+        /// <param name="xCenter">The x-coordinate of the center point of this Ellipse </param>
+        /// <param name="yCenter">The y-coordinate of the center point of this Ellipse </param>
+        /// <param name="xRadius">The amount of tiles this Ellipse advances from the center in +x direction</param>
+        /// <param name="yRadius">The amount of tiles this Ellipse advances from the center in +y direction</param>
         public Ellipse(int xCenter, int yCenter, int xRadius, int yRadius)
         {
             this.x0 = xCenter;
             this.y0 = yCenter;
             this.xRadius = xRadius;
             this.yRadius = yRadius;
+
+            this.xTiles = 2 * xRadius + 1;
+            this.yTiles = 2 * yRadius + 1;
+
+            xForm = xRadius >= yRadius;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Ellipse structure (that has a single center point) with the specified values. 
+        /// <br/>It is a special ellipse, adapted to Terraria worlds (based on discrete tiles).
+        /// <br/>The Ellipse includes all tiles that have a (float) radius length equal and lower than xRadius and yRadius
+        /// <br/>
+        /// <br/><b>Example1</b>: <i>xCenter = 100</i> and <i>xRadius=1</i> includes the x-tiles <i>99,100,101</i>
+        /// <br/><b>Example2</b>: <i>xCenter = yCenter = 100</i>  and <i>xRadius = yRadius = 1</i>  includes the tiles <i>(100,101), (99,100), (100,100), (101,100), (100,101)</i>
+        /// <br/>
+        /// <br/><b>Attention</b>: <i>xRadius = 0</i>  or <i>yRadius = 0</i>  will reduce the Ellipse to a line of tiles
+        /// </summary>
+        /// <param name="xCenter">The x-coordinate of the center point of this Ellipse </param>
+        /// <param name="yCenter">The y-coordinate of the center point of this Ellipse </param>
+        /// <param name="xLeft">The x-coordinate of the leftmost tile that's still included in the this Ellipse</param>
+        /// <param name="yTop">The y-coordinate of the topmost tile that's still included in the this Ellipse</param>
+        /// <param name="dummy">Just a dummy to have another Constructor</param>
+        public Ellipse(int xCenter, int yCenter, int xLeft, int yTop, String dummy)
+        {
+            this.x0 = xCenter;
+            this.y0 = yCenter;
+            this.xRadius = Math.Abs(xCenter - xLeft);
+            this.yRadius = Math.Abs(yCenter - yTop);
+
+            this.xTiles = 2 * xRadius + 1;
+            this.yTiles = 2 * yRadius + 1;
+
+            xForm = xRadius >= yRadius;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the Ellipse structure (that has a single center point) with the specified values. 
+        /// <br/>It is a special ellipse, adapted to Terraria worlds (based on discrete tiles).
+        /// <br/>The Ellipse includes all tiles that have a (float) radius length equal and lower than xRadius and yRadius
+        /// <br/>
+        /// <br/><b>Example1</b>: <i>xCenter = 100</i> and <i>xRadius=1</i> includes the x-tiles <i>99,100,101</i>
+        /// <br/><b>Example2</b>: <i>xCenter = yCenter = 100</i>  and <i>xRadius = yRadius = 1</i>  includes the tiles <i>(100,101), (99,100), (100,100), (101,100), (100,101)</i>
+        /// <br/>
+        /// <br/><b>Attention</b>: <i>xRadius = 0</i>  or <i>yRadius = 0</i>  will reduce the Ellipse to a line of tiles
+        /// </summary>
+        /// <param name="cover">The rectangular region that would cover this Ellipse completely</param>
+        /// <param name="leftCenterX">If "cover" is even-XTiled (there is not a 1 but a 2 tiled X-Center), shall the left or the right X-Center be used?
+        ///                 <br/> --> Example: a rectangle with 6 XTiles can have the Ellipse XCenter at Tile 3 (e.g. the left Center) and a radius of 2 (leaving out tile 6) or
+        ///                 <br/>     the XCenter at Tile 4 (e.g. the right Center), and radius of 2 (leaving out tile 1)</param>
+        /// <param name="topCenterY">If "cover" is even-YTiled (there is not a 1 but a 2 tiled Y-Center), shall the top or the bottom Y-Center be used?
+        ///                 <br/> --> Example: a rectangle with 6 YTiles can have the Ellipse YCenter at Tile 3 (e.g. the top Center) and a radius of 2 (leaving out tile 6) or
+        ///                 <br/>     the YCenter at Tile 4 (e.g. the bottom Center), and radius of 2 (leaving out tile 1)</param>
+        /// <param name="radiusIncX">If "cover" is even-XTiled (there is not a 1 but a 2 tiled X-Center) then stating true at this variable increments the xRadius by 1 (effectively making the ellipse exceed the rectangular region by 1 x tile!)</param>
+        /// <param name="radiusIncY">If "cover" is even-YTiled (there is not a 1 but a 2 tiled Y-Center) then stating true at this variable increments the yRadius by 1 (effectively making the ellipse exceed the rectangular region by 1 y tile!)</param>
+        /// <param name="dummy">Just a dummy to have another Constructor</param>
+        public Ellipse(Rectangle2P cover, bool leftCenterX, bool topCenterY, char dummy, bool radiusIncX = false, bool radiusIncY = false)
+        {
+            if (cover.IsEmpty())
+            {
+                this.x0 = 0;
+                this.y0 = 0;
+                this.xRadius = 0;
+                this.yRadius = 0;
+
+                this.xTiles = 0;
+                this.yTiles = 0;
+
+                xForm = true;
+            }
+
+            if (!cover.IsEvenX())
+            {
+                this.x0 = cover.XCenter;
+                this.xRadius = this.x0 - cover.X0;
+            }
+            else
+            {
+                if (leftCenterX)
+                {
+                    this.x0 = cover.XCenter;
+                    this.xRadius = this.x0 - cover.X0;
+                } 
+                else
+                {
+                    this.x0 = cover.XCenter + 1;
+                    this.xRadius = cover.X1 - this.x0;
+                }
+
+                if (radiusIncX) this.xRadius++;
+            }
+
+
+            if (!cover.IsEvenY())
+            {
+                this.y0 = cover.YCenter;
+                this.yRadius = this.y0 - cover.Y0;
+            }
+            else
+            {
+                if (topCenterY)
+                {
+                    this.y0 = cover.YCenter;
+                    this.yRadius = this.y0 - cover.Y0;
+                } 
+                else
+                {
+                    this.y0 = cover.YCenter + 1;
+                    this.yRadius = cover.Y1 - this.y0;
+                }
+
+                if (radiusIncY) this.yRadius++;
+            }
+
 
             this.xTiles = 2 * xRadius + 1;
             this.yTiles = 2 * yRadius + 1;
@@ -2810,7 +2976,10 @@ namespace WorldGenMod
         /// <summary>
         /// Determines if the specified point (x/y) (written in global coordinates) is contained within the Ellipse.
         /// </summary>
-        public readonly bool Contains(int x, int y, bool includeBorder = false)
+        /// <param name="includeBorder">If the tile is exactly on the border (yR² * (x-x0)² + xR² * (y-y0)² == xR² * yR²), if the tile should be included</param>
+        /// <param name="radiusIncrease">For small Ellipses (small xRadius or small yRadius), the ellipse often gets reduced to a rectangle. A small increase in xRadius and yRadius may help in that case.
+        ///                         <br/> --> applies for both xRadius and yRadius, value is in % </param>
+        public readonly bool Contains(int x, int y, bool includeBorder = true, int radiusIncrease = 0)
         {
             // x², y², xRadius², yRadius²
             long x2 = (x-x0) * (x-x0); // x²
@@ -2818,16 +2987,18 @@ namespace WorldGenMod
             long xR2 = xRadius * xRadius;
             long yR2 = yRadius * yRadius;
 
-            if (includeBorder)
-            {
-                if (xForm) return yR2 * x2 + xR2 * y2 <= xR2 * yR2;
-                else return xR2 * x2 + yR2 * y2 <= xR2 * yR2;
-            }
-            else
-            {
-                if (xForm) return yR2 * x2 + xR2 * y2 < xR2 * yR2;
-                else return xR2 * x2 + yR2 * y2 < xR2 * yR2;
-            }
+            long radFact = 1 + ((long)radiusIncrease / 100);
+
+            // point distance²
+            long pointDist2;
+            if (xForm) pointDist2 = yR2 * x2 + xR2 * y2;
+            else       pointDist2 = yR2 * x2 + xR2 * y2;
+
+            // radius²
+            long rad2 = xR2 * yR2 * radFact * radFact;
+
+            if (includeBorder) return pointDist2 <= rad2;
+            else               return pointDist2 < rad2;
         }
 
         /// <summary>

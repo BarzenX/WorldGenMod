@@ -257,6 +257,9 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.SwordEnergyFlowWall, (0, 0));
             Deco.Add(S.SwordBladeEdgeWall, (0, 0));
             Deco.Add(S.SwordBladeWall, (0, 0));
+
+            // tree
+            Deco.Add(S.TreePaint, (0, 0));
             #endregion
 
             //use the handed over style / choose a random style and define it's IDs
@@ -357,6 +360,9 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.SwordEnergyFlowWall] = (WallID.Lavafall, 0);
                     Deco[S.SwordBladeEdgeWall] = (WallID.RubyGemspark, 0);
                     Deco[S.SwordBladeWall] = (WallID.CrimstoneEcho, 0);
+
+                    // tree
+                    Deco[S.TreePaint] = (PaintID.BlackPaint, 0);
                     break;
 
                 case S.StyleTitanstone: // Titanstone
@@ -437,6 +443,9 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.SwordEnergyFlowWall] = (WallID.Lavafall, 0);
                     Deco[S.SwordBladeEdgeWall] = (WallID.RubyGemspark, 0);
                     Deco[S.SwordBladeWall] = (WallID.CrimstoneEcho, 0);
+
+                    // tree
+                    Deco[S.TreePaint] = (0, 0);
                     break;
 
                 case S.StyleBlueBrick:
@@ -518,6 +527,9 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.SwordEnergyFlowWall] = (WallID.GrinchFingerWallpaper, 0);
                     Deco[S.SwordBladeEdgeWall] = (WallID.SapphireGemspark, 0);
                     Deco[S.SwordBladeWall] = (WallID.ShroomitePlating, 0);
+
+                    // tree
+                    Deco[S.TreePaint] = (0, 0);
                     break;
             }
         }
@@ -3100,9 +3112,9 @@ namespace WorldGenMod.Structures.Underworld
                             {
                                 Func.MarkRoom(room);
 
-                                if (Chance.Perc(1))
+                                if (Chance.Perc(0))
                                 {
-                                    // two trees
+                                    // 2 trees and planters in middle
                                     #region prepare soil
 
                                     y = freeR.Y1 + 1; // delete floor brick and place ash
@@ -3115,9 +3127,16 @@ namespace WorldGenMod.Structures.Underworld
                                     y = freeR.Y1;
                                     int xTree1 = middleSpace.X0 + 4;
                                     int xTree2 = middleSpace.X1 - 4;
+
+                                    List<int> xOnTree =
+                                    [
+                                        xTree1 - 1, xTree1, xTree1 + 1,
+                                        xTree2 - 1, xTree2, xTree2 + 1
+                                    ];
+
                                     for (int i = middleSpace.X0 + 1; i <= middleSpace.X1 - 1; i++)
                                     {
-                                        if ((i >= xTree1 - 1 && i <= xTree1 + 1) || (i >= xTree2 - 1 && i <= xTree2 + 1))
+                                        if (xOnTree.Contains(i))
                                         {
                                             WorldGen.PlaceTile(i, y, TileID.Ash);
                                             WorldGen.PlaceTile(i, y, TileID.AshGrass);
@@ -3153,9 +3172,9 @@ namespace WorldGenMod.Structures.Underworld
                                     treeOfDeathSettings.TreeHeightMin = height1;
                                     treeOfDeathSettings.TreeHeightMax = height1;
                                     WorldGen.GrowTreeWithSettings(xTree1, y, treeOfDeathSettings);
-                                    Func.PaintArea(new(xTree1, freeR.Y0, xTree1, y, "dummy"), PaintID.BlackPaint);
-                                    WorldGen.paintTile(xTree1 - 1, y, PaintID.BlackPaint);
-                                    WorldGen.paintTile(xTree1 + 1, y, PaintID.BlackPaint);
+                                    Func.PaintArea(new(xTree1, freeR.Y0, xTree1, y, "dummy"), Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree1 - 1, y, (byte)Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree1 + 1, y, (byte)Deco[S.TreePaint].id);
 
                                     int height2 = num - WorldGen.genRand.Next(3);
                                     if (height2 < 2) height2 = 2;
@@ -3163,9 +3182,9 @@ namespace WorldGenMod.Structures.Underworld
                                     treeOfDeathSettings.TreeHeightMin = height2;
                                     treeOfDeathSettings.TreeHeightMax = height2;
                                     WorldGen.GrowTreeWithSettings(xTree2, y, treeOfDeathSettings);
-                                    Func.PaintArea(new(xTree2, freeR.Y0, xTree2, y, "dummy"), PaintID.BlackPaint);
-                                    WorldGen.paintTile(xTree2 - 1, y, PaintID.BlackPaint);
-                                    WorldGen.paintTile(xTree2 + 1, y, PaintID.BlackPaint);
+                                    Func.PaintArea(new(xTree2, freeR.Y0, xTree2, y, "dummy"), Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree2 - 1, y, (byte)Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree2 + 1, y, (byte)Deco[S.TreePaint].id);
 
                                     #endregion
 
@@ -3312,54 +3331,17 @@ namespace WorldGenMod.Structures.Underworld
                                             }
                                         }
                                         #endregion
-
-                                        #region place moss patch
-                                        num = Math.Max(yTrunkEnd1, yTrunkEnd2); //look which tree reaches less far up.
-                                        if ((ySpotPlanter - 2) - num > 1) // sufficient space
-                                        {
-                                            Rectangle2P mosspatchArea = new(middleSpace.XCenter - 1, num, middleSpace.XCenter + 2, ySpotPlanter - 2, "dummy");
-                                            for (int i = mosspatchArea.XCenter; i <= mosspatchArea.XCenter + 1; i++)
-                                            {
-                                                for (int j = mosspatchArea.YCenter - 2; j <= mosspatchArea.YCenter + 1; j++)
-                                                {
-                                                    if (Chance.Perc(40))
-                                                    {
-                                                        Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
-                                                        WorldGen.PlaceTile(i, j, TileID.LavaMoss);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        #endregion
                                     }
                                     else
                                     {
-                                        #region place moss patch
-                                        num = Math.Max(yTrunkEnd1, yTrunkEnd2); //look which tree reaches less far up.
-                                        if ((ySaplingPlacement - 1) - num > 2) // sufficient space
-                                        {
-                                            Rectangle2P mosspatchArea = new(middleSpace.XCenter - 1, num, middleSpace.XCenter + 2, ySaplingPlacement - 1, "dummy");
-
-                                            for (int i = mosspatchArea.XCenter; i <= mosspatchArea.XCenter + 1; i++)
-                                            {
-                                                for (int j = mosspatchArea.YCenter - 2; j <= mosspatchArea.YCenter + 1; j++)
-                                                {
-                                                    if (Chance.Perc(40))
-                                                    {
-                                                        Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
-                                                        WorldGen.PlaceTile(i, j, TileID.LavaMoss);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        #endregion
+                                        // has never happened during testing...
                                     }
 
                                     #endregion
                                 }
                                 else
                                 {
-                                    //one tree
+                                    // 3 trees
                                     #region prepare soil
 
                                     y = freeR.Y1 + 1; // delete floor brick and place ash
@@ -3370,93 +3352,153 @@ namespace WorldGenMod.Structures.Underworld
                                     }
 
                                     y = freeR.Y1;
-                                    int xTree = middleSpace.XCenter + WorldGen.genRand.Next(2); // to alternate position
+                                    int xTree2 = middleSpace.XCenter + WorldGen.genRand.Next(2); // to alternate position
+                                    int xTree1 = xTree2 - 6;
+                                    int xTree3 = xTree2 + 6;
+
+                                    List<int> xOnTree =
+                                    [
+                                        xTree1 - 1, xTree1, xTree1 + 1,
+                                        xTree2 - 1, xTree2, xTree2 + 1,
+                                        xTree3 - 1, xTree3, xTree3 + 1
+                                    ];
+
                                     for (int i = middleSpace.X0 + 1; i <= middleSpace.X1 - 1; i++)
                                     {
-                                        if (i >= xTree - 1 && i <= xTree + 1)
+                                        if (xOnTree.Contains(i))
                                         {
-                                            WorldGen.PlaceTile(i, y, TileID.Ash);
-                                            WorldGen.PlaceTile(i, y, TileID.AshGrass);
+                                            Func.PlaceSingleTile(i, y, TileID.Ash, overlayID: TileID.AshGrass);
                                         }
                                         else if (Chance.Perc(25))
                                         {
-                                            WorldGen.PlaceTile(i, y, TileID.Ash);
-                                            WorldGen.PlaceTile(i, y, TileID.AshGrass);
+                                            Func.PlaceSingleTile(i, y, TileID.Ash, overlayID: TileID.AshGrass);
                                             WorldGen.PoundTile(i, y);
                                         }
+                                        else
+                                        {
+                                            WorldGen.PlaceLiquid(i, y, (byte)LiquidID.Lava, 255);
+                                        }
+
                                     }
                                     #endregion
 
-                                    #region plant tree
+                                    #region plant trees
 
-                                    int ySaplingPlacement = freeR.Y1 - 1;
-                                    y = ySaplingPlacement;
-                                    WorldGen.PlaceObject(xTree, y, TileID.Saplings, style: 10);
-                                    WorldGen.KillWall(xTree, y);
+                                    int ySaplingPlacement = y = freeR.Y1 - 1;
+                                    WorldGen.GrowTreeSettings ashTreeSettings = WorldGen.GrowTreeSettings.Profiles.Tree_Ash; // fetch settings
 
-                                    WorldGen.GrowTreeSettings treeOfDeathSettings = WorldGen.GrowTreeSettings.Profiles.Tree_Ash; // fetch settings
+                                    WorldGen.PlaceObject(xTree1, y, TileID.Saplings, style: 10);
+                                    WorldGen.KillWall(xTree1, y);
 
-                                    num = ((y - ((freeR.Y0 + 1) - 1)) - treeOfDeathSettings.TreeTopPaddingNeeded) - 1; // 1 tile between tree top and ceiling
-                                    height = num - WorldGen.genRand.Next(3);
-                                    if (height < 2) height = 2;
-                                    int yTrunkEnd = ySaplingPlacement - (height - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
-                                    treeOfDeathSettings.TreeHeightMin = height;
-                                    treeOfDeathSettings.TreeHeightMax = height;
-                                    WorldGen.GrowTreeWithSettings(xTree, y, treeOfDeathSettings);
-                                    Func.PaintArea(new(xTree, freeR.Y0, xTree, y, "dummy"), PaintID.BlackPaint);
-                                    WorldGen.paintTile(xTree - 1, y, PaintID.BlackPaint);
-                                    WorldGen.paintTile(xTree + 1, y, PaintID.BlackPaint);
+                                    WorldGen.PlaceObject(xTree2, y, TileID.Saplings, style: 10);
+                                    WorldGen.KillWall(xTree2, y);
+
+                                    WorldGen.PlaceObject(xTree3, y, TileID.Saplings, style: 10);
+                                    WorldGen.KillWall(xTree3, y);
+
+
+                                    // highest tree first
+                                    int height2 = ((y - ((freeR.Y0 + 1) - 1)) - ashTreeSettings.TreeTopPaddingNeeded) - 1; // 1 tile between tree top and ceiling
+                                    if (height2 < 2) height2 = 2;
+                                    int yTrunkEnd1 = ySaplingPlacement - (height2 - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
+                                    ashTreeSettings.TreeHeightMin = height2;
+                                    ashTreeSettings.TreeHeightMax = height2;
+                                    WorldGen.GrowTreeWithSettings(xTree2, y, ashTreeSettings);
+                                    Func.PaintArea(new(xTree2, freeR.Y0, xTree2, y, "dummy"), Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree2 - 1, y, (byte)Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree2 + 1, y, (byte)Deco[S.TreePaint].id);
+
+
+                                    int height1 = height2 - WorldGen.genRand.Next(3,6);
+                                    if (height1 < 2) height1 = 2;
+                                    int yTrunkEnd2 = ySaplingPlacement - (height1 - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
+                                    ashTreeSettings.TreeHeightMin = height1;
+                                    ashTreeSettings.TreeHeightMax = height1;
+                                    WorldGen.GrowTreeWithSettings(xTree1, y, ashTreeSettings);
+                                    Func.PaintArea(new(xTree1, freeR.Y0, xTree1, y, "dummy"), Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree1 - 1, y, (byte)Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree1 + 1, y, (byte)Deco[S.TreePaint].id);
+
+
+                                    int height3 = height2 - WorldGen.genRand.Next(3, 6);
+                                    if (height3 < 2) height3 = 2;
+                                    int yTrunkEnd3 = ySaplingPlacement - (height3 - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
+                                    ashTreeSettings.TreeHeightMin = height3;
+                                    ashTreeSettings.TreeHeightMax = height3;
+                                    WorldGen.GrowTreeWithSettings(xTree3, y, ashTreeSettings);
+                                    Func.PaintArea(new(xTree3, freeR.Y0, xTree3, y, "dummy"), Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree3 - 1, y, (byte)Deco[S.TreePaint].id);
+                                    WorldGen.paintTile(xTree3 + 1, y, (byte)Deco[S.TreePaint].id);
 
                                     #endregion
 
-                                    #region place left moss patch with lava spot
+                                    #region look for branches to hang stuff
+                                    List<int> bannerStyle =
+                                    [
+                                        12, // Rusted Company Standard
+                                        15, // Diabolic Sigil
+                                        17, // Hell Hammer
+                                        19, // Lost Hopes of Man
+                                        20, // Obsidian Watcher
+                                    ];
 
-                                    Rectangle2P leftMosspatchArea = new(middleSpace.X0 + 1, freeR.Y0, xTree - 4, freeR.Y0 + freeR.YTiles / 3, "dummy");
-                                    for (int i = leftMosspatchArea.X0; i <= leftMosspatchArea.X1; i++)
+                                    int xFirst, xSecond, yStart = 0, xStart = 0;
+                                    for (num = 1; num <= 3; num++) // all 3 trees
                                     {
-                                        for (int j = leftMosspatchArea.Y0; j <= leftMosspatchArea.Y1; j++)
+                                        placed = false; //init
+
+                                        if (Chance.Simple())
                                         {
-                                            if (Chance.Perc(50))
+                                            xFirst = xTree1 - 1;
+                                            xSecond = xTree1 + 1;
+                                        }
+                                        else
+                                        {
+                                            xFirst = xTree1 + 1;
+                                            xSecond = xTree1 - 1;
+                                        }
+
+                                        if      (num == 1) yStart = yTrunkEnd1;
+                                        else if (num == 2) yStart = yTrunkEnd2;
+                                        else if (num == 3) yStart = yTrunkEnd3;
+
+                                        for (int j = yStart; j < ySaplingPlacement; j++) // go down the tree
+                                        {
+                                            for (int num2 = 1; num2 <= 2; num2++) // for both sides of the tree
                                             {
-                                                Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
-                                                WorldGen.PlaceTile(i, j, TileID.LavaMoss);
+                                                if      (num2 == 1) xStart = xFirst;
+                                                else if (num2 == 2) xStart = xSecond;
+
+                                                if (Main.tile[xStart, j].HasTile)
+                                                {
+                                                    if (!Main.tile[xStart, j + 1].HasTile && !Main.tile[xStart, j + 2].HasTile) // enough space for hanging a lantern
+                                                    {
+                                                        if (!Main.tile[xStart, j + 3].HasTile && Chance.Perc(80)) // a third free tile, so a banner can be hanged
+                                                        {
+                                                            Func.PlaceSingleTile(xStart, j, TileID.Platforms, style: Deco[S.DecoPlat].id, coat: PaintCoatingID.Echo);
+                                                            WorldGen.PlaceTile(xStart, j + 1, TileID.Banners, style: bannerStyle.PopAt(WorldGen.genRand.Next(bannerStyle.Count())));
+
+                                                            placed = Main.tile[xStart, j + 1].TileType == TileID.Banners;
+                                                            int test = Main.tile[xStart, j + 1].TileType;
+                                                            if (placed) break; // just 1 item per tree
+                                                        }
+                                                        else if (Chance.Perc(80))
+                                                        {
+                                                            Func.PlaceSingleTile(xStart, j, TileID.Platforms, style: Deco[S.DecoPlat].id, coat: PaintCoatingID.Echo);
+                                                            WorldGen.PlaceTile(xStart, j + 1, TileID.LavaflyinaBottle);
+
+                                                            placed = Main.tile[xStart, j + 1].TileType == TileID.LavaflyinaBottle;
+                                                            if (placed) break; // just 1 item per tree
+                                                        }
+                                                    }
+                                                }
                                             }
+                                            if (placed) break; // just 1 item per tree
                                         }
                                     }
 
-                                    (int x, int y) leftLavaspot = (leftMosspatchArea.X0 + 1, leftMosspatchArea.Y0 + WorldGen.genRand.Next(leftMosspatchArea.YTiles - 2));
-                                    Func.PlaceSingleTile(leftLavaspot.x - 1, leftLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint); // surround lavaspot with tiles
-                                    Func.PlaceSingleTile(leftLavaspot.x - 1, leftLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
-                                    Func.PlaceSingleTile(leftLavaspot.x    , leftLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
-                                    Func.PlaceSingleTile(leftLavaspot.x + 1, leftLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
-                                    Func.PlaceSingleTile(leftLavaspot.x + 1, leftLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint);
-                                    WorldGen.KillTile(leftLavaspot.x, leftLavaspot.y);
-                                    WorldGen.PlaceLiquid(leftLavaspot.x, leftLavaspot.y, (byte)LiquidID.Lava, 175);
-                                    #endregion
-
-                                    #region place right moss patch with lava spot
-
-                                    Rectangle2P rightMosspatchArea = new(xTree + 4, freeR.Y0, middleSpace.X1 - 1, freeR.Y0 + freeR.YTiles / 3, "dummy");
-                                    for (int i = rightMosspatchArea.X0; i <= rightMosspatchArea.X1; i++)
-                                    {
-                                        for (int j = rightMosspatchArea.Y0; j <= rightMosspatchArea.Y1; j++)
-                                        {
-                                            if (Chance.Perc(50))
-                                            {
-                                                Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
-                                                WorldGen.PlaceTile(i, j, TileID.LavaMoss);
-                                            }
-                                        }
-                                    }
-
-                                    (int x, int y) rightLavaspot = (rightMosspatchArea.X1 - 1, rightMosspatchArea.Y0 + WorldGen.genRand.Next(rightMosspatchArea.YTiles - 2));
-                                    Func.PlaceSingleTile(rightLavaspot.x - 1, rightLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint); // surround lavaspot with tiles
-                                    Func.PlaceSingleTile(rightLavaspot.x - 1, rightLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
-                                    Func.PlaceSingleTile(rightLavaspot.x    , rightLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
-                                    Func.PlaceSingleTile(rightLavaspot.x + 1, rightLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
-                                    Func.PlaceSingleTile(rightLavaspot.x + 1, rightLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint);
-                                    WorldGen.KillTile(rightLavaspot.x, rightLavaspot.y);
-                                    WorldGen.PlaceLiquid(rightLavaspot.x, rightLavaspot.y, (byte)LiquidID.Lava, 175);
+                                    
+                                    
                                     #endregion
                                 }
 
@@ -5883,6 +5925,9 @@ namespace WorldGenMod.Structures.Underworld
         public const String SwordEnergyFlowWall = "SwordEnergyFlowWall";
         public const String SwordBladeEdgeWall = "SwordBladeEdgeWall";
         public const String SwordBladeWall = "SwordBladeWall";
+
+        // tree
+        public const String TreePaint = "TreePaint";
 
 
 
