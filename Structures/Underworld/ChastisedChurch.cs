@@ -75,18 +75,18 @@ namespace WorldGenMod.Structures.Underworld
 
 
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Smooth World"));
-                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: repair stairs", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: CC repair stairs", delegate (GenerationProgress progress, GameConfiguration config)
                 {
-                    progress.Message = "Repairing the stairs that got damaged during the previous worldgen step...";
+                    progress.Message = "Repairing the Chastised Church stairs that got damaged during the previous worldgen step...";
 
                     CreateStairsFromData();
                 }));
 
 
                 genIndex = tasks.FindIndex(genpass => genpass.Name.Equals("Quick Cleanup"));
-                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: repair structure", delegate (GenerationProgress progress, GameConfiguration config)
+                tasks.Insert(genIndex + 1, new PassLegacy("#WGM: CC repair structure", delegate (GenerationProgress progress, GameConfiguration config)
                 {
-                    progress.Message = "Repairing the structures that got damaged during the previous worldgen step...";
+                    progress.Message = "Repairing the Chastised Church structures that got damaged during the previous worldgen step...";
 
                     foreach (KeyValuePair<Action, (bool execute, int decoStyle, int decoSubStyle, List<(int x, int y, int tileID)> checkPoints)> function in runAfterWorldCleanup)
                     {
@@ -262,7 +262,7 @@ namespace WorldGenMod.Structures.Underworld
             //use the handed over style / choose a random style and define it's IDs
             int chosenStyle, subStyle;
 
-            if (forceStyle > 0) chosenStyle = forceStyle;
+            if (forceStyle >= 0) chosenStyle = forceStyle;
             else                chosenStyle = WorldGen.genRand.Next(3);
 
             if (forceSubstyle == 0 || forceSubstyle == 1) subStyle = forceSubstyle;
@@ -2297,25 +2297,36 @@ namespace WorldGenMod.Structures.Underworld
                                         if (freeR.YTiles < 18) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 1, true);
                                         else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 1, true);
 
-                                        // create lavafall on top of the flaming "+"
-                                        x = freeR.XCenter;
-                                        y = freeR.Y0 - 1;
-                                        WorldGen.KillTile(x, y);
-                                        WorldGen.KillTile(x + 1, y);
-                                        WorldGen.KillTile(x, y - 1);
-                                        WorldGen.KillTile(x + 1, y - 1);
+                                        #region create lavafall on top of the flaming "+"
 
-                                        x = freeR.XCenter - 2;
+                                        //middle
+                                        //x = freeR.XCenter;
+                                        //y = freeR.Y0 - 1;
+                                        //WorldGen.KillTile(x, y);
+                                        //WorldGen.KillTile(x + 1, y);
+                                        //WorldGen.KillTile(x, y - 1);
+                                        //WorldGen.KillTile(x + 1, y - 1);
+
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter    , freeR.Y0 - 1); }, (true, 0, 0, [(freeR.XCenter    , freeR.Y0 - 1, Deco[S.Brick].id)] ));
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter + 1, freeR.Y0 - 1); }, (true, 0, 0, [(freeR.XCenter + 1, freeR.Y0 - 1, Deco[S.Brick].id)] ));
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter    , freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter    , freeR.Y0 - 2, Deco[S.Brick].id)] ));
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter + 1, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter + 1, freeR.Y0 - 2, Deco[S.Brick].id)] ));
+
+                                        //left
+                                        x = freeR.XCenter - 1;
                                         y = freeR.Y0 - 2;
-                                        WorldGen.PoundTile(x + 1, y);
-                                        WorldGen.KillTile(x, y);
-                                        WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-                                        
-                                        x = freeR.XCenter + 3;
+                                        WorldGen.KillTile(x - 1, y);
+                                        WorldGen.PlaceLiquid(x - 1, y, (byte)LiquidID.Lava, 175);
+                                        //WorldGen.PoundTile(x, y);
+                                        runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(freeR.XCenter - 1, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter - 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
+
+                                        //right
+                                        x = freeR.XCenter + 2;
                                         y = freeR.Y0 - 2;
-                                        WorldGen.PoundTile(x - 1, y);
-                                        WorldGen.KillTile(x, y);
-                                        WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
+                                        WorldGen.KillTile(x + 1, y);
+                                        WorldGen.PlaceLiquid(x + 1, y, (byte)LiquidID.Lava, 175);
+                                        //WorldGen.PoundTile(x, y);
+                                        runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(freeR.XCenter + 2, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter + 2, freeR.Y0 - 2, Deco[S.Brick].id)]));
 
                                         // add some nice "v" spike to the middle
                                         x = freeR.XCenter;
@@ -2326,6 +2337,7 @@ namespace WorldGenMod.Structures.Underworld
                                         y = freeR.Y0 - 3;
                                         Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
 
+                                        #endregion
 
                                         altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 6);
 
@@ -2990,27 +3002,36 @@ namespace WorldGenMod.Structures.Underworld
                                         if (freeR.YTiles < 20) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 2, true);
                                         else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 2, true);
 
-                                        // create lavafall on top of the flaming "+"
-                                        x = freeR.XCenter;
-                                        y = freeR.Y0 - 1;
-                                        WorldGen.KillTile(x, y);
+                                        #region create lavafall on top of the flaming "+"
+
+                                        //middle
+                                        //x = freeR.XCenter;
+                                        //y = freeR.Y0 - 1;
+                                        //WorldGen.KillTile(x, y);
+                                        //WorldGen.KillTile(x + 1, y);
+                                        //WorldGen.KillTile(x, y - 1);
+                                        //WorldGen.KillTile(x + 1, y - 1);
+
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter, freeR.Y0 - 1); }, (true, 0, 0, [(freeR.XCenter, freeR.Y0 - 1, Deco[S.Brick].id)]));
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter + 1, freeR.Y0 - 1); }, (true, 0, 0, [(freeR.XCenter + 1, freeR.Y0 - 1, Deco[S.Brick].id)]));
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter, freeR.Y0 - 2, Deco[S.Brick].id)]));
+                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter + 1, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter + 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
+
+                                        //left
+                                        x = freeR.XCenter - 1;
+                                        y = freeR.Y0 - 2;
+                                        WorldGen.KillTile(x - 1, y);
+                                        WorldGen.PlaceLiquid(x - 1, y, (byte)LiquidID.Lava, 175);
+                                        //WorldGen.PoundTile(x, y);
+                                        runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(freeR.XCenter - 1, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter - 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
+
+                                        //right
+                                        x = freeR.XCenter + 2;
+                                        y = freeR.Y0 - 2;
                                         WorldGen.KillTile(x + 1, y);
-                                        WorldGen.KillTile(x, y - 1);
-                                        WorldGen.KillTile(x + 1, y - 1);
-
-                                        x = freeR.XCenter - 2;
-                                        y = freeR.Y0 - 2;
-                                        WorldGen.PoundTile(x + 1, y);
-                                        WorldGen.KillTile(x, y);
-                                        WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-
-
-                                        x = freeR.XCenter + 3;
-                                        y = freeR.Y0 - 2;
-                                        WorldGen.PoundTile(x - 1, y);
-                                        WorldGen.KillTile(x, y);
-                                        WorldGen.PlaceLiquid(x, y, (byte)LiquidID.Lava, 175);
-
+                                        WorldGen.PlaceLiquid(x + 1, y, (byte)LiquidID.Lava, 175);
+                                        //WorldGen.PoundTile(x, y);
+                                        runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(freeR.XCenter + 2, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter + 2, freeR.Y0 - 2, Deco[S.Brick].id)]));
 
                                         // add some nice "v" spike to the middle
                                         x = freeR.XCenter;
@@ -3020,6 +3041,8 @@ namespace WorldGenMod.Structures.Underworld
                                         x = freeR.XCenter + 1;
                                         y = freeR.Y0 - 3;
                                         Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
+
+                                        #endregion
 
 
                                         altarResult = CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
@@ -3069,27 +3092,383 @@ namespace WorldGenMod.Structures.Underworld
                             else if (middleSpace.XTiles <= 16)
                             {
                                 //Func.MarkRoom(room);
-                                //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
-                                //CreateGiantSword(middleSpace, (4, 5), 6, freeR.Y1);
-                                //CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: false, smallCrossGuard: true, actuated: false);
                             }
                             #endregion
 
-                            #region middleSpace.XTiles <= 18
+                            #region XTiles <= 18 -> Tree of Death
                             else if (middleSpace.XTiles <= 18)
                             {
-                                //Func.MarkRoom(room);
-                                //CreateAltar(middleSpace.X0 + 1, middleSpace.X1 - 1, freeR.Y1, 8);
-                                //CreateGiantSword(middleSpace, (4, 5), 6, freeR.Y1);
-                                //CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: false, smallCrossGuard: true, actuated: false);
+                                Func.MarkRoom(room);
+
+                                if (Chance.Perc(1))
+                                {
+                                    // two trees
+                                    #region prepare soil
+
+                                    y = freeR.Y1 + 1; // delete floor brick and place ash
+                                    for (int i = middleSpace.X0; i <= middleSpace.X1; i++)
+                                    {
+                                        WorldGen.KillTile(i, y);
+                                        WorldGen.PlaceTile(i, y, TileID.Ash);
+                                    }
+
+                                    y = freeR.Y1;
+                                    int xTree1 = middleSpace.X0 + 4;
+                                    int xTree2 = middleSpace.X1 - 4;
+                                    for (int i = middleSpace.X0 + 1; i <= middleSpace.X1 - 1; i++)
+                                    {
+                                        if ((i >= xTree1 - 1 && i <= xTree1 + 1) || (i >= xTree2 - 1 && i <= xTree2 + 1))
+                                        {
+                                            WorldGen.PlaceTile(i, y, TileID.Ash);
+                                            WorldGen.PlaceTile(i, y, TileID.AshGrass);
+                                        }
+                                        else if (Chance.Perc(15))
+                                        {
+                                            WorldGen.PlaceTile(i, y, TileID.Ash);
+                                            WorldGen.PoundTile(i, y);
+                                        }
+                                        else
+                                        {
+                                            WorldGen.PlaceLiquid(i, y, (byte)LiquidID.Lava, 255);
+                                        }
+                                    }
+                                    #endregion
+
+                                    #region plant trees
+
+                                    int ySaplingPlacement = freeR.Y1 - 1;
+                                    y = ySaplingPlacement;
+                                    WorldGen.PlaceObject(xTree1, y, TileID.Saplings, style: 10);
+                                    WorldGen.KillWall(xTree1, y);
+
+                                    WorldGen.PlaceObject(xTree2, y, TileID.Saplings, style: 10);
+                                    WorldGen.KillWall(xTree2, y);
+
+                                    WorldGen.GrowTreeSettings treeOfDeathSettings = WorldGen.GrowTreeSettings.Profiles.Tree_Ash; // fetch settings
+
+                                    num = ((y - ((freeR.Y0 + 1) - 1)) - treeOfDeathSettings.TreeTopPaddingNeeded) - 1; // 1 tile between tree top and ceiling
+                                    int height1 = num - WorldGen.genRand.Next(3);
+                                    if (height1 < 2) height1 = 2;
+                                    int yTrunkEnd1 = ySaplingPlacement - (height1 - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
+                                    treeOfDeathSettings.TreeHeightMin = height1;
+                                    treeOfDeathSettings.TreeHeightMax = height1;
+                                    WorldGen.GrowTreeWithSettings(xTree1, y, treeOfDeathSettings);
+                                    Func.PaintArea(new(xTree1, freeR.Y0, xTree1, y, "dummy"), PaintID.BlackPaint);
+                                    WorldGen.paintTile(xTree1 - 1, y, PaintID.BlackPaint);
+                                    WorldGen.paintTile(xTree1 + 1, y, PaintID.BlackPaint);
+
+                                    int height2 = num - WorldGen.genRand.Next(3);
+                                    if (height2 < 2) height2 = 2;
+                                    int yTrunkEnd2 = ySaplingPlacement - (height2 - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
+                                    treeOfDeathSettings.TreeHeightMin = height2;
+                                    treeOfDeathSettings.TreeHeightMax = height2;
+                                    WorldGen.GrowTreeWithSettings(xTree2, y, treeOfDeathSettings);
+                                    Func.PaintArea(new(xTree2, freeR.Y0, xTree2, y, "dummy"), PaintID.BlackPaint);
+                                    WorldGen.paintTile(xTree2 - 1, y, PaintID.BlackPaint);
+                                    WorldGen.paintTile(xTree2 + 1, y, PaintID.BlackPaint);
+
+                                    #endregion
+
+                                    #region create lavafalls at sides
+
+                                    x = middleSpace.X0;
+                                    y = freeR.Y0 - 2;
+                                    WorldGen.KillTile(x + 2, y);
+                                    WorldGen.PlaceLiquid(x + 2, y, (byte)LiquidID.Lava, 175);
+                                    //WorldGen.KillTile(x, y    );
+                                    //WorldGen.KillTile(x, y + 1);
+                                    //WorldGen.PoundTile(x + 1, y);
+                                    runAfterWorldCleanup.Add(() => { WorldGen.KillTile(middleSpace.X0, freeR.Y0 - 2); }, (true, 0, 0, [(middleSpace.X0, freeR.Y0 - 2, Deco[S.Brick].id)]));
+                                    runAfterWorldCleanup.Add(() => { WorldGen.KillTile(middleSpace.X0, freeR.Y0 - 1); }, (true, 0, 0, [(middleSpace.X0, freeR.Y0 - 1, Deco[S.Brick].id)]));
+                                    runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(middleSpace.X0 + 1, freeR.Y0 - 2); }, (true, 0, 0, [(middleSpace.X0 + 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
+
+                                    x = middleSpace.X1;
+                                    y = freeR.Y0 - 2;
+                                    WorldGen.KillTile(x - 2, y);
+                                    WorldGen.PlaceLiquid(x - 2, y, (byte)LiquidID.Lava, 175);
+                                    //WorldGen.KillTile(x, y    );
+                                    //WorldGen.KillTile(x, y + 1);
+                                    //WorldGen.PoundTile(x + 1, y);
+                                    runAfterWorldCleanup.Add(() => { WorldGen.KillTile(middleSpace.X1, freeR.Y0 - 2); }, (true, 0, 0, [(middleSpace.X1, freeR.Y0 - 2, Deco[S.Brick].id)]));
+                                    runAfterWorldCleanup.Add(() => { WorldGen.KillTile(middleSpace.X1, freeR.Y0 - 1); }, (true, 0, 0, [(middleSpace.X1, freeR.Y0 - 1, Deco[S.Brick].id)]));
+                                    runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(middleSpace.X1 - 1, freeR.Y0 - 2); }, (true, 0, 0, [(middleSpace.X1 - 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
+                                    #endregion
+
+                                    #region create planters in the middle
+
+                                    bool spotFound = false;
+                                    int ySpotPlanter = 0; // height where the planter can be placed
+                                    num = Math.Max(yTrunkEnd1, yTrunkEnd2) - 1; //look which tree reaches less far up. "-1" so that the platter doesn't cover the tree top
+
+                                    int endUpperThird = freeR.Y0 + freeR.YTiles / 3;
+                                    if (num > freeR.Y0 + freeR.YTiles / 3) // tree tops are in the middle third of the room
+                                    {
+                                        endUpperThird = num;
+                                    }
+
+                                    for (int j = freeR.Y1 - (freeR.YTiles / 3 - 1); j >= endUpperThird; j--) // planter in the central third would look the best, the lower the better
+                                    {
+                                        spotFound = !Main.tile[xTree1 + 1, j].HasTile && !Main.tile[xTree2 - 1, j].HasTile; // check if free of tree branches
+                                        if (spotFound)
+                                        {
+                                            ySpotPlanter = j;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!spotFound) // still no spot found
+                                    {
+                                        for (int j = freeR.Y1 - (freeR.YTiles / 3 - 1); j <= ySaplingPlacement - 1; j++) // look in the lower area, the higher the better
+                                        {
+                                            spotFound = !Main.tile[xTree1 + 1, j].HasTile && !Main.tile[xTree2 - 1, j].HasTile; // check if free of tree branches
+                                            if (spotFound)
+                                            {
+                                                ySpotPlanter = j;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+
+                                    if (spotFound)
+                                    {
+                                        #region place planter and column
+                                        for (int i = xTree1 + 2; i <= xTree2 - 2; i++)
+                                        {
+                                            WorldGen.PlaceTile(i, ySpotPlanter, TileID.PlanterBox, style: 7); // Fireblossom Planter Box
+                                            WorldGen.PlaceTile(i, ySpotPlanter - 1, TileID.ImmatureHerbs, style: 5); // growing Fireblossom
+                                        }
+
+                                        for (int j = ySpotPlanter + 1; j <= freeR.Y1; j++)
+                                        {
+                                            if (!Main.tile[freeR.XCenter, j].HasTile) Func.PlaceSingleTile(freeR.XCenter, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                            if (!Main.tile[freeR.XCenter + 1, j].HasTile) Func.PlaceSingleTile(freeR.XCenter + 1, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                        }
+                                        #endregion
+
+                                        #region place side planters
+                                        bool leftSpotFound = false;
+                                        int yleftSpot = 0;
+
+                                        x = xTree1 + 1;
+                                        for (int j = ySpotPlanter + 2; j < ySaplingPlacement; j++)
+                                        {
+                                            leftSpotFound = !Main.tile[x, j].HasTile; // check if free of tree branches
+                                            if (leftSpotFound)
+                                            {
+                                                yleftSpot = j;
+                                                if (Main.tile[x, j - 1].HasTile && !Main.tile[x, j + 1].HasTile && (j + 1 < ySaplingPlacement)) //if there is a branch right above the planter, peek at the below height
+                                                {
+                                                    yleftSpot++; // take the more suitable spot
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        if (leftSpotFound)
+                                        {
+                                            for (int i = xTree1 + 1; i <= xTree1 + 3; i++)
+                                            {
+                                                WorldGen.PlaceTile(i, yleftSpot, TileID.PlanterBox, style: 7); // Fireblossom Planter Box
+                                                WorldGen.PlaceTile(i, yleftSpot - 1, TileID.ImmatureHerbs, style: 5); // growing Fireblossom
+                                            }
+
+                                            for (int j = yleftSpot + 1; j <= freeR.Y1; j++)
+                                            {
+                                                if (!Main.tile[xTree1 + 2, j].HasTile) Func.PlaceSingleTile(xTree1 + 2, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                            }
+                                        }
+
+
+                                        bool rightSpotFound = false;
+                                        int yrightSpot = 0;
+
+                                        x = xTree2 - 1;
+                                        for (int j = ySpotPlanter + 2; j < ySaplingPlacement; j++)
+                                        {
+                                            rightSpotFound = !Main.tile[x, j].HasTile; // check if free of tree branches
+                                            if (rightSpotFound)
+                                            {
+                                                yrightSpot = j;
+
+                                                if (Main.tile[x, j - 1].HasTile && !Main.tile[x, j + 1].HasTile && (j + 1 < ySaplingPlacement)) //if there is a branch right above the planter, peek at the below height
+                                                {
+                                                    yrightSpot++; // take the more suitable spot
+                                                }
+
+                                                break;
+                                            }
+                                        }
+                                        if (rightSpotFound)
+                                        {
+                                            for (int i = xTree2 - 3; i <= xTree2 - 1; i++)
+                                            {
+                                                WorldGen.PlaceTile(i, yrightSpot, TileID.PlanterBox, style: 7); // Fireblossom Planter Box
+                                                WorldGen.PlaceTile(i, yrightSpot - 1, TileID.ImmatureHerbs, style: 5); // growing Fireblossom
+                                            }
+
+                                            for (int j = yrightSpot + 1; j <= freeR.Y1; j++)
+                                            {
+                                                if (!Main.tile[xTree2 - 2, j].HasTile) Func.PlaceSingleTile(xTree2 - 2, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                            }
+                                        }
+                                        #endregion
+
+                                        #region place moss patch
+                                        num = Math.Max(yTrunkEnd1, yTrunkEnd2); //look which tree reaches less far up.
+                                        if ((ySpotPlanter - 2) - num > 1) // sufficient space
+                                        {
+                                            Rectangle2P mosspatchArea = new(middleSpace.XCenter - 1, num, middleSpace.XCenter + 2, ySpotPlanter - 2, "dummy");
+                                            for (int i = mosspatchArea.XCenter; i <= mosspatchArea.XCenter + 1; i++)
+                                            {
+                                                for (int j = mosspatchArea.YCenter - 2; j <= mosspatchArea.YCenter + 1; j++)
+                                                {
+                                                    if (Chance.Perc(40))
+                                                    {
+                                                        Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
+                                                        WorldGen.PlaceTile(i, j, TileID.LavaMoss);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        #endregion
+                                    }
+                                    else
+                                    {
+                                        #region place moss patch
+                                        num = Math.Max(yTrunkEnd1, yTrunkEnd2); //look which tree reaches less far up.
+                                        if ((ySaplingPlacement - 1) - num > 2) // sufficient space
+                                        {
+                                            Rectangle2P mosspatchArea = new(middleSpace.XCenter - 1, num, middleSpace.XCenter + 2, ySaplingPlacement - 1, "dummy");
+
+                                            for (int i = mosspatchArea.XCenter; i <= mosspatchArea.XCenter + 1; i++)
+                                            {
+                                                for (int j = mosspatchArea.YCenter - 2; j <= mosspatchArea.YCenter + 1; j++)
+                                                {
+                                                    if (Chance.Perc(40))
+                                                    {
+                                                        Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
+                                                        WorldGen.PlaceTile(i, j, TileID.LavaMoss);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        #endregion
+                                    }
+
+                                    #endregion
+                                }
+                                else
+                                {
+                                    //one tree
+                                    #region prepare soil
+
+                                    y = freeR.Y1 + 1; // delete floor brick and place ash
+                                    for (int i = middleSpace.X0; i <= middleSpace.X1; i++)
+                                    {
+                                        WorldGen.KillTile(i, y);
+                                        WorldGen.PlaceTile(i, y, TileID.Ash);
+                                    }
+
+                                    y = freeR.Y1;
+                                    int xTree = middleSpace.XCenter + WorldGen.genRand.Next(2); // to alternate position
+                                    for (int i = middleSpace.X0 + 1; i <= middleSpace.X1 - 1; i++)
+                                    {
+                                        if (i >= xTree - 1 && i <= xTree + 1)
+                                        {
+                                            WorldGen.PlaceTile(i, y, TileID.Ash);
+                                            WorldGen.PlaceTile(i, y, TileID.AshGrass);
+                                        }
+                                        else if (Chance.Perc(25))
+                                        {
+                                            WorldGen.PlaceTile(i, y, TileID.Ash);
+                                            WorldGen.PlaceTile(i, y, TileID.AshGrass);
+                                            WorldGen.PoundTile(i, y);
+                                        }
+                                    }
+                                    #endregion
+
+                                    #region plant tree
+
+                                    int ySaplingPlacement = freeR.Y1 - 1;
+                                    y = ySaplingPlacement;
+                                    WorldGen.PlaceObject(xTree, y, TileID.Saplings, style: 10);
+                                    WorldGen.KillWall(xTree, y);
+
+                                    WorldGen.GrowTreeSettings treeOfDeathSettings = WorldGen.GrowTreeSettings.Profiles.Tree_Ash; // fetch settings
+
+                                    num = ((y - ((freeR.Y0 + 1) - 1)) - treeOfDeathSettings.TreeTopPaddingNeeded) - 1; // 1 tile between tree top and ceiling
+                                    height = num - WorldGen.genRand.Next(3);
+                                    if (height < 2) height = 2;
+                                    int yTrunkEnd = ySaplingPlacement - (height - 1); // height where the trunk of the tree ends, the next higher tile is the trees top
+                                    treeOfDeathSettings.TreeHeightMin = height;
+                                    treeOfDeathSettings.TreeHeightMax = height;
+                                    WorldGen.GrowTreeWithSettings(xTree, y, treeOfDeathSettings);
+                                    Func.PaintArea(new(xTree, freeR.Y0, xTree, y, "dummy"), PaintID.BlackPaint);
+                                    WorldGen.paintTile(xTree - 1, y, PaintID.BlackPaint);
+                                    WorldGen.paintTile(xTree + 1, y, PaintID.BlackPaint);
+
+                                    #endregion
+
+                                    #region place left moss patch with lava spot
+
+                                    Rectangle2P leftMosspatchArea = new(middleSpace.X0 + 1, freeR.Y0, xTree - 4, freeR.Y0 + freeR.YTiles / 3, "dummy");
+                                    for (int i = leftMosspatchArea.X0; i <= leftMosspatchArea.X1; i++)
+                                    {
+                                        for (int j = leftMosspatchArea.Y0; j <= leftMosspatchArea.Y1; j++)
+                                        {
+                                            if (Chance.Perc(50))
+                                            {
+                                                Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
+                                                WorldGen.PlaceTile(i, j, TileID.LavaMoss);
+                                            }
+                                        }
+                                    }
+
+                                    (int x, int y) leftLavaspot = (leftMosspatchArea.X0 + 1, leftMosspatchArea.Y0 + WorldGen.genRand.Next(leftMosspatchArea.YTiles - 2));
+                                    Func.PlaceSingleTile(leftLavaspot.x - 1, leftLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint); // surround lavaspot with tiles
+                                    Func.PlaceSingleTile(leftLavaspot.x - 1, leftLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
+                                    Func.PlaceSingleTile(leftLavaspot.x    , leftLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
+                                    Func.PlaceSingleTile(leftLavaspot.x + 1, leftLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
+                                    Func.PlaceSingleTile(leftLavaspot.x + 1, leftLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint);
+                                    WorldGen.KillTile(leftLavaspot.x, leftLavaspot.y);
+                                    WorldGen.PlaceLiquid(leftLavaspot.x, leftLavaspot.y, (byte)LiquidID.Lava, 175);
+                                    #endregion
+
+                                    #region place right moss patch with lava spot
+
+                                    Rectangle2P rightMosspatchArea = new(xTree + 4, freeR.Y0, middleSpace.X1 - 1, freeR.Y0 + freeR.YTiles / 3, "dummy");
+                                    for (int i = rightMosspatchArea.X0; i <= rightMosspatchArea.X1; i++)
+                                    {
+                                        for (int j = rightMosspatchArea.Y0; j <= rightMosspatchArea.Y1; j++)
+                                        {
+                                            if (Chance.Perc(50))
+                                            {
+                                                Func.PlaceSingleTile(i, j, TileID.Stone, paint: PaintID.BlackPaint);
+                                                WorldGen.PlaceTile(i, j, TileID.LavaMoss);
+                                            }
+                                        }
+                                    }
+
+                                    (int x, int y) rightLavaspot = (rightMosspatchArea.X1 - 1, rightMosspatchArea.Y0 + WorldGen.genRand.Next(rightMosspatchArea.YTiles - 2));
+                                    Func.PlaceSingleTile(rightLavaspot.x - 1, rightLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint); // surround lavaspot with tiles
+                                    Func.PlaceSingleTile(rightLavaspot.x - 1, rightLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
+                                    Func.PlaceSingleTile(rightLavaspot.x    , rightLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
+                                    Func.PlaceSingleTile(rightLavaspot.x + 1, rightLavaspot.y + 1, TileID.Stone, paint: PaintID.BlackPaint);
+                                    Func.PlaceSingleTile(rightLavaspot.x + 1, rightLavaspot.y    , TileID.Stone, paint: PaintID.BlackPaint);
+                                    WorldGen.KillTile(rightLavaspot.x, rightLavaspot.y);
+                                    WorldGen.PlaceLiquid(rightLavaspot.x, rightLavaspot.y, (byte)LiquidID.Lava, 175);
+                                    #endregion
+                                }
+
+
                             }
                             #endregion
 
-                            #region middleSpace.XTiles <= 20
+                            #region XTiles <= 20 -> Giant Sword structuree
                             else if (middleSpace.XTiles <= 20)
                             {
                                 (bool success, Rectangle2P pommelR, Rectangle2P handleR, Rectangle2P crossGuardR, Rectangle2P crossGuardCenterR, Rectangle2P bladeR, List<(int x, int y, int tileID)> checkPoints) result;
-                                Func.MarkRoom(freeR);
+                                
                                 if (freeR.YTiles >= 17)
                                 {
                                     result = CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6);
@@ -3103,7 +3482,7 @@ namespace WorldGenMod.Structures.Underworld
                                     {
                                         podestXStart++; // just one line of podest
                                         podestXEnd++;
-                                        podestYEnd--;
+                                        podestYEnd++;
                                     }
 
                                     for (int j = freeR.Y1; j >= podestYEnd; j--)
@@ -3118,7 +3497,10 @@ namespace WorldGenMod.Structures.Underworld
                                         podestXEnd--;
                                     }
 
-                                    WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 2, TileID.Statues, style: 1);
+                                    WorldGen.PlaceTile(middleSpace.XCenter, podestYEnd - 1, TileID.Statues, style: 1);
+
+                                    WorldGen.PlaceTile(middleSpace.X0 + 2, podestYEnd - 3, TileID.Painting3X3, style: 45); //SwordRack
+                                    WorldGen.PlaceTile(middleSpace.X1 - 2, podestYEnd - 3, TileID.Painting3X3, style: 45); //SwordRack
                                 }
                                 else if (freeR.YTiles >= 16)
                                 {
@@ -3126,6 +3508,9 @@ namespace WorldGenMod.Structures.Underworld
                                     runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 4), 6); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
 
                                     WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1, TileID.Statues, style: 1);
+
+                                    WorldGen.PlaceTile(middleSpace.X0 + 2, freeR.Y1 - 2, TileID.Painting3X3, style: 45); //SwordRack
+                                    WorldGen.PlaceTile(middleSpace.X1 - 2, freeR.Y1 - 2, TileID.Painting3X3, style: 45); //SwordRack
                                 }
                                 else if (freeR.YTiles >= 13)
                                 {
@@ -3153,7 +3538,21 @@ namespace WorldGenMod.Structures.Underworld
                                     runAfterWorldCleanup.Add(() => { CreateGiantSword(new(middleSpace.X0, freeR.Y0, middleSpace.X1, freeR.Y1, "dummy"), (4, 2), 6, smallPommel: true, smallCrossGuard: true, actuated: true); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, result.checkPoints));
                                 }
 
-                                //TODO: idea for small rooms....the sword is alomost unrecognizable there, maybe hand it horizontally? But there is the problem of 
+                                // WeaponRacks with swords
+                                randomItems.Clear();
+                                randomItems.Add(((ushort)ItemID.GoldBroadsword, 0, 0));
+                                randomItems.Add(((ushort)ItemID.PlatinumBroadsword, 0, 0));
+                                randomItems.Add(((ushort)ItemID.GoldShortsword, 0, 0));
+                                randomItems.Add(((ushort)ItemID.PlatinumShortsword, 0, 0));
+                                randomItems.Add(((ushort)ItemID.Gladius, 0, 0));
+
+                                randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count()));
+                                Func.PlaceWeaponRack(middleSpace.X0 + 3, middleSpace.Y0 + 1, paint: Deco[S.StylePaint].id, direction: -1, item: randomItem.id);
+
+                                randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count()));
+                                Func.PlaceWeaponRack(middleSpace.X1 - 3, middleSpace.Y0 + 1, paint: Deco[S.StylePaint].id, direction:  1, item: randomItem.id);
+
+                                //TODO: idea for low rooms....the sword is alomost unrecognizable there, maybe hand it horizontally? But there is the problem of 
                             }
                             #endregion
                         }

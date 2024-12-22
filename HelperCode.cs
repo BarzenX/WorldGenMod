@@ -1115,18 +1115,26 @@ namespace WorldGenMod
 
 
         /// <summary>
-        /// Slopes a tile
+        /// Kills existing tiles and places the stated tile a the stated position
         /// </summary>
-        /// <param name="pos">The x and y position of the to-be-sloped tile </param>
-        /// <param name="slopeForm">The to-be-applied slope form (use ENUM "SlopeVal") </param>
-        public static bool PlaceSingleTile(int posX, int posY, int tileID, int style = 0, int paint = 0, int slope = 0, bool actuated = false)
+        /// <param name="posX">The x position of the to-be-placed tile </param>
+        /// <param name="posY">The y position of the to-be-placed tile </param>
+        /// <param name="tileID">The TildID of the to-be-placed tile </param>
+        /// <param name="style">The style of the to-be-placed tile </param>
+        /// <param name="paint">Add a PaintID to paint the tile </param>
+        /// <param name="coat">Add a PaintCoatingID to coat the tile </param>
+        /// <param name="slope">The to-be-applied slope form (use ENUM "SlopeVal") </param>
+        /// <param name="actuated">State if the placed tile shall be actuated or not </param>
+        public static bool PlaceSingleTile(int posX, int posY, int tileID, int style = 0, int paint = 0, int coat = 0, int slope = 0, bool actuated = false)
         {
-            if (posX < 0 || posY < 0 || tileID < 0 || style < 0 || paint < 0 || slope < 0 || slope > (int)SlopeVal.BotLeft) return false;
-
+            if (posX < 0 || posY < 0 || tileID < 0 || style < 0 || paint < 0 || coat < 0 || slope < 0 || slope > (int)SlopeVal.BotLeft) return false;
+            
             WorldGen.KillTile(posX, posY);
             bool placed = WorldGen.PlaceTile(posX, posY, tileID, style: style);
 
             if (paint > 0) WorldGen.paintTile(posX, posY, (byte)paint);
+
+            if (coat > 0) WorldGen.paintCoatTile(posX, posY, (byte)coat);
 
             if (slope > 0) SlopeTile(posX, posY, slope);
 
@@ -2705,21 +2713,21 @@ namespace WorldGenMod
         private int xTiles; // The amount of tiles along the x diameter of the region defined by this Ellipse
         private int yTiles; // The amount of tiles along the y diameter of the region defined by this Ellipse
 
-        private bool xForm; // Defines the appearance of the Ellipse: true = long side of the ellipse is along x-direction
+        private bool xForm; // Defines the appearance of the Ellipse: true = long side of the ellipse is along x-direction, false = long side of the ellipse is along y-direction
 
 
         /// <summary>
-        /// Initializes a new instance of the Ellipse structure with the specified values. 
+        /// Initializes a new instance of the Ellipse structure (that has a single center point) with the specified values. 
         /// <br/>It is a special ellipse, adapted to Terraria worlds (based on discrete tiles).
         /// <br/>The Ellipse includes all tiles that have a (float) radius length equal and lower than xRadius and yRadius
         /// <br/>
         /// <br/><b>Example1</b>: <i>xCenter = 100</i> and <i>xRadius=1</i> includes the x-tiles <i>99,100,101</i>
-        /// <br/><b>Example2</b>: <i>xCenter = yCenter = 100</i>  and <i>xRadius  = yRadius = 1</i>  includes the tiles <i>(100,101), (99,100), (100,100), (101,100), (100,101)</i>
+        /// <br/><b>Example2</b>: <i>xCenter = yCenter = 100</i>  and <i>xRadius = yRadius = 1</i>  includes the tiles <i>(100,101), (99,100), (100,100), (101,100), (100,101)</i>
         /// <br/>
         /// <br/><b>Attention</b>: <i>xRadius = 0</i>  or <i>yRadius = 0</i>  will reduce the Ellipse to a line of tiles
         /// </summary>
-        /// <param name="xCenter">The x-coordinate of the upper-left corner of the rectangular region defined by this Ellipse</param>
-        /// <param name="yCenter">The y-coordinate of the upper-left corner of the rectangular region defined by this Ellipse</param>
+        /// <param name="xCenter">The x-coordinate of the upper-left corner of the rectangular region that would cover this Ellipse completely</param>
+        /// <param name="yCenter">The y-coordinate of the upper-left corner of the rectangular region that would cover this Ellipse completely</param>
         /// <param name="xRadius">The amount of tiles on the x side of the rectangular region defined by this Ellipse</param>
         /// <param name="yRadius">The amount of tiles on the y side of the rectangular region defined by this Ellipse</param>
         public Ellipse(int xCenter, int yCenter, int xRadius, int yRadius)
