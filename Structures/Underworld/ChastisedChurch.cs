@@ -260,6 +260,7 @@ namespace WorldGenMod.Structures.Underworld
 
             // tree
             Deco.Add(S.TreePaint, (0, 0));
+            Deco.Add(S.BannerHangPlat, (0, 0));
             #endregion
 
             //use the handed over style / choose a random style and define it's IDs
@@ -363,6 +364,7 @@ namespace WorldGenMod.Structures.Underworld
 
                     // tree
                     Deco[S.TreePaint] = (PaintID.BlackPaint, 0);
+                    Deco[S.BannerHangPlat] = (TileID.Platforms, 11); //Wood Shelf
                     break;
 
                 case S.StyleTitanstone: // Titanstone
@@ -446,6 +448,7 @@ namespace WorldGenMod.Structures.Underworld
 
                     // tree
                     Deco[S.TreePaint] = (0, 0);
+                    Deco[S.BannerHangPlat] = (TileID.Platforms, 11); //Wood Shelf
                     break;
 
                 case S.StyleBlueBrick:
@@ -530,6 +533,7 @@ namespace WorldGenMod.Structures.Underworld
 
                     // tree
                     Deco[S.TreePaint] = (0, 0);
+                    Deco[S.BannerHangPlat] = (TileID.Platforms, 11); //Wood Shelf
                     break;
             }
         }
@@ -3110,9 +3114,7 @@ namespace WorldGenMod.Structures.Underworld
                             #region XTiles <= 18 -> Tree of Death
                             else if (middleSpace.XTiles <= 18)
                             {
-                                Func.MarkRoom(room);
-
-                                if (Chance.Perc(0))
+                                if (Chance.Perc(50))
                                 {
                                     // 2 trees and planters in middle
                                     #region prepare soil
@@ -3217,7 +3219,7 @@ namespace WorldGenMod.Structures.Underworld
 
                                     bool spotFound = false;
                                     int ySpotPlanter = 0; // height where the planter can be placed
-                                    num = Math.Max(yTrunkEnd1, yTrunkEnd2) - 1; //look which tree reaches less far up. "-1" so that the platter doesn't cover the tree top
+                                    num = Math.Max(yTrunkEnd1, yTrunkEnd2) + 1; //look which tree reaches less far up. "+1" so that the planter doesn't cover the tree top
 
                                     int endUpperThird = freeR.Y0 + freeR.YTiles / 3;
                                     if (num > freeR.Y0 + freeR.YTiles / 3) // tree tops are in the middle third of the room
@@ -3260,8 +3262,8 @@ namespace WorldGenMod.Structures.Underworld
 
                                         for (int j = ySpotPlanter + 1; j <= freeR.Y1; j++)
                                         {
-                                            if (!Main.tile[freeR.XCenter, j].HasTile) Func.PlaceSingleTile(freeR.XCenter, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
-                                            if (!Main.tile[freeR.XCenter + 1, j].HasTile) Func.PlaceSingleTile(freeR.XCenter + 1, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                            Func.PlaceSingleTile(freeR.XCenter, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                            Func.PlaceSingleTile(freeR.XCenter + 1, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
                                         }
                                         #endregion
 
@@ -3293,7 +3295,7 @@ namespace WorldGenMod.Structures.Underworld
 
                                             for (int j = yleftSpot + 1; j <= freeR.Y1; j++)
                                             {
-                                                if (!Main.tile[xTree1 + 2, j].HasTile) Func.PlaceSingleTile(xTree1 + 2, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                                Func.PlaceSingleTile(xTree1 + 2, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
                                             }
                                         }
 
@@ -3442,67 +3444,136 @@ namespace WorldGenMod.Structures.Underworld
                                         20, // Obsidian Watcher
                                     ];
 
-                                    int xFirst, xSecond, yStart = 0, xStart = 0;
+                                    int xTree = 0, xFirst, xSecond, yStart = 0, xStart = 0;
                                     for (num = 1; num <= 3; num++) // all 3 trees
                                     {
                                         placed = false; //init
+                                        if (num == 1)      { xTree = xTree1; yStart = yTrunkEnd1; }
+                                        else if (num == 2) { xTree = xTree2; yStart = yTrunkEnd2; }
+                                        else if (num == 3) { xTree = xTree3; yStart = yTrunkEnd3; }
 
-                                        if (Chance.Simple())
+                                        if (Chance.Simple()) // randomly start left or right of the tree
                                         {
-                                            xFirst = xTree1 - 1;
-                                            xSecond = xTree1 + 1;
+                                            xFirst = xTree - 1;
+                                            xSecond = xTree + 1;
                                         }
                                         else
                                         {
-                                            xFirst = xTree1 + 1;
-                                            xSecond = xTree1 - 1;
+                                            xFirst = xTree + 1;
+                                            xSecond = xTree - 1;
                                         }
-
-                                        if      (num == 1) yStart = yTrunkEnd1;
-                                        else if (num == 2) yStart = yTrunkEnd2;
-                                        else if (num == 3) yStart = yTrunkEnd3;
 
                                         for (int j = yStart; j < ySaplingPlacement; j++) // go down the tree
                                         {
+                                            int dir = 0;
                                             for (int num2 = 1; num2 <= 2; num2++) // for both sides of the tree
                                             {
                                                 if      (num2 == 1) xStart = xFirst;
                                                 else if (num2 == 2) xStart = xSecond;
+                                                dir = (xStart - xTree); // the direction from the trunk to the branch (-1 = left side, +1 = right side)
 
                                                 if (Main.tile[xStart, j].HasTile)
                                                 {
                                                     if (!Main.tile[xStart, j + 1].HasTile && !Main.tile[xStart, j + 2].HasTile) // enough space for hanging a lantern
                                                     {
-                                                        if (!Main.tile[xStart, j + 3].HasTile && Chance.Perc(80)) // a third free tile, so a banner can be hanged
+                                                        if (!Main.tile[xStart, j + 3].HasTile && Chance.Perc(70)) // a third free tile, so a banner can be hanged
                                                         {
-                                                            Func.PlaceSingleTile(xStart, j, TileID.Platforms, style: Deco[S.DecoPlat].id, coat: PaintCoatingID.Echo);
-                                                            WorldGen.PlaceTile(xStart, j + 1, TileID.Banners, style: bannerStyle.PopAt(WorldGen.genRand.Next(bannerStyle.Count())));
+                                                            Func.PlaceSingleTile(xStart + dir, j, Deco[S.BannerHangPlat].id, style: Deco[S.BannerHangPlat].style, coat: PaintCoatingID.Echo);
+                                                            WorldGen.PlaceObject(xStart + dir, j + 1, TileID.Banners, style: bannerStyle.PopAt(WorldGen.genRand.Next(bannerStyle.Count())));
 
-                                                            placed = Main.tile[xStart, j + 1].TileType == TileID.Banners;
-                                                            int test = Main.tile[xStart, j + 1].TileType;
-                                                            if (placed) break; // just 1 item per tree
+                                                            placed = true;
+                                                            break; // just 1 item per tree
                                                         }
                                                         else if (Chance.Perc(80))
                                                         {
-                                                            Func.PlaceSingleTile(xStart, j, TileID.Platforms, style: Deco[S.DecoPlat].id, coat: PaintCoatingID.Echo);
-                                                            WorldGen.PlaceTile(xStart, j + 1, TileID.LavaflyinaBottle);
+                                                            Func.PlaceSingleTile(xStart + dir, j, Deco[S.BannerHangPlat].id, style: Deco[S.BannerHangPlat].style, coat: PaintCoatingID.Echo);
+                                                            WorldGen.PlaceObject(xStart + dir, j + 1, TileID.LavaflyinaBottle);
 
-                                                            placed = Main.tile[xStart, j + 1].TileType == TileID.LavaflyinaBottle;
-                                                            if (placed) break; // just 1 item per tree
+                                                            placed = true; 
+                                                            break; // just 1 item per tree
                                                         }
                                                     }
                                                 }
                                             }
-                                            if (placed) break; // just 1 item per tree
+
+                                            if (placed)
+                                            {
+                                                if (Main.tile[xStart, j].TileFrameY < 198) // trees use empty parts of their spritesheet for rendering the "longer" branches. The 1 tile branches are normal ones from the spritesheet
+                                                {                                          // --> if it's just a 1 tile branch, there is nothing the banner can hang onto, so make the platform visible and create a chain above!
+                                                    x = xStart + dir;
+                                                    WorldGen.paintCoatTile(x, j, 0); // remove echo coat
+
+                                                    for (int num2 = freeR.Y0; num2 < j; num2++)
+                                                    {
+                                                        WorldGen.PlaceTile(x, num2, TileID.Chain); //place chains till the ceiling
+                                                    }
+                                                }
+                                                break; // just 1 item per tree
+                                            }  
                                         }
                                     }
 
-                                    
-                                    
+
+
+                                    #endregion
+
+                                    #region create planters between trees
+
+                                    for (num = 0; num < 2; num++)
+                                    {
+                                        bool spotFound = false;
+                                        int ySpotPlanter = 0; // height where the planter can be placed
+
+                                        int num2 = 0; // look which tree reaches less far up.
+                                        int firstTreeX = 0, secondTreeX = 0;
+
+                                        if (num == 0)
+                                        {
+                                            firstTreeX = xTree1;
+                                            secondTreeX = xTree2;
+                                            num2 = Math.Max(yTrunkEnd1, yTrunkEnd2) + 1; // "+1" so that the planter doesn't cover the tree top
+                                        }
+                                        else if (num == 1)
+                                        {
+                                            firstTreeX = xTree2;
+                                            secondTreeX = xTree3;
+                                            num2 = Math.Max(yTrunkEnd2, yTrunkEnd3) + 1; // "+1" so that the planter doesn't cover the tree top
+                                        }
+
+
+                                        int upperEnd = freeR.Y1 - (freeR.YTiles / 3 - 1);
+                                        if (num2 > upperEnd) upperEnd = num2; // tree tops are in the lower third of the room
+
+                                        for (int j = upperEnd; j <= ySaplingPlacement - 1; j++) // look in the lower area, the higher the better
+                                        {
+                                            spotFound = (!Main.tile[firstTreeX + 1, j    ].HasTile && !Main.tile[secondTreeX - 1, j    ].HasTile) && // check if free of tree branches
+                                                        (!Main.tile[firstTreeX + 2, j - 1].HasTile && !Main.tile[secondTreeX - 2, j - 1].HasTile); // and free of banners / lanterns
+                                            if (spotFound)
+                                            {
+                                                ySpotPlanter = j;
+                                                break;
+                                            }
+                                        }
+
+
+                                        if (spotFound)
+                                        {
+                                            //place planter and column
+                                            for (int i = firstTreeX + 2; i <= secondTreeX - 2; i++)
+                                            {
+                                                WorldGen.PlaceTile(i, ySpotPlanter, TileID.PlanterBox, style: 7); // Fireblossom Planter Box
+                                                WorldGen.PlaceTile(i, ySpotPlanter - 1, TileID.ImmatureHerbs, style: 5); // growing Fireblossom
+                                            }
+
+                                            x = firstTreeX + 3;
+                                            for (int j = ySpotPlanter + 1; j <= freeR.Y1; j++)
+                                            {
+                                                Func.PlaceSingleTile(x, j, TileID.MarbleColumn, paint: PaintID.DeepRedPaint);
+                                            }
+                                        }
+                                    }
                                     #endregion
                                 }
-
-
                             }
                             #endregion
 
@@ -5928,6 +5999,7 @@ namespace WorldGenMod.Structures.Underworld
 
         // tree
         public const String TreePaint = "TreePaint";
+        public const String BannerHangPlat = "BannerHangPlat";
 
 
 
