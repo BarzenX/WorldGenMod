@@ -1,17 +1,17 @@
-This is the updated version of the mod "Microdungeons And More - A Worldgen Mod" by JustImpaxim. He gave me permission to carry on with the mod, so all credit for that initial creation goes to him!
+This is the updated version of the mod "Microdungeons And More - A Worldgen Mod" by JustImpaxim. He gave me permission to carry on with the mod, but all credit for that initial creation goes to him!
 The original mod: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2864294093] Link [/url]
 
 I also took the opportunity to
 - create a new variation of the "Canyon", called "Fissure" which looks more natural
-- reduce the size of the Underground Lakes
+- reduce the size of the Underground Lakes and add additional configuration
 - make the count of created Fissures, Underground Lakes and Abandoned Hellevators configurable
-- almost completely rewrite the Frost Fortress, including an abundant decoration of the rooms
+- almost completely rewrite the Frost Fortress and the Chastised Church, including an abundant decoration of the rooms
 
 Every single structure of this mod can be disabled in the mods configuration!
 
 The legacy version of the Canyon and the Underground Lakes are still available if someone misses them.
 
-I don't know if I'm ever going to implement the plentiful suggestions made in the old workshop entry...most probably not. Anyway I collected all ideas in the "Suggested structures / additions" discussion.
+I don't know if I'm ever going to implement the plentiful suggestions collected in the "Suggested structures / additions" discussion ...most probably not.
 
 For compatibility concerned questions please have a look at the "FAQ" discussion before asking.
 

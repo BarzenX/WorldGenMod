@@ -1,3 +1,20 @@
+Version 1.1
+- overhauled and decorated the Chastised Church so it's not so bland anymore!
+
+Version 1.0.8
+- added room#7 "Treasury": Preview https://imgur.com/room-7-treasury-BXAJ1B6
+- filled some small empty spaces in room#0 "Corridor", room#1 "Kitchen", room#2 "Library"
+
+The Frost Fortress is done, next update will tackle the Chastised Church!
+
+Version 1.0.7
+- added room#6 "Prison"
+Preview: https://imgur.com/room-6-prison-nCQVVJt
+
+1.0.6.5
+- gave room#0 "Corridor" some of the love, the later created rooms received.
+Preview: https://i.imgur.com/iAcsBCp.jpg
+
 1.0.6.1
 - removed the FossilArmor from room#3 ArmoryShowroom and room#5 Armory as it's too rewarding for the point at the game when the player finds the FrostFortress
 
