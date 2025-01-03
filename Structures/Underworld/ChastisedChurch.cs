@@ -17,6 +17,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static tModPorter.ProgressUpdate;
 using System.Diagnostics.Metrics;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace WorldGenMod.Structures.Underworld
 {
@@ -56,7 +57,7 @@ namespace WorldGenMod.Structures.Underworld
                     else side = WorldGen.genRand.NextBool() ? 1 : -1; // "Random"
 
                     //TODO: deactivate debug mode!
-                    bool debug = false;
+                    bool debug = true;
                     if (debug)
                     {
                         side = -1;
@@ -244,7 +245,7 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.Column, (0, 0));
             Deco.Add(S.ColumnPaint, (0, 0));
 
-            //altar
+            // altar
             Deco.Add(S.MiddleWall, (0, 0));
             Deco.Add(S.MiddleWallPaint, (0, 0));
             Deco.Add(S.AltarSteps, (0, 0));
@@ -267,10 +268,19 @@ namespace WorldGenMod.Structures.Underworld
             // tree
             Deco.Add(S.TreePaint, (0, 0));
             Deco.Add(S.BannerHangPlat, (0, 0));
-            #endregion
 
-            //use the handed over style / choose a random style and define it's IDs
-            int chosenStyle, subStyle;
+            // temple
+            Deco.Add(S.TempleBrick, (0, 0));
+            Deco.Add(S.TempleBrickBottomPaint, (0, 0));
+            Deco.Add(S.TempleBrickAltarPaint, (0, 0));
+            Deco.Add(S.TempleSteps, (0, 0));
+            Deco.Add(S.TempleStepsPaint, (0, 0));
+            Deco.Add(S.TempleColumnPaint, (0, 0));
+            Deco.Add(S.TempleCeilingPlat, (0, 0));
+        #endregion
+
+        //use the handed over style / choose a random style and define it's IDs
+        int chosenStyle, subStyle;
 
             if (forceStyle >= 0) chosenStyle = forceStyle;
             else                chosenStyle = WorldGen.genRand.Next(3);
@@ -371,6 +381,15 @@ namespace WorldGenMod.Structures.Underworld
                     // tree
                     Deco[S.TreePaint] = (PaintID.BlackPaint, 0);
                     Deco[S.BannerHangPlat] = (TileID.Platforms, 11); //Wood Shelf
+
+                    // temple
+                    Deco[S.TempleBrick] = (TileID.LavaMossBlock, 11);
+                    Deco[S.TempleBrickBottomPaint] = (PaintID.BlackPaint, 0);
+                    Deco[S.TempleBrickAltarPaint] = (0, 0);
+                    Deco[S.TempleSteps] = (TileID.Platforms, 22); //Skyware Platform
+                    Deco[S.TempleStepsPaint] = (PaintID.BlackPaint, 0);
+                    Deco[S.TempleColumnPaint] = (PaintID.DeepRedPaint, 0);
+                    Deco[S.TempleCeilingPlat] = (TileID.Platforms, 10); //Brass Shelf
                     break;
 
                 case S.StyleTitanstone: // Titanstone
@@ -455,6 +474,15 @@ namespace WorldGenMod.Structures.Underworld
                     // tree
                     Deco[S.TreePaint] = (0, 0);
                     Deco[S.BannerHangPlat] = (TileID.Platforms, 11); //Wood Shelf
+
+                    // temple
+                    Deco[S.TempleBrick] = (TileID.LavaMossBlock, 11);
+                    Deco[S.TempleBrickBottomPaint] = (PaintID.BlackPaint, 0);
+                    Deco[S.TempleBrickAltarPaint] = (0, 0);
+                    Deco[S.TempleSteps] = (TileID.Platforms, 22); //Skyware Platform
+                    Deco[S.TempleStepsPaint] = (PaintID.BlackPaint, 0);
+                    Deco[S.TempleColumnPaint] = (PaintID.DeepRedPaint, 0);
+                    Deco[S.TempleCeilingPlat] = (TileID.Platforms, 10); //Brass Shelf
                     break;
 
                 case S.StyleBlueBrick:
@@ -540,6 +568,15 @@ namespace WorldGenMod.Structures.Underworld
                     // tree
                     Deco[S.TreePaint] = (0, 0);
                     Deco[S.BannerHangPlat] = (TileID.Platforms, 11); //Wood Shelf
+
+                    // temple
+                    Deco[S.TempleBrick] = (TileID.XenonMossBlock, 11);
+                    Deco[S.TempleBrickBottomPaint] = (PaintID.ShadowPaint, 0);
+                    Deco[S.TempleBrickAltarPaint] = (PaintID.DeepBluePaint, 0);
+                    Deco[S.TempleSteps] = (TileID.Platforms, 22); //Skyware Platform
+                    Deco[S.TempleStepsPaint] = (0, 0);
+                    Deco[S.TempleColumnPaint] = (PaintID.DeepSkyBluePaint, 0);
+                    Deco[S.TempleCeilingPlat] = (TileID.Platforms, 10); //Brass Shelf
                     break;
             }
         }
@@ -3110,733 +3147,351 @@ namespace WorldGenMod.Structures.Underworld
                             }
                             #endregion
 
-                            #region middleSpace.XTiles <= 16
+                            #region XTiles <= 16 -> temple
                             else if (middleSpace.XTiles <= 16)
                             {
                                 //TODO: for now a copy of XTiles14, replace with a real one
 
-                                randomStyles.Clear();
-                                if (middleSpace.YTiles >= 10) randomStyles.Add(1); // window type 1 "skull"
-                                if (middleSpace.YTiles >= 10) randomStyles.Add(2); // window type 2 "crystal"
-                                if (middleSpace.YTiles >= 4) randomStyles.Add(3); // window type 3 "hammer"
-                                if (middleSpace.YTiles >= 11) randomStyles.Add(4); // window type 4 "little devil"
-                                if (middleSpace.YTiles > 17) randomStyles.Add(5); // flaming "+"
-                                if (middleSpace.YTiles <= 15) randomStyles.Add(6); // painting with frame
+                                //Func.MarkRoom(freeR);
 
-                                switch (randomStyles[WorldGen.genRand.Next(randomStyles.Count())])
+                                #region foundation
+
+                                int templeFloor = freeR.Y1 - 1;
+                                for (int i = middleSpace.X0 + 3; i <= middleSpace.X1 - 3; i++)
                                 {
-                                    // window type 1 "skull"
-                                    case 1:
-
-                                        if (middleSpace.YTiles < 10)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("  ▓ ▓▓ ▓  ");
-                                            height = 8;
-                                        }
-
-                                        else if (middleSpace.YTiles < 12)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("  ▓ ▓▓ ▓  ");
-                                            height = 10;
-                                        }
-                                        else if (middleSpace.YTiles < 14)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓  ▓▓  ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("  ▓ ▓▓ ▓  ");
-                                            height = 12;
-                                        }
-                                        else if (middleSpace.YTiles < 16)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓  ▓▓  ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add(" ▓  ▓▓  ▓ ");
-                                            pattern.Add(" ▓▓    ▓▓ ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            height = 14;
-                                        }
-                                        else if (middleSpace.YTiles < 18)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓  ▓▓  ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add(" ▓  ▓▓  ▓ ");
-                                            pattern.Add(" ▓▓    ▓▓ ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            height = 16;
-                                        }
-                                        else if (middleSpace.YTiles <= 20)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓  ▓▓  ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add(" ▓  ▓▓  ▓ ");
-                                            pattern.Add(" ▓▓    ▓▓ ");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            height = 18;
-                                        }
-                                        else
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add("  ▓▓  ▓▓  ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add(" ▓  ▓▓  ▓ ");
-                                            pattern.Add(" ▓▓    ▓▓ ");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            height = 20;
-                                        }
-
-                                        patternData.Clear();
-                                        patternData.Add('W', (10, Deco[S.PaintingWallpaper].id, 0, overWrite));
-                                        patternData.Add('▓', (10, Deco[S.WindowWall].id, Deco[S.WindowPaint].id, overWrite));
-
-                                        diff = middleSpace.YTiles - height;
-                                        Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 3, middleSpace.YCenter - (height / 2)));
-
-                                        if (Chance.Perc(90))
-                                        {
-                                            placed = WorldGen.PlaceTile(middleSpace.X0 + 2, freeR.Y1, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
-                                            if (placed) Func.UnlightLamp(middleSpace.X0 + 2, freeR.Y1);
-                                        }
-
-                                        if (Chance.Perc(90))
-                                        {
-                                            placed = WorldGen.PlaceTile(middleSpace.X1 - 2, freeR.Y1, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
-                                            if (placed) Func.UnlightLamp(middleSpace.X1 - 2, freeR.Y1);
-                                        }
-
-                                        if (Chance.Perc(90)) // plattforms with candelabra
-                                        {
-                                            WorldGen.PlaceTile(freeR.XCenter - 2, freeR.Y1, TileID.Campfire, style: 2);
-                                            WorldGen.PlaceTile(freeR.XCenter + 3, freeR.Y1, TileID.Campfire, style: 2);
-                                        }
-
-                                        break;
-
-                                    // window type 2 "crystal"
-                                    case 2:
-
-                                        if (middleSpace.YTiles < 12)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  WWWWWW  ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add("W▓▓▓▓▓▓▓▓W");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("  W▓▓▓▓W  ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add("   WWWW   ");
-                                            height = 10;
-                                        }
-                                        else if (middleSpace.YTiles < 16)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("   WWWW   ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add("W▓▓▓▓▓▓▓▓W");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("  W▓▓▓▓W  ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add("   W▓▓W   ");
-                                            pattern.Add("   WWWW   ");
-                                            height = 12;
-                                        }
-                                        else if (middleSpace.YTiles <= 22)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("   WWWW   ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add("W▓▓▓▓▓▓▓▓W");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("  W▓▓▓▓W  ");
-                                            pattern.Add("  W▓▓▓▓W  ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add("   W▓▓W   ");
-                                            pattern.Add("   W▓▓W   ");
-                                            pattern.Add("   WWWW   ");
-                                            height = 15;
-                                        }
-                                        else
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("   WWWW   ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add("W▓▓▓▓▓▓▓▓W");
-                                            pattern.Add("W▓▓▓▓▓▓▓▓W");
-                                            pattern.Add("WW▓▓▓▓▓▓WW");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add(" W▓▓▓▓▓▓W ");
-                                            pattern.Add(" WW▓▓▓▓WW ");
-                                            pattern.Add("  W▓▓▓▓W  ");
-                                            pattern.Add("  W▓▓▓▓W  ");
-                                            pattern.Add("  WW▓▓WW  ");
-                                            pattern.Add("   W▓▓W   ");
-                                            pattern.Add("   W▓▓W   ");
-                                            pattern.Add("   WWWW   ");
-                                            height = 19;
-                                        }
-
-                                        patternData.Clear();
-                                        patternData.Add('W', (10, Deco[S.PaintingWallpaper].id, 0, overWrite));
-                                        patternData.Add('▓', (10, Deco[S.WindowWall].id, Deco[S.WindowPaint].id, overWrite));
-
-                                        diff = middleSpace.YTiles - height;
-                                        Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 3, middleSpace.YCenter - (height / 2)));
-
-                                        if (Chance.Perc(90))
-                                        {
-                                            placed = WorldGen.PlaceTile(middleSpace.XCenter - 1, freeR.Y1, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
-                                            if (placed) Func.UnlightLamp(middleSpace.XCenter - 1, freeR.Y1);
-                                        }
-
-                                        if (Chance.Perc(90))
-                                        {
-                                            placed = WorldGen.PlaceTile(middleSpace.XCenter + 2, freeR.Y1, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
-                                            if (placed) Func.UnlightLamp(middleSpace.XCenter + 2, freeR.Y1);
-                                        }
-
-                                        if (Chance.Perc(90)) // plattforms with candelabra
-                                        {
-                                            WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 1, Deco[S.AltarSteps].id, style: Deco[S.AltarSteps].style);
-                                            WorldGen.paintTile(middleSpace.XCenter, freeR.Y1 - 1, (byte)Deco[S.AltarStepsPaint].id);
-
-                                            WorldGen.PlaceTile(middleSpace.XCenter + 1, freeR.Y1 - 1, Deco[S.AltarSteps].id, style: Deco[S.AltarSteps].style);
-                                            WorldGen.paintTile(middleSpace.XCenter + 1, freeR.Y1 - 1, (byte)Deco[S.AltarStepsPaint].id);
-
-                                            placed = WorldGen.PlaceTile(middleSpace.XCenter + 1, freeR.Y1 - 2, Deco[S.Candelabra].id, style: Deco[S.Candelabra].style);
-                                            if (placed) Func.UnlightCandelabra(middleSpace.XCenter + 1, freeR.Y1 - 2);
-                                        }
-
-                                        break;
-
-                                    // window type 3 "hammer"
-                                    case 3:
-
-                                        if (middleSpace.YTiles < 6)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            height = 4;
-                                        }
-                                        else if (middleSpace.YTiles < 8)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 6;
-                                        }
-                                        else if (middleSpace.YTiles < 10)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add(" SSS▓▓SSS ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 8;
-                                        }
-                                        else if (middleSpace.YTiles < 12)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add(" SSS▓▓SSS ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 10;
-                                        }
-                                        else if (middleSpace.YTiles < 14)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add(" SSS▓▓SSS ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 12;
-                                        }
-                                        else if (middleSpace.YTiles < 16)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add(" SSS▓▓SSS ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 14;
-                                        }
-                                        else if (middleSpace.YTiles < 18)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add(" SSS▓▓SSS ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 16;
-                                        }
-                                        else
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("S▓▓▓▓▓▓▓▓S");
-                                            pattern.Add("SS▓▓▓▓▓▓SS");
-                                            pattern.Add(" SSS▓▓SSS ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("    ▓▓    ");
-                                            height = 18;
-                                        }
-
-                                        patternData.Clear();
-                                        patternData.Add('S', (1, TileID.Spikes, 0, (0, 0)));
-                                        patternData.Add('▓', (10, Deco[S.WindowWall].id, Deco[S.WindowPaint].id, overWrite));
-
-                                        diff = middleSpace.YTiles - height;
-                                        Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 3, middleSpace.YCenter - (height / 2 - 1)));
-
-                                        for (int i = middleSpace.XCenter - 1; i <= middleSpace.XCenter + 2; i++)
-                                        {
-                                            WorldGen.PlaceTile(i, freeR.Y1, Deco[S.Floor].id);
-                                            WorldGen.paintTile(i, freeR.Y1, (byte)Deco[S.FloorPaint].id);
-                                        }
-
-                                        WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 1, TileID.Statues, style: 19); //Hammer statue
-
-
-                                        break;
-
-                                    // window type 4 "little devil"
-                                    case 4:
-
-                                        if (middleSpace.YTiles <= 11)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("  S    S  "); // -> the devils horns
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            height = 11;
-                                        }
-                                        else if (middleSpace.YTiles < 17)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            height = 12;
-                                        }
-                                        else if (middleSpace.YTiles == 17)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add(" ▓ ▓▓▓▓ ▓ ");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add(" ▓▓▓▓▓▓▓▓ ");
-                                            pattern.Add(" ▓▓ ▓▓ ▓▓ ");
-                                            pattern.Add(" ▓ ▓▓▓▓ ▓ ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            height = 17;
-                                        }
-                                        else if (middleSpace.YTiles == 18)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("▓ ▓▓SS▓▓ ▓");
-                                            pattern.Add("▓▓ ▓▓▓▓ ▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓ ▓▓▓▓ ▓▓");
-                                            pattern.Add("▓ ▓▓▓▓▓▓ ▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            height = 18;
-                                        }
-                                        else if (middleSpace.YTiles == 19)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓ ▓▓▓▓ ▓▓");
-                                            pattern.Add("▓ ▓▓▓▓▓▓ ▓");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            height = 19;
-                                        }
-                                        else if (middleSpace.YTiles == 20)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            height = 20;
-                                        }
-                                        else if (middleSpace.YTiles == 21)
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓   ▓▓   ▓");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            height = 21;
-                                        }
-                                        else
-                                        {
-                                            pattern.Clear();
-                                            pattern.Add("SS      SS"); // -> the devils horns
-                                            pattern.Add(" SSSSSSSS ");
-                                            pattern.Add(" SS▓▓▓▓SS ");
-                                            pattern.Add("SS▓▓SS▓▓SS");
-                                            pattern.Add("S▓▓SSSS▓▓S");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓SS▓▓▓▓SS▓");
-                                            pattern.Add("▓▓SS▓▓SS▓▓");
-                                            pattern.Add(" ▓▓SSSS▓▓ ");
-                                            pattern.Add("  ▓▓SS▓▓  ");
-                                            pattern.Add("▓  ▓▓▓▓  ▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓▓▓▓▓▓▓▓▓");
-                                            pattern.Add("▓▓▓ ▓▓ ▓▓▓");
-                                            pattern.Add("▓▓  ▓▓  ▓▓");
-                                            pattern.Add("▓   ▓▓   ▓");
-                                            pattern.Add("    ▓▓    ");
-                                            pattern.Add("   ▓▓▓▓   ");
-                                            pattern.Add("  ▓▓▓▓▓▓  ");
-                                            pattern.Add(" ▓▓▓  ▓▓▓ ");
-                                            height = 22;
-                                        }
-
-                                        patternData.Clear();
-                                        patternData.Add('S', (1, TileID.Spikes, 0, (0, 0)));
-                                        patternData.Add('▓', (10, Deco[S.WindowWall].id, Deco[S.WindowPaint].id, overWrite));
-
-                                        diff = middleSpace.YTiles - height;
-                                        Func.DrawPatternFromString(pattern, patternData, (middleSpace.X0 + 3, middleSpace.YCenter - (height / 2) - height % 2));
-
-
-                                        break;
-
-                                    // flaming "+"
-                                    case 5:
-
-                                        if (freeR.YTiles < 20) CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + 3, 2, true);
-                                        else CreateFlamingPlus(freeR.XCenter, middleSpace.Y0 + middleSpace.YDiff / 3, 2, true);
-
-                                        #region create lavafall on top of the flaming "+"
-
-                                        //middle
-                                        //x = freeR.XCenter;
-                                        //y = freeR.Y0 - 1;
-                                        //WorldGen.KillTile(x, y);
-                                        //WorldGen.KillTile(x + 1, y);
-                                        //WorldGen.KillTile(x, y - 1);
-                                        //WorldGen.KillTile(x + 1, y - 1);
-
-                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter, freeR.Y0 - 1); }, (true, 0, 0, [(freeR.XCenter, freeR.Y0 - 1, Deco[S.Brick].id)]));
-                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter + 1, freeR.Y0 - 1); }, (true, 0, 0, [(freeR.XCenter + 1, freeR.Y0 - 1, Deco[S.Brick].id)]));
-                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter, freeR.Y0 - 2, Deco[S.Brick].id)]));
-                                        runAfterWorldCleanup.Add(() => { WorldGen.KillTile(freeR.XCenter + 1, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter + 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
-
-                                        //left
-                                        x = freeR.XCenter - 1;
-                                        y = freeR.Y0 - 2;
-                                        WorldGen.KillTile(x - 1, y);
-                                        WorldGen.PlaceLiquid(x - 1, y, (byte)LiquidID.Lava, 175);
-                                        //WorldGen.PoundTile(x, y);
-                                        runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(freeR.XCenter - 1, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter - 1, freeR.Y0 - 2, Deco[S.Brick].id)]));
-
-                                        //right
-                                        x = freeR.XCenter + 2;
-                                        y = freeR.Y0 - 2;
-                                        WorldGen.KillTile(x + 1, y);
-                                        WorldGen.PlaceLiquid(x + 1, y, (byte)LiquidID.Lava, 175);
-                                        //WorldGen.PoundTile(x, y);
-                                        runAfterWorldCleanup.Add(() => { WorldGen.PoundTile(freeR.XCenter + 2, freeR.Y0 - 2); }, (true, 0, 0, [(freeR.XCenter + 2, freeR.Y0 - 2, Deco[S.Brick].id)]));
-
-                                        // add some nice "v" spike to the middle
-                                        x = freeR.XCenter;
-                                        y = freeR.Y0 - 3;
-                                        Func.SlopeTile(x, y, (int)Func.SlopeVal.BotLeft);
-
-                                        x = freeR.XCenter + 1;
-                                        y = freeR.Y0 - 3;
-                                        Func.SlopeTile(x, y, (int)Func.SlopeVal.BotRight);
-
-                                        #endregion
-
-
-                                        altarResult = CreateAltar(middleSpace.X0 + 2, middleSpace.X1 - 2, freeR.Y1, 8);
-
-                                        if (altarResult.success)
-                                        {
-                                            y = altarResult.altar.Y0 - 1;
-                                            if (Chance.Perc(90))
-                                            {
-                                                WorldGen.PlaceTile(freeR.XCenter - 2, y, Deco[S.Campfire].id, style: Deco[S.Campfire].style);
-                                                Func.PaintArea(new(freeR.XCenter - 3, y - 1, 3, 2), (byte)Deco[S.CampfirePaint].id);
-                                            }
-                                            if (Chance.Perc(90))
-                                            {
-                                                WorldGen.PlaceTile(freeR.XCenter + 3, y, Deco[S.Campfire].id, style: Deco[S.Campfire].style);
-                                                Func.PaintArea(new(freeR.XCenter + 2, y - 1, 3, 2), (byte)Deco[S.CampfirePaint].id);
-                                            }
-
-                                            randomItems.Clear();
-                                            randomItems.Add((TileID.WaterFountain, 4, 100)); //Corrupt Water Fountain
-                                            randomItems.Add((TileID.WaterFountain, 5, 100)); //Crimson Water Fountain
-                                            randomItems.Add((TileID.WaterFountain, 7, 100)); //Blood Water Fountain
-                                            randomItem = randomItems[WorldGen.genRand.Next(randomItems.Count)];
-
-                                            if (Chance.Perc(90)) WorldGen.PlaceTile(middleSpace.XCenter, freeR.Y1 - 2, randomItem.id, style: randomItem.style);
-                                        }
-
-
-
-                                        break;
-
-                                    // painting
-                                    case 6:
-
-                                        Func.ReplaceWallArea(new(middleSpace.X0 + 3, middleSpace.YCenter - 2, middleSpace.XTiles - 6, 6), Deco[S.PaintingWallpaper].id, chance: 60, chanceWithType: Deco[S.CrookedWall].id);
-                                        Place6x4PaintingByStyle(new(middleSpace.X0 + 5, middleSpace.YCenter - 1, 6, 4), Deco[S.StyleSave].id);
-
-                                        break;
-
-                                    default:
-                                        break;
+                                    Func.PlaceSingleTile(i, templeFloor, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id);
                                 }
 
+                                // left side
+                                int templeFloorStart = middleSpace.X0 + 3;
+                                x = templeFloorStart;
+                                Func.PlaceSingleTile(x - 1, freeR.Y1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id, slope: (int)Func.SlopeVal.UpLeft);
+                                Func.PlaceSingleTile(x    , freeR.Y1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id);
+                                Func.PlaceSingleTile(x + 1, freeR.Y1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id, slope: (int)Func.SlopeVal.UpRight);
+
+                                Func.PlaceSingleTile(x - 1, freeR.Y1 - 1, Deco[S.TempleSteps].id, style: Deco[S.TempleSteps].style, paint: PaintID.GrayPaint);
+                                Func.PlaceSingleTile(x - 2, freeR.Y1    , Deco[S.TempleSteps].id, style: Deco[S.TempleSteps].style, paint: PaintID.GrayPaint);
+                                PoundAfterSmoothWorld.Add((x - 1, freeR.Y1 - 1, 1, Deco[S.TempleSteps].id, Deco[S.TempleSteps].style, PaintID.GrayPaint, false)); // PoundTile after "Smooth World" so the pound stays
+                                PoundAfterSmoothWorld.Add((x - 2, freeR.Y1    , 1, Deco[S.TempleSteps].id, Deco[S.TempleSteps].style, PaintID.GrayPaint, false)); // PoundTile after "Smooth World" so the pound stays
+
+
+                                // right side
+                                int templeFloorEnd = middleSpace.X1 - 3;
+                                x = templeFloorEnd;
+                                Func.PlaceSingleTile(x - 1, freeR.Y1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id, slope: (int)Func.SlopeVal.UpLeft);
+                                Func.PlaceSingleTile(x    , freeR.Y1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id);
+                                Func.PlaceSingleTile(x + 1, freeR.Y1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickBottomPaint].id, slope: (int)Func.SlopeVal.UpRight);
+
+                                Func.PlaceSingleTile(x + 1, freeR.Y1 - 1, Deco[S.TempleSteps].id, style: Deco[S.TempleSteps].style, paint: PaintID.GrayPaint);
+                                Func.PlaceSingleTile(x + 2, freeR.Y1    , Deco[S.TempleSteps].id, style: Deco[S.TempleSteps].style, paint: PaintID.GrayPaint);
+                                PoundAfterSmoothWorld.Add((x + 1, freeR.Y1 - 1, 1, Deco[S.TempleSteps].id, Deco[S.TempleSteps].style, PaintID.GrayPaint, false)); // PoundTile after "Smooth World" so the pound stays
+                                PoundAfterSmoothWorld.Add((x + 2, freeR.Y1    , 1, Deco[S.TempleSteps].id, Deco[S.TempleSteps].style, PaintID.GrayPaint, false)); // PoundTile after "Smooth World" so the pound stays
+
+                                //lava below floor
+                                for (int i = middleSpace.X0 + 5; i <= middleSpace.X1 - 5; i++)
+                                {
+                                    WorldGen.PlaceLiquid(i, freeR.Y1, (byte)LiquidID.Lava, 200);
+                                }
+
+                                #endregion
+
+
+                                #region altar
+
+                                Func.PlaceSingleTile(middleSpace.XCenter    , freeR.Y1 - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                Func.PlaceSingleTile(middleSpace.XCenter + 1, freeR.Y1 - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                Func.PlaceSingleTile(middleSpace.XCenter    , freeR.Y1 - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                Func.PlaceSingleTile(middleSpace.XCenter + 1, freeR.Y1 - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+
+                                WorldGen.PlaceObject(middleSpace.XCenter, freeR.Y1 - 4, TileID.LavafishBowl);
+
+                                placed = WorldGen.PlaceTile(middleSpace.XCenter - 1, freeR.Y1 - 2, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
+                                if (placed) Func.UnlightLamp(middleSpace.XCenter - 1, freeR.Y1 - 2);
+
+                                placed = WorldGen.PlaceTile(middleSpace.XCenter + 2, freeR.Y1 - 2, Deco[S.Lamp].id, style: Deco[S.Lamp].style);
+                                if (placed) Func.UnlightLamp(middleSpace.XCenter + 2, freeR.Y1 - 2);
+
+                                #endregion
+
+
+                                #region altar surroundings until roof
+
+                                int columnsBottom = templeFloor - 1; //freeR.Y1 - 2
+                                int columnsTop = 0;
+
+                                if      (freeR.YTiles <= 14) columnsTop = freeR.Y1 - 6; // first let the roof complete
+                                else if (freeR.YTiles <= 15) columnsTop = freeR.Y1 - 7; // then raise the roof...
+                                else if (freeR.YTiles >= 16) columnsTop = freeR.Y1 - 8; // ...step by step
+
+                                for (int j = columnsBottom; j >= columnsTop; j--)
+                                {
+                                    Func.PlaceSingleTile(templeFloorStart    , j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                    Func.PlaceSingleTile(templeFloorStart + 1, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+
+                                    Func.PlaceSingleTile(templeFloorEnd - 1, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                    Func.PlaceSingleTile(templeFloorEnd    , j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                }
+
+                                Func.ReplaceWallArea(new(templeFloorStart + 1, columnsTop, templeFloorStart + 2, columnsBottom, "dummy"), Deco[S.DoorWall].id);
+                                Func.ReplaceWallArea(new(templeFloorEnd - 2  , columnsTop, templeFloorEnd - 1  , columnsBottom, "dummy"), Deco[S.DoorWall].id);
+
+                                Func.ReplaceWallArea(new(templeFloorStart + 3, columnsTop, templeFloorEnd - 3, columnsBottom, "dummy"), WallID.Lavafall);
+
+                                #endregion
+
+
+                                #region altar roof
+
+                                int roofBottom = columnsTop - 2; // first full line of bricks
+                                y = columnsTop - 1;
+                                for (int i = templeFloorStart - 1; i <= templeFloorEnd + 1; i++)
+                                {
+                                    WorldGen.PlaceTile(i, y, Deco[S.TempleCeilingPlat].id, style: Deco[S.TempleCeilingPlat].style);
+                                    if (i >= templeFloorStart && i <= templeFloorEnd) Func.ReplaceWallTile((i, y), WallID.ObsidianBrick);
+
+                                    Func.PlaceSingleTile(i, roofBottom, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                }
+
+                                List<(int id, int style)> bannerItems =
+                                [
+                                    //(TileID.HangingLanterns,  2), // Caged Lantern
+                                    //(TileID.HangingLanterns,  6), // Oil Rag Sconce
+                                    //(TileID.HangingLanterns, 25), // Bone Lantern
+                                    (TileID.Banners, 10), // Marching Bones Banner
+                                    (TileID.Banners, 11), // Necromantic Sign
+                                    (TileID.Banners, 12), // Rusted Company Standard
+                                    (TileID.Banners, 15), // Diabolic Sigil
+                                    (TileID.Banners, 17), // Hell Hammer Banner
+                                    (TileID.Banners, 18), // Helltower Banner
+                                    (TileID.Banners, 21)  // Lava Erupts Banner
+                                ];
+                                if (Deco[S.StyleSave].id == S.StyleBlueBrick) bannerItems.Add((TileID.Banners, 2)); // Blue Banner
+                                else                                          bannerItems.Add((TileID.Banners, 0)); // Red Banner
+
+                                (int id, int style) bannerItem;
+
+                                if (Chance.Perc(85))
+                                {
+                                    bannerItem = bannerItems[WorldGen.genRand.Next(bannerItems.Count())];
+                                    WorldGen.PlaceObject(templeFloorStart - 1, roofBottom + 2, bannerItem.id, style: bannerItem.style);
+                                }
+                                if (Chance.Perc(85))
+                                {
+                                    bannerItem = bannerItems[WorldGen.genRand.Next(bannerItems.Count())];
+                                    WorldGen.PlaceObject(templeFloorEnd + 1, roofBottom + 2, bannerItem.id, style: bannerItem.style);
+                                }
+
+                                // roof bricks
+                                if (freeR.YTiles >= 9)
+                                {
+                                    y = roofBottom;
+                                    for (int i = templeFloorStart - 1; i <= templeFloorEnd + 1; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                    }
+
+                                    if (freeR.YTiles <= 10) // looks nicer to give it an edge
+                                    {
+                                        //Func.SlopeTile(templeFloorStart - 1, y, (int)Func.SlopeVal.UpLeft);
+                                        //Func.SlopeTile(templeFloorEnd + 1  , y, (int)Func.SlopeVal.UpRight);
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorStart - 1, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart + 2, roofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorEnd + 1  , y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd - 2  , roofBottom, Deco[S.TempleBrick].id)]));
+                                    }
+
+                                    if (freeR.YTiles == 10) // 1 space between temple and ceiling available
+                                    {
+                                        //Func.PlaceSingleTile(templeFloorStart + 1, y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        //Func.PlaceSingleTile(freeR.XCenter       , y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        //Func.PlaceSingleTile(freeR.XCenter + 1   , y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        //Func.PlaceSingleTile(templeFloorEnd - 1  , y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorStart + 1, y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart + 2, roofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter       , y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart + 2, roofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1   , y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart + 2, roofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorEnd - 1  , y - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart + 2, roofBottom, Deco[S.TempleBrick].id)]));
+                                    }
+                                }
+                                if (freeR.YTiles >= 11)
+                                {
+                                    y = roofBottom - 1;
+                                    for (int i = templeFloorStart; i <= templeFloorEnd; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        if (i == templeFloorStart) Func.SlopeTile(i, y, (int)Func.SlopeVal.UpLeft);
+                                        if (i == templeFloorEnd)   Func.SlopeTile(i, y, (int)Func.SlopeVal.UpRight);
+                                    }
+                                }
+                                if (freeR.YTiles >= 12)
+                                {
+                                    y = roofBottom - 2;
+                                    for (int i = templeFloorStart + 1; i <= templeFloorEnd - 1; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        if (i == templeFloorStart + 1) WorldGen.PoundTile(i, y);
+                                        if (i == templeFloorEnd - 1)   WorldGen.PoundTile(i, y);
+                                    }
+                                }
+                                if (freeR.YTiles >= 13)
+                                {
+                                    y = roofBottom - 3;
+                                    for (int i = templeFloorStart + 3; i <= templeFloorEnd - 3; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        if (i == templeFloorStart + 3) Func.SlopeTile(i, y, (int)Func.SlopeVal.UpLeft);
+                                        if (i == templeFloorEnd - 3)   Func.SlopeTile(i, y, (int)Func.SlopeVal.UpRight);
+                                    }
+                                }
+                                if (freeR.YTiles >= 14)
+                                {
+                                    y = roofBottom - 4;
+                                    //Func.PlaceSingleTile(templeFloorStart + 4, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight);
+                                    //Func.PlaceSingleTile(templeFloorEnd - 4  , y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft);
+
+                                    runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorStart + 4, roofBottom - 4, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart + 4, roofBottom - 3, Deco[S.TempleBrick].id)]));
+                                    runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorEnd - 4  , roofBottom - 4, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd - 4  , roofBottom - 3, Deco[S.TempleBrick].id)]));
+                                }
+
+                                #endregion
+
+
+                                #region left / right altar roof toppers
+
+                                int sideRoofTop = 0;
+                                if (freeR.YTiles >= 17) // left and right roof toppers
+                                {
+                                    if      (freeR.YTiles == 17) sideRoofTop = freeR.Y1 - 14;
+                                    else if (freeR.YTiles >= 18) sideRoofTop = freeR.Y1 - 15;
+
+                                    // brick lines
+                                    for (int i = templeFloorStart - 1; i <= templeFloorStart + 2; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, sideRoofTop, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                    }
+                                    for (int i = templeFloorEnd - 2; i <= templeFloorEnd + 1; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, sideRoofTop, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                    }
+
+                                    // spikes
+                                    y = sideRoofTop - 1;
+                                    runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorStart    , sideRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart, sideRoofTop, Deco[S.TempleBrick].id)]));
+                                    runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorStart + 1, sideRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorStart, sideRoofTop, Deco[S.TempleBrick].id)]));
+
+                                    runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorEnd - 1, sideRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd, sideRoofTop, Deco[S.TempleBrick].id)]));
+                                    runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(templeFloorEnd    , sideRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd, sideRoofTop, Deco[S.TempleBrick].id)]));
+
+                                    // columns
+                                    for (int j = sideRoofTop + 1; j <= roofBottom - 1; j++)
+                                    {
+                                                                                         Func.PlaceSingleTile(templeFloorStart - 1, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                        if (!Main.tile[templeFloorStart + 2, j].HasTile) Func.PlaceSingleTile(templeFloorStart + 2, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+
+                                        if (!Main.tile[templeFloorEnd - 2  , j].HasTile) Func.PlaceSingleTile(templeFloorEnd - 2, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                                                                         Func.PlaceSingleTile(templeFloorEnd + 1, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                    }
+
+                                    // hang decoration
+                                    List<(int id, int style)> hangItems = [];
+                                    (int id, int style) hangItem;
+
+                                    if (Deco[S.StyleSave].id == S.StyleBlueBrick) hangItems.Add((TileID.HangingLanterns, 15)); // Glass Lantern
+                                    else                                          hangItems.Add((TileID.HangingLanterns, 23)); // Shadewood Lantern
+                                    if (freeR.YTiles >= 18)
+                                    {
+                                        hangItems.Add((TileID.Banners, 10)); // Marching Bones Banner
+                                        hangItems.Add((TileID.Banners, 11)); // Necromantic Sign
+                                        hangItems.Add((TileID.Banners, 12)); // Rusted Company Standard
+                                        hangItems.Add((TileID.Banners, 15)); // Diabolic Sigil
+                                        hangItems.Add((TileID.Banners, 17)); // Hell Hammer Banner
+                                        hangItems.Add((TileID.Banners, 18)); // Helltower Banner
+                                        hangItems.Add((TileID.Banners, 21)); // Lava Erupts Banner
+
+                                        if (Deco[S.StyleSave].id == S.StyleBlueBrick) hangItems.Add((TileID.Banners, 2)); // Blue Banner
+                                        else                                          hangItems.Add((TileID.Banners, 0)); // Red Banner
+                                    }
+
+                                    // place backwall
+                                    Func.ReplaceWallArea(new(templeFloorStart  , sideRoofTop + 1, templeFloorStart + 1, roofBottom - 1, "dummy"), Deco[S.DoorWall].id);
+                                    Func.ReplaceWallArea(new(templeFloorEnd - 1, sideRoofTop + 1, templeFloorEnd      , roofBottom - 1, "dummy"), Deco[S.DoorWall].id);
+
+                                    if (Chance.Perc(85))
+                                    {
+                                        hangItem = hangItems[WorldGen.genRand.Next(hangItems.Count())];
+                                        placed = WorldGen.PlaceObject(templeFloorStart, sideRoofTop + 1, hangItem.id, style: hangItem.style);
+                                        if (placed && hangItem.id == TileID.HangingLanterns) Func.UnlightLantern(templeFloorStart, sideRoofTop + 1);
+                                    }
+                                    if (Chance.Perc(85))
+                                    {
+                                        hangItem = hangItems[WorldGen.genRand.Next(hangItems.Count())];
+                                        placed = WorldGen.PlaceObject(templeFloorEnd, sideRoofTop + 1, hangItem.id, style: hangItem.style);
+                                        if (placed && hangItem.id == TileID.HangingLanterns) Func.UnlightLantern(templeFloorEnd, sideRoofTop + 1);
+                                    }
+
+                                    if (freeR.YTiles <= 18) Func.MarkRoom(freeR);
+                                }
+
+                                #endregion
+
+
+                                #region middle altar roof topper
+
+                                int centerRoofTop = 0;
+                                if (freeR.YTiles >= 20)
+                                {
+                                    if (freeR.YTiles == 20)      centerRoofTop = freeR.Y1 - 17;
+                                    else if (freeR.YTiles >= 21) centerRoofTop = freeR.Y1 - 18;
+
+                                    // brick lines
+                                    for (int i = templeFloorStart + 2; i <= templeFloorEnd - 2; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, centerRoofTop, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                    }
+                                    if (freeR.YTiles >= 22)
+                                    {
+                                        y = centerRoofTop - 1;
+                                        for (int i = templeFloorStart + 3; i <= templeFloorEnd - 3; i++)
+                                        {
+                                            Func.PlaceSingleTile(i, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                            if (i == templeFloorStart + 3) WorldGen.PoundTile(i, y);
+                                            if (i == templeFloorEnd - 3)   WorldGen.PoundTile(i, y);
+                                        }
+                                    }
+
+                                    // spike
+                                    y = centerRoofTop - 1;
+                                    if (freeR.YTiles < 22)
+                                    {
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
+                                    }
+                                    else // one more up because of the second brick line
+                                    {
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofTop - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofTop - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
+                                    }
+
+
+                                    // columns
+                                    for (int j = centerRoofTop + 1; j <= sideRoofTop - 1; j++)
+                                    {
+                                        Func.PlaceSingleTile(templeFloorStart + 2, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                        Func.PlaceSingleTile(templeFloorEnd - 2  , j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                    }
+
+                                    // place backwall
+                                    Func.ReplaceWallArea(new(freeR.XCenter - 1, centerRoofTop + 1, freeR.XCenter - 1, sideRoofTop + 2, "dummy"), Deco[S.DoorWall].id);
+                                    Func.ReplaceWallArea(new(freeR.XCenter + 2, centerRoofTop + 1, freeR.XCenter + 2, sideRoofTop + 2, "dummy"), Deco[S.DoorWall].id);
+
+                                    Func.ReplaceWallArea(new(freeR.XCenter, centerRoofTop + 1, freeR.XCenter + 1, sideRoofTop + 2, "dummy"), WallID.Lavafall);
+
+                                    // hang decoration
+                                    if (Chance.Perc(85)) placed = WorldGen.PlaceTile(freeR.XCenter - 1, centerRoofTop + 1, TileID.Platforms, style: 12); // Dungeon Shelf
+                                    if (Chance.Perc(85)) placed = WorldGen.PlaceTile(freeR.XCenter + 2, centerRoofTop + 1, TileID.Platforms, style: 12); // Dungeon Shelf
+
+                                    Func.MarkRoom(freeR);
+                                }
+
+                                #endregion
                             }
                             #endregion
 
@@ -6729,6 +6384,16 @@ namespace WorldGenMod.Structures.Underworld
         // tree
         public const String TreePaint = "TreePaint";
         public const String BannerHangPlat = "BannerHangPlat";
+
+        // inner temple
+
+        public const String TempleBrick = "TempleBrick";
+        public const String TempleBrickBottomPaint = "TempleBrickBottomPaint";
+        public const String TempleBrickAltarPaint = "TempleBrickAltarPaint";
+        public const String TempleSteps = "TempleSteps";
+        public const String TempleStepsPaint = "TempleStepsPaint";
+        public const String TempleColumnPaint = "TempleColumnPaint";
+        public const String TempleCeilingPlat = "TempleCeilingPlat";
 
 
 
