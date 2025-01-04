@@ -1,3 +1,8 @@
+Version 1.1.1
+- filled the missing middle space in the ChastisedChurch: The Temple
+- The Chastised Church's design is done!
+- made the Wand of Sparkling, Wand of Frosting and also Chain Knife no longer generate in the Frost Fortress / Chastised Church during WorldGen of a remix (a.k.a "don't dig up") world because they are considered Hardmode weapons there
+
 Version 1.1
 - overhauled and decorated the Chastised Church so it's not so bland anymore!
 

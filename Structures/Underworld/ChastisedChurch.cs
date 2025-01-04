@@ -57,7 +57,7 @@ namespace WorldGenMod.Structures.Underworld
                     else side = WorldGen.genRand.NextBool() ? 1 : -1; // "Random"
 
                     //TODO: deactivate debug mode!
-                    bool debug = true;
+                    bool debug = false;
                     if (debug)
                     {
                         side = -1;
@@ -273,6 +273,7 @@ namespace WorldGenMod.Structures.Underworld
             Deco.Add(S.TempleBrick, (0, 0));
             Deco.Add(S.TempleBrickBottomPaint, (0, 0));
             Deco.Add(S.TempleBrickAltarPaint, (0, 0));
+            Deco.Add(S.TempleStreamerPaint, (0, 0));
             Deco.Add(S.TempleSteps, (0, 0));
             Deco.Add(S.TempleStepsPaint, (0, 0));
             Deco.Add(S.TempleColumnPaint, (0, 0));
@@ -386,6 +387,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.TempleBrick] = (TileID.LavaMossBlock, 11);
                     Deco[S.TempleBrickBottomPaint] = (PaintID.BlackPaint, 0);
                     Deco[S.TempleBrickAltarPaint] = (0, 0);
+                    Deco[S.TempleStreamerPaint] = (PaintID.RedPaint, 0);
                     Deco[S.TempleSteps] = (TileID.Platforms, 22); //Skyware Platform
                     Deco[S.TempleStepsPaint] = (PaintID.BlackPaint, 0);
                     Deco[S.TempleColumnPaint] = (PaintID.DeepRedPaint, 0);
@@ -479,6 +481,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.TempleBrick] = (TileID.LavaMossBlock, 11);
                     Deco[S.TempleBrickBottomPaint] = (PaintID.BlackPaint, 0);
                     Deco[S.TempleBrickAltarPaint] = (0, 0);
+                    Deco[S.TempleStreamerPaint] = (PaintID.RedPaint, 0);
                     Deco[S.TempleSteps] = (TileID.Platforms, 22); //Skyware Platform
                     Deco[S.TempleStepsPaint] = (PaintID.BlackPaint, 0);
                     Deco[S.TempleColumnPaint] = (PaintID.DeepRedPaint, 0);
@@ -541,7 +544,6 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.Piano] = (TileID.Pianos, 1); //* Ebonwood
                     Deco[S.Column] = (TileID.GraniteColumn, 0);
                     Deco[S.ColumnPaint] = (PaintID.GrayPaint, 0);
-                    //TODO: decide if everything obsidian / demon or ebonwood!
 
                     //altar
                     Deco[S.MiddleWall] = (WallID.Bone, 0);
@@ -573,6 +575,7 @@ namespace WorldGenMod.Structures.Underworld
                     Deco[S.TempleBrick] = (TileID.XenonMossBlock, 11);
                     Deco[S.TempleBrickBottomPaint] = (PaintID.ShadowPaint, 0);
                     Deco[S.TempleBrickAltarPaint] = (PaintID.DeepBluePaint, 0);
+                    Deco[S.TempleStreamerPaint] = (PaintID.BluePaint, 0);
                     Deco[S.TempleSteps] = (TileID.Platforms, 22); //Skyware Platform
                     Deco[S.TempleStepsPaint] = (0, 0);
                     Deco[S.TempleColumnPaint] = (PaintID.DeepSkyBluePaint, 0);
@@ -1619,7 +1622,7 @@ namespace WorldGenMod.Structures.Underworld
                             if ((Main.tile[x , y].TileType == Deco[S.DoorPlat].id) || (Main.tile[x + 1, y].TileType == Deco[S.DoorPlat].id)) continue;
 
 
-                            // check if the pedestral can be big
+                            // check if the pedestral can be big (4 Tiles)
                             y = freeR.Y1 + 1;
                             bool bigPedestral = ((windowRect.XCenter - 1 >= windowRect.X0) && (Main.tile[windowRect.XCenter - 1, y].TileType != Deco[S.DoorPlat].id)) &&
                                                 ((windowRect.XCenter + 2 <= windowRect.X1) && (Main.tile[windowRect.XCenter + 2, y].TileType != Deco[S.DoorPlat].id));
@@ -1627,34 +1630,32 @@ namespace WorldGenMod.Structures.Underworld
 
                             // put pedestral in the middle of the window (XCenter and XCenter++)
                             y = freeR.Y1;
+                            Func.PlaceSingleTile(windowRect.XCenter    , y, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id);
+                            Func.PlaceSingleTile(windowRect.XCenter + 1, y, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id);
 
-                            
-                            x = windowRect.XCenter - 1;
                             if (bigPedestral)
                             {
-                                WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
-                            }
-
-                            x = windowRect.XCenter;
-                            WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
-                            WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
-
-                            x = windowRect.XCenter + 1;
-                            WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
-                            WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
-
-                            x = windowRect.XCenter + 2;
-                            if (bigPedestral)
-                            {
-                                WorldGen.PlaceTile(x, y, Deco[S.Floor].id, true, true);
-                                WorldGen.paintTile(x, y, (byte)Deco[S.FloorPaint].id);
+                                Func.PlaceSingleTile(windowRect.XCenter - 1, y, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id);
+                                Func.PlaceSingleTile(windowRect.XCenter + 2, y, Deco[S.Floor].id, paint: Deco[S.FloorPaint].id);
                             }
 
 
                             // put statue
                             randomItem = randomItems.PopAt(WorldGen.genRand.Next(randomItems.Count));
                             if (Chance.Perc(randomItem.chance))    WorldGen.PlaceTile(windowRect.XCenter, y - 1, randomItem.id, style: randomItem.style);
+
+
+                            //delete additional pedestral pieces that sometimes appear on "Smooth World" worldgen step
+                            int beforePedestral = windowRect.XCenter - 1;
+                            int afterPedestral = windowRect.XCenter + 2;
+                            if (bigPedestral)
+                            {
+                                beforePedestral--;
+                                afterPedestral++;
+                            }
+                            runAfterWorldCleanup.Add(() => { WorldGen.KillTile(beforePedestral, freeR.Y1); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(beforePedestral, freeR.Y1, Deco[S.Floor].id)]));
+                            runAfterWorldCleanup.Add(() => { WorldGen.KillTile(afterPedestral, freeR.Y1); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(afterPedestral, freeR.Y1, Deco[S.Floor].id)]));
+
                         }
                     }
                     #endregion
@@ -1738,11 +1739,17 @@ namespace WorldGenMod.Structures.Underworld
                                             ItemID.CopperBow, ItemID.TinBow, ItemID.IronBow, ItemID.LeadBow, ItemID.SilverBow, ItemID.TungstenBow, ItemID.GoldBow, ItemID.BorealWoodBow, ItemID.PalmWoodBow,
                                             ItemID.ShadewoodBow, ItemID.EbonwoodBow, ItemID.RichMahoganyBow,
 
-                                            ItemID.WandofSparking, ItemID.WandofFrosting, ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff,
+                                            ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff,
 
-                                            ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang,
+                                            ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang,
                                             ItemID.EnchantedBoomerang, ItemID.BlandWhip
                                         ];
+                                        if (!WorldGen.remixWorldGen) // "don't dig up" special worldgen seed changes item stats, these weapons are now considered hardmode!
+                                        {
+                                            WeaponRackItems.Add(ItemID.WandofSparking);
+                                            WeaponRackItems.Add(ItemID.WandofFrosting);
+                                            WeaponRackItems.Add(ItemID.ChainKnife);
+                                        }
 
                                         Func.PlaceWeaponRack(windowRect.XCenter, freeR.Y1 - 4, paint: Deco[S.StylePaint].id,
                                                                                                item: WeaponRackItems.PopAt(WorldGen.genRand.Next(WeaponRackItems.Count)),
@@ -3150,10 +3157,6 @@ namespace WorldGenMod.Structures.Underworld
                             #region XTiles <= 16 -> Temple
                             else if (middleSpace.XTiles <= 16)
                             {
-                                //TODO: for now a copy of XTiles14, replace with a real one
-
-                                //Func.MarkRoom(freeR);
-
                                 #region foundation
 
                                 int templeFloor = freeR.Y1 - 1;
@@ -3242,8 +3245,30 @@ namespace WorldGenMod.Structures.Underworld
 
                                 Func.ReplaceWallArea(new(templeFloorStart + 3, columnsTop, templeFloorEnd - 3, columnsBottom, "dummy"), WallID.Lavafall);
 
-                                WorldGen.PlaceTile(templeFloorStart + 2, columnsTop + 1, TileID.Torches, style: 7); // Demon Torch
-                                WorldGen.PlaceTile(templeFloorEnd - 2  , columnsTop + 1, TileID.Torches, style: 7); // Demon Torch
+                                // deco: demon torches or streamers
+                                if (Chance.Perc(75) || freeR.YTiles < 15)
+                                {
+                                    WorldGen.PlaceTile(templeFloorStart + 2, columnsTop + 1, TileID.Torches, style: 7); // Demon Torch
+                                    WorldGen.PlaceTile(templeFloorEnd - 2, columnsTop + 1, TileID.Torches, style: 7); // Demon Torch
+                                }
+                                else if (freeR.YTiles >= 15)
+                                {
+                                    for (int i = templeFloorStart + 2; i <= templeFloorEnd - 2; i++)
+                                    {
+                                        Func.PlaceSingleTile(i, columnsTop, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                    }
+                                    for (int j = columnsTop + 1; j <= columnsTop + 2; j++)
+                                    {
+                                        Func.PlaceSingleTile(templeFloorStart + 2, j, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorEnd - 2  , j, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                    }
+
+                                    if (freeR.YTiles > 15)
+                                    {
+                                        Func.PlaceSingleTile(freeR.XCenter    , columnsTop + 1, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(freeR.XCenter + 1, columnsTop + 1, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                    }
+                                }
 
                                 #endregion
 
@@ -3398,6 +3423,10 @@ namespace WorldGenMod.Structures.Underworld
                                                                                          Func.PlaceSingleTile(templeFloorEnd + 1, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
                                     }
 
+                                    // place backwall
+                                    Func.ReplaceWallArea(new(templeFloorStart, sideRoofTop + 1, templeFloorStart + 1, roofBottom - 1, "dummy"), Deco[S.DoorWall].id);
+                                    Func.ReplaceWallArea(new(templeFloorEnd - 1, sideRoofTop + 1, templeFloorEnd, roofBottom - 1, "dummy"), Deco[S.DoorWall].id);
+
                                     // hang decoration
                                     List<(int id, int style)> hangItems = [];
                                     (int id, int style) hangItem;
@@ -3418,24 +3447,35 @@ namespace WorldGenMod.Structures.Underworld
                                         else                                          hangItems.Add((TileID.Banners, 0)); // Red Banner
                                     }
 
-                                    // place backwall
-                                    Func.ReplaceWallArea(new(templeFloorStart  , sideRoofTop + 1, templeFloorStart + 1, roofBottom - 1, "dummy"), Deco[S.DoorWall].id);
-                                    Func.ReplaceWallArea(new(templeFloorEnd - 1, sideRoofTop + 1, templeFloorEnd      , roofBottom - 1, "dummy"), Deco[S.DoorWall].id);
-
-                                    if (Chance.Perc(85))
+                                    //left
+                                    if (Chance.Perc(65))
                                     {
                                         hangItem = hangItems[WorldGen.genRand.Next(hangItems.Count())];
                                         placed = WorldGen.PlaceObject(templeFloorStart, sideRoofTop + 1, hangItem.id, style: hangItem.style);
                                         if (placed && hangItem.id == TileID.HangingLanterns) Func.UnlightLantern(templeFloorStart, sideRoofTop + 1);
                                     }
-                                    if (Chance.Perc(85))
+                                    else if (Chance.Perc(85))
+                                    {
+                                        Func.PlaceSingleTile(templeFloorStart, sideRoofTop + 1, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorStart, sideRoofTop + 2, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorStart + 1, sideRoofTop + 1, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorStart + 1, sideRoofTop + 2, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                    }
+
+                                    //right
+                                    if (Chance.Perc(65))
                                     {
                                         hangItem = hangItems[WorldGen.genRand.Next(hangItems.Count())];
                                         placed = WorldGen.PlaceObject(templeFloorEnd, sideRoofTop + 1, hangItem.id, style: hangItem.style);
                                         if (placed && hangItem.id == TileID.HangingLanterns) Func.UnlightLantern(templeFloorEnd, sideRoofTop + 1);
                                     }
-
-                                    if (freeR.YTiles <= 18) Func.MarkRoom(freeR);
+                                    else if (Chance.Perc(85))
+                                    {
+                                        Func.PlaceSingleTile(templeFloorEnd - 1, sideRoofTop + 1, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorEnd - 1, sideRoofTop + 2, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorEnd, sideRoofTop + 1, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                        Func.PlaceSingleTile(templeFloorEnd, sideRoofTop + 2, TileID.SillyStreamerBlue, paint: Deco[S.TempleStreamerPaint].id);
+                                    }
                                 }
 
                                 #endregion
@@ -3538,7 +3578,6 @@ namespace WorldGenMod.Structures.Underworld
                                         runAfterWorldCleanup.Add(() => { WorldGen.PlaceObject(centerRoofEnd + 2, centerRoofBottom - 2, TileID.PotsSuspended, style: 0); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(centerRoofEnd + 2, centerRoofBottom - 3, Deco[S.TempleBrick].id)]));
 
                                     }
-                                    Func.MarkRoom(freeR);
                                 }
 
                                 #endregion
@@ -4350,69 +4389,7 @@ namespace WorldGenMod.Structures.Underworld
                     break;
 
                 case 100: // empty room for display
-                          //windows blueprint for copying
-                    #region windows
-                    windowsPairs.Clear();
-
-                    // create window rectangles
-                    if (freeR.YTiles > (windowXTiles + 2 * windowYMargin) && freeR.XTiles >= (windowXTiles + 2 * 2)) //minimal window size: windowXTiles * windowXTiles
-                    {
-                        if (freeR.XTiles <= 12) // narrow room, place window in the middle
-                        {
-                            int windowCenterOffset = (windowXTiles / 2) - 1 + (windowXTiles % 2); // to center the window at a specified x position
-
-                            windowsPairs.Add(new Rectangle2P(freeR.XCenter - windowCenterOffset, windowY0, windowXTiles, windowYTiles));
-                        }
-
-                        else // symmetrical window pairs with spaces in between
-                        {
-                            int windowXMargin = 2; // how many tiles the outer windows-pair shall be away from the left / right wall
-                            int windowDistanceXTiles = 4; // XTiles between two windows
-
-                            int windowLeftX0 = freeR.X0 + windowXMargin; // init
-                            int windowRightX0 = freeR.X1 - windowXMargin - (windowXTiles - 1); // init
-
-                            while (windowLeftX0 + windowXTiles < freeR.XCenter)
-                            {
-                                windowsPairs.Add(new Rectangle2P(windowLeftX0, windowY0, windowXTiles, windowYTiles)); // left room side
-                                windowsPairs.Add(new Rectangle2P(windowRightX0, windowY0, windowXTiles, windowYTiles)); // right room side
-
-                                windowLeftX0 += (windowXTiles + windowDistanceXTiles);
-                                windowRightX0 -= (windowXTiles + windowDistanceXTiles);
-                            }
-                        }
-                    }
-
-                    // put windows
-                    windowPairsExist = windowsPairs.Count > 0;
-                    if (windowPairsExist)
-                    {
-                        foreach (Rectangle2P windowRect in windowsPairs)
-                        {
-                            for (int i = windowRect.X0; i <= windowRect.X1; i++)
-                            {
-                                for (int j = windowRect.Y0; j <= windowRect.Y1; j++)
-                                {
-                                    WorldGen.KillWall(i, j);
-
-                                    if (!wallBreak[BP.Left].exist) awayEnough1 = true;
-                                    else awayEnough1 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Left].point) > WorldGen.genRand.NextFloat(4f, 12f);
-
-                                    if (!wallBreak[BP.Right].exist) awayEnough2 = true;
-                                    else awayEnough2 = Vector2.Distance(new Vector2(i, j), wallBreak[BP.Right].point) > WorldGen.genRand.NextFloat(4f, 12f);
-
-
-                                    if (awayEnough1 && awayEnough2)
-                                    {
-                                        WorldGen.PlaceWall(i, j, Deco[S.WindowWall].id);
-                                        WorldGen.paintWall(i, j, (byte)Deco[S.WindowPaint].id);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #endregion
-
+                      
                     break;
 
             }
@@ -6440,6 +6417,7 @@ namespace WorldGenMod.Structures.Underworld
         public const String TempleBrick = "TempleBrick";
         public const String TempleBrickBottomPaint = "TempleBrickBottomPaint";
         public const String TempleBrickAltarPaint = "TempleBrickAltarPaint";
+        public const String TempleStreamerPaint = "TempleStreamerPaint";
         public const String TempleSteps = "TempleSteps";
         public const String TempleStepsPaint = "TempleStepsPaint";
         public const String TempleColumnPaint = "TempleColumnPaint";
