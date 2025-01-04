@@ -315,7 +315,7 @@ namespace WorldGenMod
 
 
         /// <summary>
-        /// Adapted from "Place2x3Wall"....I did not like that a background wall is required
+        /// Adapted from "WorldGen.Place2x3Wall"....I did not like that a background wall is required
         /// </summary>
         /// <param name="x"></param>
         /// <param name="y"></param>

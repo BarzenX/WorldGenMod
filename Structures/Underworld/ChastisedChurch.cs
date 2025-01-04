@@ -3147,7 +3147,7 @@ namespace WorldGenMod.Structures.Underworld
                             }
                             #endregion
 
-                            #region XTiles <= 16 -> temple
+                            #region XTiles <= 16 -> Temple
                             else if (middleSpace.XTiles <= 16)
                             {
                                 //TODO: for now a copy of XTiles14, replace with a real one
@@ -3188,10 +3188,15 @@ namespace WorldGenMod.Structures.Underworld
                                 PoundAfterSmoothWorld.Add((x + 2, freeR.Y1    , 1, Deco[S.TempleSteps].id, Deco[S.TempleSteps].style, PaintID.GrayPaint, false)); // PoundTile after "Smooth World" so the pound stays
 
                                 //lava below floor
-                                for (int i = middleSpace.X0 + 5; i <= middleSpace.X1 - 5; i++)
-                                {
-                                    WorldGen.PlaceLiquid(i, freeR.Y1, (byte)LiquidID.Lava, 200);
-                                }
+                                //for (int i = middleSpace.X0 + 5; i <= middleSpace.X1 - 5; i++)
+                                //{
+                                //    WorldGen.PlaceLiquid(i, freeR.Y1, (byte)LiquidID.Lava, 200);
+                                    
+                                //}
+                                runAfterWorldCleanup.Add(() => { WorldGen.PlaceLiquid(freeR.XCenter - 1, freeR.Y1, (byte)LiquidID.Lava, 255); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd, templeFloor, Deco[S.TempleBrick].id)]));
+                                runAfterWorldCleanup.Add(() => { WorldGen.PlaceLiquid(freeR.XCenter    , freeR.Y1, (byte)LiquidID.Lava, 255); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd, templeFloor, Deco[S.TempleBrick].id)]));
+                                runAfterWorldCleanup.Add(() => { WorldGen.PlaceLiquid(freeR.XCenter + 1, freeR.Y1, (byte)LiquidID.Lava, 255); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd, templeFloor, Deco[S.TempleBrick].id)]));
+                                runAfterWorldCleanup.Add(() => { WorldGen.PlaceLiquid(freeR.XCenter + 2, freeR.Y1, (byte)LiquidID.Lava, 255); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(templeFloorEnd, templeFloor, Deco[S.TempleBrick].id)]));
 
                                 #endregion
 
@@ -3236,6 +3241,9 @@ namespace WorldGenMod.Structures.Underworld
                                 Func.ReplaceWallArea(new(templeFloorEnd - 2  , columnsTop, templeFloorEnd - 1  , columnsBottom, "dummy"), Deco[S.DoorWall].id);
 
                                 Func.ReplaceWallArea(new(templeFloorStart + 3, columnsTop, templeFloorEnd - 3, columnsBottom, "dummy"), WallID.Lavafall);
+
+                                WorldGen.PlaceTile(templeFloorStart + 2, columnsTop + 1, TileID.Torches, style: 7); // Demon Torch
+                                WorldGen.PlaceTile(templeFloorEnd - 2  , columnsTop + 1, TileID.Torches, style: 7); // Demon Torch
 
                                 #endregion
 
@@ -3435,59 +3443,101 @@ namespace WorldGenMod.Structures.Underworld
 
                                 #region middle altar roof topper
 
-                                int centerRoofTop = 0;
+                                int centerRoofBottom = 0;
+                                int centerRoofStart = templeFloorStart + 2;
+                                int centerRoofEnd = templeFloorEnd - 2;
                                 if (freeR.YTiles >= 20)
                                 {
-                                    if (freeR.YTiles == 20)      centerRoofTop = freeR.Y1 - 17;
-                                    else if (freeR.YTiles >= 21) centerRoofTop = freeR.Y1 - 18;
+                                    if (freeR.YTiles == 20)      centerRoofBottom = freeR.Y1 - 17;
+                                    else if (freeR.YTiles >= 21) centerRoofBottom = freeR.Y1 - 18;
 
                                     // brick lines
-                                    for (int i = templeFloorStart + 2; i <= templeFloorEnd - 2; i++)
+                                    for (int i = centerRoofStart; i <= centerRoofEnd; i++)
                                     {
-                                        Func.PlaceSingleTile(i, centerRoofTop, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        Func.PlaceSingleTile(i, centerRoofBottom, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
                                     }
                                     if (freeR.YTiles >= 22)
                                     {
-                                        y = centerRoofTop - 1;
-                                        for (int i = templeFloorStart + 3; i <= templeFloorEnd - 3; i++)
+                                        y = centerRoofBottom - 1;
+                                        for (int i = centerRoofStart + 1; i <= centerRoofEnd - 1; i++)
                                         {
                                             Func.PlaceSingleTile(i, y, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
-                                            if (i == templeFloorStart + 3) WorldGen.PoundTile(i, y);
-                                            if (i == templeFloorEnd - 3)   WorldGen.PoundTile(i, y);
+                                            if (i == centerRoofStart + 1) WorldGen.PoundTile(i, y);
+                                            if (i == centerRoofEnd - 1)   WorldGen.PoundTile(i, y);
                                         }
                                     }
 
                                     // spike
-                                    y = centerRoofTop - 1;
+                                    y = centerRoofBottom - 1;
                                     if (freeR.YTiles < 22)
                                     {
-                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
-                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofTop - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofBottom - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofBottom - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
                                     }
-                                    else // one more up because of the second brick line
+                                    else if (freeR.YTiles == 22)// one more up because of the second brick line
                                     {
-                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofTop - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
-                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofTop - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofTop, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofBottom - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft ); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofBottom - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
+                                    }
+                                    else
+                                    {
+                                        // normal brick line first to get on height with side arms
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofBottom - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofBottom - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
+
+
+                                        // spike on top
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter    , centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(freeR.XCenter + 1, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(freeR.XCenter, centerRoofBottom, Deco[S.TempleBrick].id)]));
                                     }
 
 
                                     // columns
-                                    for (int j = centerRoofTop + 1; j <= sideRoofTop - 1; j++)
+                                    for (int j = centerRoofBottom + 1; j <= sideRoofTop - 1; j++)
                                     {
-                                        Func.PlaceSingleTile(templeFloorStart + 2, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
-                                        Func.PlaceSingleTile(templeFloorEnd - 2  , j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                        Func.PlaceSingleTile(centerRoofStart, j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
+                                        Func.PlaceSingleTile(centerRoofEnd  , j, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id);
                                     }
 
                                     // place backwall
-                                    Func.ReplaceWallArea(new(freeR.XCenter - 1, centerRoofTop + 1, freeR.XCenter - 1, sideRoofTop + 2, "dummy"), Deco[S.DoorWall].id);
-                                    Func.ReplaceWallArea(new(freeR.XCenter + 2, centerRoofTop + 1, freeR.XCenter + 2, sideRoofTop + 2, "dummy"), Deco[S.DoorWall].id);
+                                    Func.ReplaceWallArea(new(freeR.XCenter - 1, centerRoofBottom + 1, freeR.XCenter - 1, sideRoofTop + 2, "dummy"), Deco[S.DoorWall].id);
+                                    Func.ReplaceWallArea(new(freeR.XCenter + 2, centerRoofBottom + 1, freeR.XCenter + 2, sideRoofTop + 2, "dummy"), Deco[S.DoorWall].id);
 
-                                    Func.ReplaceWallArea(new(freeR.XCenter, centerRoofTop + 1, freeR.XCenter + 1, sideRoofTop + 2, "dummy"), WallID.Lavafall);
+                                    Func.ReplaceWallArea(new(freeR.XCenter, centerRoofBottom + 1, freeR.XCenter + 1, sideRoofTop + 2, "dummy"), WallID.Lavafall);
 
                                     // hang decoration
-                                    if (Chance.Perc(85)) placed = WorldGen.PlaceTile(freeR.XCenter - 1, centerRoofTop + 1, TileID.Platforms, style: 12); // Dungeon Shelf
-                                    if (Chance.Perc(85)) placed = WorldGen.PlaceTile(freeR.XCenter + 2, centerRoofTop + 1, TileID.Platforms, style: 12); // Dungeon Shelf
+                                    if (Chance.Perc(85)) placed = WorldGen.PlaceTile(freeR.XCenter - 1, centerRoofBottom + 1, TileID.Platforms, style: 12); // Dungeon Shelf
+                                    if (Chance.Perc(85)) placed = WorldGen.PlaceTile(freeR.XCenter + 2, centerRoofBottom + 1, TileID.Platforms, style: 12); // Dungeon Shelf
 
+
+                                    // side arms for high rooms
+                                    if (freeR.YTiles >= 23 && Chance.Perc(75))
+                                    {
+                                        // left
+                                        Func.PlaceSingleTile(centerRoofStart - 1, centerRoofBottom    , Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.BotLeft);
+                                        Func.PlaceSingleTile(centerRoofStart - 1, centerRoofBottom - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        Func.PlaceSingleTile(centerRoofStart - 1, centerRoofBottom - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        Func.PlaceSingleTile(centerRoofStart - 1, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight);
+                                        Func.PlaceSingleTile(centerRoofStart - 2, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        //Func.PlaceSingleTile(centerRoofStart - 3, centerRoofBottom - 3, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id, slope: (int)Func.SlopeVal.UpLeft);
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(centerRoofStart - 3, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(centerRoofStart - 2, centerRoofBottom - 3, Deco[S.TempleBrick].id)]));
+                                        
+                                        //WorldGen.PlaceObject(centerRoofStart - 3, centerRoofBottom - 2, TileID.PotsSuspended, style: 0); // Hanging Pot
+                                        runAfterWorldCleanup.Add(() => { WorldGen.PlaceObject(centerRoofStart - 3, centerRoofBottom - 2, TileID.PotsSuspended, style: 0); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(centerRoofStart - 2, centerRoofBottom - 3, Deco[S.TempleBrick].id)]));
+
+                                        // right
+                                        Func.PlaceSingleTile(centerRoofEnd + 1, centerRoofBottom, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.BotRight);
+                                        Func.PlaceSingleTile(centerRoofEnd + 1, centerRoofBottom - 1, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        Func.PlaceSingleTile(centerRoofEnd + 1, centerRoofBottom - 2, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        Func.PlaceSingleTile(centerRoofEnd + 1, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpLeft);
+                                        Func.PlaceSingleTile(centerRoofEnd + 2, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id);
+                                        //Func.PlaceSingleTile(centerRoofEnd + 3, centerRoofBottom - 3, TileID.MarbleColumn, paint: Deco[S.TempleColumnPaint].id, slope: (int)Func.SlopeVal.UpRight);
+                                        runAfterWorldCleanup.Add(() => { Func.PlaceSingleTile(centerRoofEnd + 3, centerRoofBottom - 3, Deco[S.TempleBrick].id, paint: Deco[S.TempleBrickAltarPaint].id, slope: (int)Func.SlopeVal.UpRight); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(centerRoofEnd + 2, centerRoofBottom - 3, Deco[S.TempleBrick].id)]));
+
+                                        //WorldGen.PlaceObject(centerRoofEnd + 3, centerRoofBottom - 2, TileID.PotsSuspended, style: 0); // Hanging Pot
+                                        runAfterWorldCleanup.Add(() => { WorldGen.PlaceObject(centerRoofEnd + 2, centerRoofBottom - 2, TileID.PotsSuspended, style: 0); }, (true, Deco[S.StyleSave].id, Deco[S.SubStyleSave].id, [(centerRoofEnd + 2, centerRoofBottom - 3, Deco[S.TempleBrick].id)]));
+
+                                    }
                                     Func.MarkRoom(freeR);
                                 }
 

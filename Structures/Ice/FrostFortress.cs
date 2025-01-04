@@ -279,7 +279,7 @@ namespace WorldGenMod.Structures.Ice
                                                             rightDoor: true,
                                                             upDoor: false,
                                                             downDoor: false);
-
+            
             previousSideRoom = mainRoom;
             previousHighestY = mainRoom.Y0; //for later filling the gap between the rooms with bricks
             previousLowestY = mainRoom.Y1; //for later filling the gap between the rooms with bricks
@@ -2606,21 +2606,30 @@ namespace WorldGenMod.Structures.Ice
                         ]
                     ];
 
-                    List<List<int>> weaponRack_Styles =
-                    [
-                        [ // swords
-                            ItemID.CopperBroadsword, ItemID.TinBroadsword, ItemID.IronBroadsword, ItemID.LeadBroadsword, ItemID.SilverBroadsword, ItemID.TungstenBroadsword, ItemID.GoldBroadsword, ItemID.PlatinumBroadsword, ItemID.BoneSword, ItemID.IceBlade, ItemID.BorealWoodSword, ItemID.EbonwoodSword, ItemID.ShadewoodSword, ItemID.AshWoodSword
-                        ],
-                        [ // bows
-                            ItemID.CopperBow, ItemID.TinBow, ItemID.IronBow, ItemID.LeadBow, ItemID.SilverBow, ItemID.TungstenBow, ItemID.GoldBow, ItemID.BorealWoodBow, ItemID.PalmWoodBow, ItemID.ShadewoodBow, ItemID.EbonwoodBow, ItemID.RichMahoganyBow
-                        ],
-                        [ // magic
-                            ItemID.WandofSparking, ItemID.WandofFrosting, ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff
-                        ],
-                        [ // randoms
-                            ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip
-                        ],
-                    ];
+
+                    List<List<int>> weaponRack_Styles = [];
+                    // swords
+                    weaponRack_Styles.Add([ItemID.CopperBroadsword, ItemID.TinBroadsword, ItemID.IronBroadsword, ItemID.LeadBroadsword, ItemID.SilverBroadsword, ItemID.TungstenBroadsword, ItemID.GoldBroadsword, ItemID.PlatinumBroadsword, ItemID.BoneSword, ItemID.IceBlade, ItemID.BorealWoodSword, ItemID.EbonwoodSword, ItemID.ShadewoodSword, ItemID.AshWoodSword]);
+                    // bows
+                    weaponRack_Styles.Add([ItemID.CopperBow, ItemID.TinBow, ItemID.IronBow, ItemID.LeadBow, ItemID.SilverBow, ItemID.TungstenBow, ItemID.GoldBow, ItemID.BorealWoodBow, ItemID.PalmWoodBow, ItemID.ShadewoodBow, ItemID.EbonwoodBow, ItemID.RichMahoganyBow]);
+                    // magic
+                    if (WorldGen.remixWorldGen) // "don't dig up" special worldgen seed
+                    {
+                        weaponRack_Styles.Add([ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff]); // the WandofSparking and WandofFrosting are hardmode weapons in that game mode!
+                    }
+                    else
+                    {
+                        weaponRack_Styles.Add([ItemID.WandofSparking, ItemID.WandofFrosting, ItemID.AmethystStaff, ItemID.TopazStaff, ItemID.SapphireStaff, ItemID.EmeraldStaff]);
+                    }
+                    // randoms
+                    if (WorldGen.remixWorldGen) // "don't dig up" special worldgen seed
+                    {
+                        weaponRack_Styles.Add([ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.Mace, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip]); // the ChainKnife is a hardmode weapon in that game mode!
+                    }
+                    else
+                    {
+                        weaponRack_Styles.Add([ItemID.FlintlockPistol, ItemID.FlareGun, ItemID.ChainKnife, ItemID.Mace, ItemID.FlamingMace, ItemID.Spear, ItemID.Trident, ItemID.WoodenBoomerang, ItemID.EnchantedBoomerang, ItemID.BlandWhip]);
+                    }
 
                     //__________________________________________________________________________________________________________________________________
                     // init vars
