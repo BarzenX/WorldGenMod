@@ -5,17 +5,15 @@ using Terraria.Localization;
 
 namespace WorldGenMod
 {
-    [BackgroundColor(130 / 5, 230 / 5, 255 / 5, (int)(255f * 0.75f))]
+    [BackgroundColor(r: 130 / 5, g: 230 / 5, b:255 / 5, a:(int)(255f * 0.75f))]
     class WorldgenConfig : ModConfig
     {
-        public override ConfigScope Mode => ConfigScope.ServerSide;
-
-        public override bool AcceptClientChanges(ModConfig pendingConfig, int whoAmI, ref NetworkText message)
-        {
-            return Main.countsAsHostForGameplay[whoAmI];
-        }
+        public override ConfigScope Mode => ConfigScope.ClientSide;
 
         [Header("Generation")] // Headers are like titles in a config. You only need to declare a header on the item it should appear over, not every item in the category. 
+
+
+
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
@@ -26,6 +24,9 @@ namespace WorldGenMod
         [DefaultValue(25)]
         [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
         public int configFrostFortressCobwebFilling;
+
+
+
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
@@ -43,6 +44,9 @@ namespace WorldGenMod
         [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
         public int configChastisedChurchCobwebFilling;
 
+
+
+
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
         public bool configGenerateHellevator;
@@ -52,6 +56,9 @@ namespace WorldGenMod
         [DefaultValue(2)]
         [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
         public int configHellevatorCount;
+
+
+
 
         [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
@@ -71,7 +78,10 @@ namespace WorldGenMod
         //[BackgroundColor(116, 201, 164)]
         public bool configSmallerGoldLake;
 
-        [DefaultValue(false)]
+
+
+
+        [DefaultValue(true)]
         //[BackgroundColor(116, 201, 164)]
         public bool configGenerateFissure;
 
@@ -79,7 +89,16 @@ namespace WorldGenMod
         [Range(1, 10)]
         [DefaultValue(2)]
         [Slider] // The Slider attribute makes this field be presented with a slider rather than a text input. The default ticks is 1.
-        public int configFissureCount;      
+        public int configFissureCount;
+
+        [DefaultValue(false)]
+        //[BackgroundColor(116, 201, 164)]
+        public bool configMoveFissureToLaterWorldgen;
+
+
+
+
+
 
 
 
@@ -88,6 +107,10 @@ namespace WorldGenMod
         [DefaultValue(false)]
         //[BackgroundColor(116, 201, 164)]
         public bool configGenerateCanyon;
+
+
+
+
 
         [DefaultValue(false)]
         //[BackgroundColor(116, 201, 164)]
@@ -99,6 +122,7 @@ namespace WorldGenMod
         {
             WorldGenMod.generateFissure = configGenerateFissure;
             WorldGenMod.fissureCount = configFissureCount;
+            WorldGenMod.fissureCreationAtLaterWorldgen = configMoveFissureToLaterWorldgen;
 
             WorldGenMod.generateFrostFortresses = configGenerateFrostFortress;
             WorldGenMod.configFrostFortressCobwebFilling = configFrostFortressCobwebFilling;

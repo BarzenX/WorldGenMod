@@ -1,6 +1,6 @@
 Configs: {
 	WorldgenConfig: {
-		DisplayName: WorldGenMod Config
+		DisplayName: Local Config
 
 		Headers: {
 			Generation: World Generation Options
@@ -75,6 +75,11 @@ Configs: {
 		configFissureCount: {
 			Label: "   Fissure count"
 			Tooltip: Number of Fissures to be created
+		}
+
+		configMoveFissureToLaterWorldgen: {
+			Label: "   Move Fissure creation to later Worldgen step"
+			Tooltip: Makes the Fissures less likely to be overwritten during worldgen (possibly overwriting parts of the Desert, Marble, Granite, Corruption / Crimson)
 		}
 
 		configGenerateLakes_Legacy: {

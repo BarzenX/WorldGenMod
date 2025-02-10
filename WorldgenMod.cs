@@ -5,22 +5,22 @@ namespace WorldGenMod
 	public class WorldGenMod : Mod
 	{
         /// <summary>
-		/// Abandoned Hellevators activated in ServerConfig
+		/// Abandoned Hellevators activated
 		/// </summary>
         public static bool generateHellevators;
 
         /// <summary>
-        /// Number of Hellevators to be created during worldgen set in ServerConfig
+        /// Number of Hellevators to be created during worldgen
         /// </summary>
         public static int hellevatorCount;
 
         /// <summary>
-        /// Underground Lakes activated in ServerConfig
+        /// Underground Lakes activated
         /// </summary>
         public static bool generateLakes;
 
         /// <summary>
-        /// Number of Underground Lakes to be created during worldgen set in ServerConfig
+        /// Number of Underground Lakes to be created during worldgen
         /// </summary>
         public static int lakeCount;
 
@@ -35,7 +35,7 @@ namespace WorldGenMod
         public static bool smallGoldLake;
 
         /// <summary>
-        /// Frost Fortresses activated in ServerConfig
+        /// Frost Fortresses activated
         /// </summary>
         public static bool generateFrostFortresses;
 
@@ -45,14 +45,19 @@ namespace WorldGenMod
         public static int configFrostFortressCobwebFilling;
 
         /// <summary>
-        /// Fissure activated in ServerConfig
+        /// Fissure activated
         /// </summary>
         public static bool generateFissure;
 
         /// <summary>
-        /// Number of Fissure to be created during worldgen set in ServerConfig
+        /// Number of Fissure to be created during worldgen
         /// </summary>
         public static int fissureCount;
+
+        /// <summary>
+        /// Move the Fissure to a later worldgen position so it overwrites more structure and feels more like a "earth-splitting valley"
+        /// </summary>
+        public static bool fissureCreationAtLaterWorldgen;
 
         /// <summary>
         /// Chastised Church activated in ServerConfig
