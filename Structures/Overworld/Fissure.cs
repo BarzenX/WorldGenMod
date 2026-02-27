@@ -11,6 +11,7 @@ using Terraria.WorldBuilding;
 
 namespace WorldGenMod.Structures.Overworld
 {
+    //TODO: create Sandstone for Fissures that generate in the desert, so the player doesn't need to cut through all the sand
     class Fissure : ModSystem
     {
         List<int> previousFissuresStartX = [];

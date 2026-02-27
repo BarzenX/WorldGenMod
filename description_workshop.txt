@@ -1,5 +1,5 @@
 This is the updated version of the mod "Microdungeons And More - A Worldgen Mod" by JustImpaxim. He gave me permission to carry on with the mod, but all credit for that initial creation goes to him!
-The original mod: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2864294093] Link [/url]
+Link to the original mod: [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2864294093] Link [/url]
 
 I also took the opportunity to
 - create a new variation of the "Canyon", called "Fissure" which looks more natural
@@ -13,7 +13,7 @@ The legacy version of the Canyon and the Underground Lakes are still available i
 
 I don't know if I'm ever going to implement the plentiful suggestions collected in the "Suggested structures / additions" discussion ...most probably not.
 
-For compatibility concerned questions please have a look at the "FAQ" discussion before asking.
+For compatibility concerned questions ("Will this mod work with [...]?") please have a look at the "FAQ" discussion before asking.
 
 Mod Repository:
 https://github.com/BarzenX/WorldGenMod

@@ -1,24 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria.ID;
-using Terraria;
-using Terraria.ModLoader;
 using System.Diagnostics;
-using WorldGenMod.Structures.Ice;
+using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent.Tile_Entities;
-using Microsoft.VisualBasic;
-using Terraria.Achievements;
-using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Immutable;
-using static WorldGenMod.LineAutomat;
-using System.ComponentModel.DataAnnotations;
-using System.Data.Common;
-using Terraria.GameContent.UI.States;
-using System.Drawing;
+using Terraria.ID;
 
 namespace WorldGenMod
 {
@@ -2103,6 +2089,12 @@ namespace WorldGenMod
             return WorldGen.genRand.NextBool(Math.Max(1, x));
         }
 
+        /// <summary> Returns true every "y out of x times" (2 .. x .. maxInt)</summary>
+        public static bool yOut(int y, int x)
+        {
+            return WorldGen.genRand.NextBool(Math.Max(1, x));
+        }
+
         /// <summary> Returns true in x percent of cases (0 .. x .. 100) </summary>
         public static bool Perc(float x)
         {
@@ -3017,8 +3009,8 @@ namespace WorldGenMod
         }
 
         /// <summary>
-        /// Calculates the normalized distance from the Ellipse center point to the specified point (x/y) (written in global coordinates) and if it's contained within the Ellipse
-        /// <br/>
+        /// Calculates the normalized distance from the Ellipse center point to the specified point (x/y) (written in global coordinates)
+        /// <br/> and at once states if it's contained within the Ellipse
         /// </summary>
         public readonly (float, bool) Distance_Contains(int x, int y, bool includeBorder = false)
         {
