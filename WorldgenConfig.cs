@@ -1,7 +1,8 @@
-﻿using Terraria.ModLoader.Config;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using Terraria;
 using Terraria.Localization;
+using Terraria.ModLoader.Config;
+using static Terraria.ModLoader.PlayerDrawLayer;
 
 namespace WorldGenMod
 {
@@ -98,11 +99,17 @@ namespace WorldGenMod
 
 
 
+        //TODO: Can you add treehouses to the undergound Tiki village you're planning?
+        //I feel like hanging rope bridges could work great as connection points between them
 
 
 
 
-        [Header("Legacy")] // Headers are like titles in a config. You only need to declare a header on the item it should appear over, not every item in the category. 
+
+
+
+
+                [Header("Legacy")] // Headers are like titles in a config. You only need to declare a header on the item it should appear over, not every item in the category. 
 
         [DefaultValue(false)]
         //[BackgroundColor(116, 201, 164)]
